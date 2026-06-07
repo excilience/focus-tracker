@@ -71,7 +71,7 @@ May 25, 05:00 -> относится к фокус-дню May 25
 ```go
 settings := Settings{
 	DayStartHour: 4,
-	Timezone:     "Europe/Istanbul",
+	Timezone:     "Europe/Moscow",
 	DailyGoal:    120,
 }
 ```
@@ -243,16 +243,6 @@ data/
 `active_session.json` используется, пока фокус-сессия запущена.
 
 `sessions.json` хранит завершённые фокус-сессии.
-
-Обычно не стоит добавлять директорию `data/` в GitHub, потому что она содержит локальные пользовательские данные.
-
-Рекомендуемый `.gitignore`:
-
-```gitignore
-data/
-focus
-focus.exe
-```
 
 ## Примечания
 

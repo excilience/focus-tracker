@@ -71,7 +71,7 @@ The app uses the timezone from settings:
 ```go
 settings := Settings{
 	DayStartHour: 4,
-	Timezone:     "Europe/Istanbul",
+	Timezone: "Europe/Moscow"
 	DailyGoal:    120,
 }
 ```
@@ -241,17 +241,6 @@ The directory is created automatically when needed.
 `active_session.json` is used while a focus session is running.
 
 `sessions.json` stores finished focus sessions.
-
-You usually should not commit the data/ directory to GitHub, because it contains local user data.
-
-
-Recommended `.gitignore`:
-
-```gitignore
-data/
-focus
-focus.exe
-```
 
 ## Notes
 
