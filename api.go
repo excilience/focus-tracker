@@ -20,13 +20,14 @@ func runApiServer(fs *FocusService) error {
 		getGoalHandler(w, r, fs)
 	})
 	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
+	mux.HandleFunc("GET /sessions/{id}", getSessionByIDHandler)
+
+	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
 
 	mux.HandleFunc("POST /sessions/start", startSessionHandler)
 	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
 	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
 	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
-
-	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
 
 	addr := ":8080"
 
@@ -288,4 +289,40 @@ func toSessionResponse(session Session) SessionResponse {
 		DurationSeconds: session.DurationSeconds,
 		DurationHuman:   formatDuration(session.DurationSeconds),
 	}
+}
+
+func getSessionByID(id string) (Session, error) {
+	sessions, err := loadSessions()
+	if err != nil {
+		return Session{}, err
+	}
+
+	for _, session := range sessions {
+		if session.ID == id {
+			return session, nil
+		}
+	}
+
+	return Session{}, fmt.Errorf("session not found")
+
+}
+
+func getSessionByIDHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "session id is required",
+		})
+		return
+	}
+
+	session, err := getSessionByID(id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toSessionResponse(session))
 }
