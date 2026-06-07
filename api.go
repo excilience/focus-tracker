@@ -19,6 +19,7 @@ func runApiServer(fs *FocusService) error {
 	mux.HandleFunc("GET /goal", func(w http.ResponseWriter, r *http.Request) {
 		getGoalHandler(w, r, fs)
 	})
+	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
 
 	mux.HandleFunc("POST /sessions/start", startSessionHandler)
 	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
@@ -92,6 +93,35 @@ func resumeSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, map[string]string{
 		"message": "focus session resumed",
 	})
+}
+
+func getActiveSessionHandler(w http.ResponseWriter, _ *http.Request) {
+	activeSession, err := loadActiveSession()
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]any{
+			"error": err.Error(),
+		})
+		return
+	}
+	focusedSeconds := activeSession.FocusedSeconds
+
+	if !activeSession.IsPaused && !activeSession.LastResume.IsZero() {
+		activeDuration := time.Since(activeSession.LastResume)
+		focusedSeconds += int(activeDuration.Seconds())
+	}
+
+	response := ActiveSessionResponse{
+		Start:          timeFormat(activeSession.Start),
+		FocusedSeconds: focusedSeconds,
+		FocusedHuman:   formatDuration(focusedSeconds),
+		IsPaused:       activeSession.IsPaused,
+	}
+
+	if !activeSession.LastResume.IsZero() {
+		response.LastResume = timeFormat(activeSession.LastResume)
+	}
+
+	writeJSON(w, http.StatusOK, response)
 }
 
 func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService) {
