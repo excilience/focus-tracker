@@ -143,13 +143,48 @@ func (fs *FocusService) StatsForPeriod(sessions []Session, period StatsPeriod, n
 
 	total := fs.TotalFocusForPeriod(sessions, from, to)
 
+	avg := time.Duration(0)
+
+	switch period {
+	case StatsWeek, StatsMonth, StatsYear:
+		avg = averageFocusPerDay(total, from, to)
+	}
+
 	return FocusStats{
 		Period: period,
 		From:   from,
 		To:     to,
 		Total:  total,
+		Avg:    avg,
 	}, nil
 
+}
+
+func (fs *FocusService) TotalFocusDayRange(sessions []Session) (time.Time, time.Time, bool) {
+	if len(sessions) == 0 {
+		return time.Time{}, time.Time{}, false
+	}
+
+	first := sessions[0].Start.In(fs.location)
+	last := sessions[0].End.In(fs.location)
+
+	for _, s := range sessions {
+		start := s.Start.In(fs.location)
+		end := s.End.In(fs.location)
+
+		if start.Before(first) {
+			first = start
+		}
+
+		if end.After(last) {
+			last = end
+		}
+	}
+
+	from := fs.StartOfFocusDay(first)
+	to := fs.StartOfFocusDay(last).AddDate(0, 0, 1)
+
+	return from, to, true
 }
 
 func (fs *FocusService) StatsForCommand(sessions []Session, arg string, now time.Time) (FocusStats, error) {
@@ -159,7 +194,13 @@ func (fs *FocusService) StatsForCommand(sessions []Session, arg string, now time
 	switch period {
 	case StatsTotal:
 		total := time.Duration(getTotalFocusTimeAll(sessions)) * time.Second
-		avg := time.Duration(getAvgSessionSeconds(sessions)) * time.Second
+
+		from, to, ok := fs.TotalFocusDayRange(sessions)
+
+		avg := time.Duration(0)
+		if ok {
+			avg = averageFocusPerDay(total, from, to)
+		}
 
 		return FocusStats{
 			Period: StatsTotal,

@@ -51,7 +51,15 @@ func handleStats(fs *FocusService, args []string) {
 
 	if stats.Period == StatsTotal {
 		fmt.Println("Total Focused:", formatDuration(int(stats.Total.Seconds())))
-		fmt.Println("Average session:", formatDuration(int(stats.Avg.Seconds())))
+		fmt.Println("Avg. time spent per day:", formatDuration(int(stats.Avg.Seconds())))
+		return
+	}
+
+	if stats.Period == StatsDay {
+		fmt.Println("Period:", stats.Period)
+		fmt.Println("From:", stats.From.Format("2006-01-02 15:04"))
+		fmt.Println("To:", stats.To.Format("2006-01-02 15:04"))
+		fmt.Println("Focused:", formatDuration(int(stats.Total.Seconds())))
 		return
 	}
 
@@ -59,6 +67,7 @@ func handleStats(fs *FocusService, args []string) {
 	fmt.Println("From:", stats.From.Format("2006-01-02 15:04"))
 	fmt.Println("To:", stats.To.Format("2006-01-02 15:04"))
 	fmt.Println("Focused:", formatDuration(int(stats.Total.Seconds())))
+	fmt.Println("Avg. time spent per day:", formatDuration(int(stats.Avg.Seconds())))
 }
 
 func handlePause() {
