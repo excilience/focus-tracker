@@ -27,6 +27,11 @@ type Session struct {
 	DurationSeconds int       `json:"duration_seconds"`
 }
 
+type StopSessionResult struct {
+	Session Session
+	Saved   bool
+}
+
 type Settings struct {
 	DayStartHour int
 	Timezone     string

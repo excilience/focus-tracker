@@ -16,13 +16,17 @@ func handleStart() {
 }
 
 func handleStop() {
-	currentSession, err := stopSession()
+	result, err := stopSession()
 	if err != nil {
 		fmt.Println("Failed to stop session", err)
 		return
 	}
 	fmt.Println("Focus session stopped")
-	fmt.Println("Focused for:", formatDuration(currentSession.DurationSeconds))
+	fmt.Println("Focused for:", formatDuration(result.Session.DurationSeconds))
+
+	if !result.Saved {
+		fmt.Println("Session was not saved because it was shorter than 1 minute")
+	}
 }
 
 func handleStats(fs *FocusService, args []string) {

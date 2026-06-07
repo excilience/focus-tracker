@@ -44,10 +44,10 @@ func pauseSession() error {
 	return saveActiveSession(activeSession)
 }
 
-func stopSession() (Session, error) {
+func stopSession() (StopSessionResult, error) {
 	activeSession, err := loadActiveSession()
 	if err != nil {
-		return Session{}, err
+		return StopSessionResult{}, err
 	}
 
 	now := time.Now()
@@ -67,22 +67,28 @@ func stopSession() (Session, error) {
 
 	if totalSeconds < 60 {
 		if err := os.Remove(activeSessionFile); err != nil {
-			return Session{}, err
+			return StopSessionResult{}, err
 		}
 
-		fmt.Printf("---------------\nSession not saved, it was shorter than 1 minute.\n---------------\n")
-		return currentSession, nil
+		return StopSessionResult{
+			Session: currentSession,
+			Saved:   false,
+		}, nil
 	}
 
 	if err := saveSession(currentSession); err != nil {
-		return Session{}, err
+		return StopSessionResult{}, err
 	}
 	if err = os.Remove(activeSessionFile); err != nil {
-		return Session{}, err
+		return StopSessionResult{}, err
 	}
 
-	return currentSession, nil
+	return StopSessionResult{
+		Session: currentSession,
+		Saved:   true,
+	}, nil
 }
+
 func resumeSession() error {
 	activeSession, err := loadActiveSession()
 	if err != nil {
