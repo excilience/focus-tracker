@@ -79,3 +79,11 @@ type ActiveSession struct {
 	FocusedSeconds int       `json:"focused_seconds"`
 	IsPaused       bool      `json:"is_paused"`
 }
+
+type ActiveSessionResponse struct {
+	Start          string `json:"start"`
+	LastResume     string `json:"last_resume"`
+	FocusedSeconds int    `json:"focused_seconds"`
+	FocusedHuman   string `json:"focused_human"`
+	IsPaused       bool   `json:"is_paused"`
+}
