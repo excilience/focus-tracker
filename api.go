@@ -20,11 +20,78 @@ func runApiServer(fs *FocusService) error {
 		getGoalHandler(w, r, fs)
 	})
 
+	mux.HandleFunc("POST /sessions/start", startSessionHandler)
+	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
+	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
+	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
+
 	addr := ":8080"
 
 	fmt.Println("API server started on http://localhost" + addr)
 
 	return http.ListenAndServe(addr, mux)
+}
+
+func startSessionHandler(w http.ResponseWriter, _ *http.Request) {
+	if err := startSession(); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusCreated, map[string]string{
+		"message": "focus session started",
+	})
+}
+
+func stopSessionHandler(w http.ResponseWriter, _ *http.Request) {
+	result, err := stopSession()
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	if !result.Saved {
+		writeJSON(w, http.StatusOK, map[string]any{
+			"message": "focus session stopped but not saved because it was shorter than 1 minute",
+			"saved":   false,
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]any{
+		"message": "focus sesion stopped and saved",
+		"saved":   true,
+		"session": result.Session,
+	})
+}
+
+func pauseSessionHandler(w http.ResponseWriter, _ *http.Request) {
+	if err := pauseSession(); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "focus session paused",
+	})
+}
+
+func resumeSessionHandler(w http.ResponseWriter, _ *http.Request) {
+	if err := resumeSession(); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]string{
+		"message": "focus session resumed",
+	})
 }
 
 func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService) {
