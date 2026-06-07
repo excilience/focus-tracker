@@ -51,6 +51,9 @@ func main() {
 	case "help", "--help", "-h":
 		printUsage()
 
+	case "serve":
+		handleServe(focusService)
+
 	default:
 		fmt.Println("Unknown command")
 		printUsage()

@@ -209,6 +209,7 @@ func (fs *FocusService) StatsForCommand(sessions []Session, arg string, now time
 		}, nil
 	case StatsDay, StatsWeek, StatsMonth, StatsYear:
 		return fs.StatsForPeriod(sessions, period, now)
+
 	default:
 		return FocusStats{}, fmt.Errorf("unknown stats period: %s", period)
 	}
