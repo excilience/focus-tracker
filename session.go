@@ -141,6 +141,27 @@ func editSessionDuration(id string, newDuration time.Duration) (Session, error) 
 	return Session{}, fmt.Errorf("session not found")
 }
 
+func deleteSessionByID(id string) (Session, error) {
+	sessions, err := loadSessions()
+	if err != nil {
+		return Session{}, err
+	}
+
+	for i, session := range sessions {
+		if session.ID == id {
+
+			sessions = append(sessions[:i], sessions[i+1:]...)
+
+			if err := saveSessions(sessions); err != nil {
+				return Session{}, err
+			}
+
+			return session, nil
+		}
+	}
+	return Session{}, fmt.Errorf("session with ID %q not found", id)
+}
+
 func newSessionID(start time.Time) string {
 	return start.Format("20060102-150405")
 }
