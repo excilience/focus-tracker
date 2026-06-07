@@ -148,11 +148,19 @@ func getTotalFocusTimeAll(sessions []Session) int {
 
 }
 
-func getAvgSessionSeconds(sessions []Session) int {
-	if len(sessions) == 0 {
+func countFocusDays(from, to time.Time) int {
+	days := 0
+
+	for d := from; d.Before(to); d = d.AddDate(0, 0, 1) {
+		days++
+	}
+	return days
+}
+
+func averageFocusPerDay(total time.Duration, from, to time.Time) time.Duration {
+	days := countFocusDays(from, to)
+	if days == 0 {
 		return 0
 	}
-
-	total := getTotalFocusTimeAll(sessions)
-	return total / len(sessions)
+	return total / time.Duration(days)
 }
