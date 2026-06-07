@@ -163,3 +163,11 @@ func handleEdit(args []string) {
 	fmt.Println("ID:", updatedSession.ID)
 	fmt.Println("New duration:", formatDuration(updatedSession.DurationSeconds))
 }
+
+func handleServe(fs *FocusService) {
+	err := runApiServer(fs)
+	if err != nil {
+		fmt.Println("Failed to start API server:", err)
+		return
+	}
+}

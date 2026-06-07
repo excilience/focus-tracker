@@ -12,6 +12,16 @@ const (
 	StatsTotal StatsPeriod = "total"
 )
 
+type StatsResponse struct {
+	Period       StatsPeriod `json:"period"`
+	From         string      `json:"from,omitempty"`
+	To           string      `json:"to,omitempty"`
+	TotalSeconds int         `json:"total_seconds"`
+	TotalHuman   string      `json:"total_human"`
+	AvgSeconds   int         `json:"avg_seconds,omitempty"`
+	AvgHuman     string      `json:"avg_human,omitempty"`
+}
+
 type FocusStats struct {
 	Period StatsPeriod
 	From   time.Time
