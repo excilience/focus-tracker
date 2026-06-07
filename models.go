@@ -1,0 +1,54 @@
+package main
+
+import "time"
+
+type StatsPeriod string
+
+const (
+	StatsDay   StatsPeriod = "day"
+	StatsWeek  StatsPeriod = "week"
+	StatsMonth StatsPeriod = "month"
+	StatsYear  StatsPeriod = "year"
+	StatsTotal StatsPeriod = "total"
+)
+
+type FocusStats struct {
+	Period StatsPeriod
+	From   time.Time
+	To     time.Time
+	Total  time.Duration
+	Avg    time.Duration
+}
+
+type Session struct {
+	ID              string    `json:"id"`
+	Start           time.Time `json:"start"`
+	End             time.Time `json:"end"`
+	DurationSeconds int       `json:"duration_seconds"`
+}
+
+type Settings struct {
+	DayStartHour int
+	Timezone     string
+	DailyGoal    int
+}
+
+type FocusService struct {
+	settings Settings
+	location *time.Location
+}
+
+type FocusProgress struct {
+	Total       time.Duration
+	Goal        time.Duration
+	Remaining   time.Duration
+	Percent     float64
+	IsCompleted bool
+}
+
+type ActiveSession struct {
+	Start          time.Time `json:"start"`
+	LastResume     time.Time `json:"last_resume"`
+	FocusedSeconds int       `json:"focused_seconds"`
+	IsPaused       bool      `json:"is_paused"`
+}
