@@ -53,6 +53,18 @@ type FocusService struct {
 	location *time.Location
 }
 
+type GoalResponse struct {
+	FocusDay         string `json:"focus_day"`
+	FocusedSeconds   int    `json:"focused_seconds"`
+	FocusedHuman     string `json:"focused_human"`
+	GoalSeconds      int    `json:"goal_seconds"`
+	GoalHuman        string `json:"goal_human"`
+	RemainingSeconds int    `json:"remaining_seconds"`
+	RemainingHuman   string `json:"remaining_human"`
+	Percent          int    `json:"percent"`
+	IsCompleted      bool   `json:"is_completed"`
+}
+
 type FocusProgress struct {
 	Total       time.Duration
 	Goal        time.Duration
