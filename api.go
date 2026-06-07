@@ -23,6 +23,7 @@ func runApiServer(fs *FocusService) error {
 	mux.HandleFunc("GET /sessions/{id}", getSessionByIDHandler)
 
 	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
+	mux.HandleFunc("DELETE /sessions/{id}", deleteSessionHandler)
 
 	mux.HandleFunc("POST /sessions/start", startSessionHandler)
 	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
@@ -279,6 +280,28 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession))
+}
+
+func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "session id is required",
+		})
+		return
+	}
+
+	deletedSession, err := deleteSessionByID(id)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+	writeJSON(w, http.StatusOK, map[string]any{
+		"message": "session deleted",
+		"session": toSessionResponse(deletedSession),
+	})
 }
 
 func toSessionResponse(session Session) SessionResponse {
