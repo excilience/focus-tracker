@@ -87,3 +87,15 @@ type ActiveSessionResponse struct {
 	FocusedHuman   string `json:"focused_human"`
 	IsPaused       bool   `json:"is_paused"`
 }
+
+type updateSessionRequest struct {
+	Duration string `json:"duration"`
+}
+
+type SessionResponse struct {
+	ID              string `json:"id"`
+	Start           string `json:"start"`
+	End             string `json:"end"`
+	DurationSeconds int    `json:"duration_seconds"`
+	DurationHuman   string `json:"duration_human"`
+}

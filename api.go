@@ -26,6 +26,8 @@ func runApiServer(fs *FocusService) error {
 	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
 	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
 
+	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
+
 	addr := ":8080"
 
 	fmt.Println("API server started on http://localhost" + addr)
@@ -233,4 +235,57 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 
 	return response
 
+}
+
+func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
+	id := r.PathValue("id")
+	if id == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "session id is required",
+		})
+		return
+	}
+
+	var request updateSessionRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid JSON body",
+		})
+		return
+	}
+
+	if request.Duration == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "duration is required",
+		})
+		return
+	}
+
+	duration, err := time.ParseDuration(request.Duration)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid duration format",
+		})
+		return
+	}
+	updatedSession, err := editSessionDuration(id, duration)
+	if err != nil {
+		writeJSON(w, http.StatusNotFound, map[string]string{
+			"error": err.Error(),
+		})
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession))
+}
+
+func toSessionResponse(session Session) SessionResponse {
+	return SessionResponse{
+		ID:              session.ID,
+		Start:           timeFormat(session.Start),
+		End:             timeFormat(session.End),
+		DurationSeconds: session.DurationSeconds,
+		DurationHuman:   formatDuration(session.DurationSeconds),
+	}
 }
