@@ -12,23 +12,25 @@ func runApiServer(fs *FocusService) error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
-	mux.HandleFunc("GET /sessions", getSessionsHandler)
+	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
+		getSessionsHandler(w, r, fs)
+	})
+	mux.HandleFunc("GET /sessions/{id}", getSessionByIDHandler)
+	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
 	mux.HandleFunc("GET /stats", func(w http.ResponseWriter, r *http.Request) {
 		getStatsHandler(w, r, fs)
 	})
 	mux.HandleFunc("GET /goal", func(w http.ResponseWriter, r *http.Request) {
 		getGoalHandler(w, r, fs)
 	})
-	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
-	mux.HandleFunc("GET /sessions/{id}", getSessionByIDHandler)
+
+	mux.HandleFunc("POST /sessions/start", startSessionHandler)
+	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
+	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
+	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
 
 	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
 	mux.HandleFunc("DELETE /sessions/{id}", deleteSessionHandler)
-
-	mux.HandleFunc("POST /sessions/start", startSessionHandler)
-	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
-	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
-	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
 
 	addr := ":8080"
 
@@ -159,7 +161,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getSessionsHandler(w http.ResponseWriter, r *http.Request) {
+func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService) {
 	sessions, err := loadSessions()
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
@@ -167,7 +169,52 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	writeJSON(w, http.StatusOK, sessions)
+
+	fromText := r.URL.Query().Get("from")
+	toText := r.URL.Query().Get("to")
+
+	if fromText == "" && toText == "" {
+		writeJSON(w, http.StatusOK, toSessionResponses(sessions))
+		return
+	}
+
+	if fromText == "" || toText == "" {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error":   "both 'from' and 'to' are required",
+			"example": "/sessions?from=YYYY-MM-DD&to=YYYY-MM-DD",
+		})
+		return
+	}
+
+	fromDate, err := time.ParseInLocation(dateLayout, fromText, fs.location)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid from date, expected YYYY-MM-DD",
+		})
+		return
+	}
+
+	toDate, err := time.ParseInLocation(dateLayout, toText, fs.location)
+	if err != nil {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "invalid to date, expected YYYY-MM-DD",
+		})
+		return
+	}
+
+	from := fs.StartOfFocusDayFromDate(fromDate)
+	to := fs.StartOfFocusDayFromDate(toDate)
+
+	if !to.After(from) {
+		writeJSON(w, http.StatusBadRequest, map[string]string{
+			"error": "to date must be after from date",
+		})
+		return
+	}
+
+	filtered := filterSessionsByPeriod(sessions, from, to)
+
+	writeJSON(w, http.StatusOK, toSessionResponses(filtered))
 }
 
 func toStatsResponse(stats FocusStats) StatsResponse {
@@ -312,6 +359,16 @@ func toSessionResponse(session Session) SessionResponse {
 		DurationSeconds: session.DurationSeconds,
 		DurationHuman:   formatDuration(session.DurationSeconds),
 	}
+}
+
+func toSessionResponses(sessions []Session) []SessionResponse {
+	response := make([]SessionResponse, 0, len(sessions))
+
+	for _, session := range sessions {
+		response = append(response, toSessionResponse(session))
+	}
+
+	return response
 }
 
 func getSessionByID(id string) (Session, error) {

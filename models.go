@@ -4,6 +4,8 @@ import "time"
 
 type StatsPeriod string
 
+const dateLayout = "2006-01-02"
+
 const (
 	StatsDay   StatsPeriod = "day"
 	StatsWeek  StatsPeriod = "week"

@@ -226,6 +226,12 @@ func (fs *FocusService) FocusDay(t time.Time) time.Time {
 	return time.Date(y, m, d, 0, 0, 0, 0, fs.location)
 }
 
+func (fs *FocusService) StartOfFocusDayFromDate(t time.Time) time.Time {
+	y, m, d := t.In(fs.location).Date()
+
+	return time.Date(y, m, d, fs.settings.DayStartHour, 0, 0, 0, fs.location)
+}
+
 func (fs *FocusService) TotalFocusForDay(sessions []Session, t time.Time) time.Duration {
 	from := fs.StartOfFocusDay(t)
 	to := from.AddDate(0, 0, 1)
