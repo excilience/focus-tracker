@@ -1,0 +1,15 @@
+services:
+  postgres:
+    image: postgres:17
+    container_name: focus-postgres
+    environment:
+      POSTGRES_USER: focus
+      POSTGRES_PASSWORD: focus
+      POSTGRES_DB: focus_tracker
+    ports:
+      - "5433:5432"
+    volumes:
+      - focus_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  focus_postgres_data:
