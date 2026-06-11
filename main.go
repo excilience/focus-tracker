@@ -54,8 +54,8 @@ func main() {
 	case "serve":
 		handleServe(focusService)
 
-	case "db-check":
-		dbCheck()
+	case "db-import":
+		dbImport()
 
 	default:
 		fmt.Println("Unknown command")

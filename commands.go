@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -171,10 +173,19 @@ func handleServe(fs *FocusService) {
 		return
 	}
 }
-func dbCheck() {
+func connectDB() (*sql.DB, error) {
 	dsn := "postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable"
 
 	db, err := openDatabase(dsn)
+	if err != nil {
+		return nil, fmt.Errorf("connect to PostgreSQL: %w", err)
+	}
+
+	return db, nil
+}
+
+func dbImport() {
+	db, err := connectDB()
 	if err != nil {
 		fmt.Println("Failed to connect to PostgreSQL:", err)
 		return
@@ -182,4 +193,21 @@ func dbCheck() {
 	defer db.Close()
 
 	fmt.Println("Connected to PostgreSQL")
+
+	sessions, err := loadSessions()
+	if err != nil {
+		fmt.Println("Failed to load sessions:", err)
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
+	defer cancel()
+
+	if err := importSessions(ctx, db, sessions); err != nil {
+		fmt.Println("Failed to import sessions", err)
+		return
+
+	}
+
+	fmt.Printf("Processed %d sessions for PostgreSQL import\n", len(sessions))
 }
