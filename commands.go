@@ -171,3 +171,15 @@ func handleServe(fs *FocusService) {
 		return
 	}
 }
+func dbCheck() {
+	dsn := "postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable"
+
+	db, err := openDatabase(dsn)
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
+	fmt.Println("Connected to PostgreSQL")
+}
