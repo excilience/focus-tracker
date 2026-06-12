@@ -57,6 +57,9 @@ func main() {
 	case "db-import":
 		dbImport()
 
+	case "db-list":
+		dbList()
+
 	default:
 		fmt.Println("Unknown command")
 		printUsage()
