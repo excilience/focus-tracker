@@ -40,3 +40,43 @@ func importSessions(ctx context.Context, db *sql.DB, sessions []Session) error {
 	}
 	return nil
 }
+
+func loadSessionsFromDB(ctx context.Context, db *sql.DB) ([]Session, error) {
+	const query = `
+		SELECT
+			id,
+			start_time,
+			end_time,
+			duration_seconds
+		FROM sessions
+		ORDER BY start_time;
+	`
+
+	rows, err := db.QueryContext(ctx, query)
+	if err != nil {
+		return nil, fmt.Errorf("query sessions: %w", err)
+	}
+	defer rows.Close()
+
+	sessions := make([]Session, 0)
+
+	for rows.Next() {
+		var session Session
+
+		if err := rows.Scan(
+			&session.ID,
+			&session.Start,
+			&session.End,
+			&session.DurationSeconds,
+		); err != nil {
+			return nil, fmt.Errorf("scan session: %w", err)
+		}
+		sessions = append(sessions, session)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("read session rows: %w", err)
+	}
+
+	return sessions, nil
+}

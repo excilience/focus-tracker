@@ -211,3 +211,25 @@ func dbImport() {
 
 	fmt.Printf("Processed %d sessions for PostgreSQL import\n", len(sessions))
 }
+
+func dbList() {
+	db, err := connectDB()
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
+	if err != nil {
+		fmt.Println("Failed to load sessions from PostgreSQL:", err)
+		return
+	}
+
+	for _, session := range sessions {
+		fmt.Printf("%s | %s → %s | %s\n", session.ID, timeFormat(session.Start), timeFormat(session.End), formatDuration(session.DurationSeconds))
+	}
+}
