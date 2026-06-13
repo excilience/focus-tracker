@@ -233,3 +233,36 @@ func dbList() {
 		fmt.Printf("%s | %s → %s | %s\n", session.ID, timeFormat(session.Start), timeFormat(session.End), formatDuration(session.DurationSeconds))
 	}
 }
+
+func dbGetSession(args []string) {
+
+	if len(os.Args) < 3 {
+		fmt.Println("Usage: focus db-get <session-id>")
+		return
+	}
+
+	id := args[0]
+
+	db, err := connectDB()
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	session, err := getSessionByIDFromDB(ctx, db, id)
+	if err != nil {
+		fmt.Println("Failed to get session:", err)
+		return
+	}
+	fmt.Printf(
+		"%s | %s → %s | %s\n",
+		session.ID,
+		timeFormat(session.Start),
+		timeFormat(session.End),
+		formatDuration(session.DurationSeconds),
+	)
+}

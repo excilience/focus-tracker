@@ -60,6 +60,9 @@ func main() {
 	case "db-list":
 		dbList()
 
+	case "db-get":
+		dbGetSession(os.Args[2:])
+
 	default:
 		fmt.Println("Unknown command")
 		printUsage()

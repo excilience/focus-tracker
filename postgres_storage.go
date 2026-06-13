@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 )
 
@@ -79,4 +80,33 @@ func loadSessionsFromDB(ctx context.Context, db *sql.DB) ([]Session, error) {
 	}
 
 	return sessions, nil
+}
+
+func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, error) {
+	const query = `
+		SELECT
+			id,
+			start_time,
+			end_time,
+			duration_seconds
+		FROM sessions
+		WHERE id = $1;
+	`
+
+	var session Session
+	err := db.QueryRowContext(ctx, query, id).Scan(
+		&session.ID,
+		&session.Start,
+		&session.End,
+		&session.DurationSeconds,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Session{}, fmt.Errorf("session not found")
+		}
+
+		return Session{}, fmt.Errorf("query sessions by id: %w", err)
+	}
+
+	return session, nil
 }
