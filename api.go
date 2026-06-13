@@ -31,8 +31,12 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
 	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
 
-	mux.HandleFunc("PATCH /sessions/{id}", updateSessionHandler)
-	mux.HandleFunc("DELETE /sessions/{id}", deleteSessionHandler)
+	mux.HandleFunc("PATCH /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+		deleteSessionHandler(w, r, db)
+	})
+	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+		deleteSessionHandler(w, r, db)
+	})
 
 	addr := ":8080"
 
@@ -300,7 +304,7 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 
 }
 
-func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
+func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -332,7 +336,11 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 		})
 		return
 	}
-	updatedSession, err := editSessionDuration(id, duration)
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	updatedSession, err := updateSessionDurationInDB(ctx, db, id, duration)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
@@ -343,7 +351,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request) {
 	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession))
 }
 
-func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
+func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -352,7 +360,10 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	deletedSession, err := deleteSessionByID(id)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	deletedSession, err := deleteSessionFromDB(ctx, db, id)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
