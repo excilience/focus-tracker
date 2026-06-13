@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"errors"
 	"fmt"
+	"time"
 )
 
 func insertSession(ctx context.Context, db *sql.DB, session Session) error {
@@ -106,6 +107,67 @@ func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, 
 		}
 
 		return Session{}, fmt.Errorf("query sessions by id: %w", err)
+	}
+
+	return session, nil
+}
+
+func updateSessionDurationInDB(ctx context.Context, db *sql.DB, id string, duration time.Duration) (Session, error) {
+	const query = `
+		UPDATE sessions
+		SET duration_seconds = $1
+		WHERE id = $2
+		RETURNING
+			id,
+			start_time,
+			end_time,
+			duration_seconds;
+	`
+	var session Session
+
+	err := db.QueryRowContext(ctx, query, int(duration.Seconds()), id).Scan(
+		&session.ID,
+		&session.Start,
+		&session.End,
+		&session.DurationSeconds,
+	)
+
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Session{}, fmt.Errorf("session not found")
+		}
+
+		return Session{}, fmt.Errorf("update session duration: %w", err)
+	}
+
+	return session, nil
+}
+
+func deleteSessionFromDB(ctx context.Context, db *sql.DB, id string) (Session, error) {
+	const query = `
+		DELETE FROM sessions
+		WHERE id = $1
+		RETURNING
+			id,
+			start_time,
+			end_time,
+			duration_seconds;
+	`
+
+	var session Session
+
+	err := db.QueryRowContext(ctx, query, id).Scan(
+		&session.ID,
+		&session.Start,
+		&session.End,
+		&session.DurationSeconds,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Session{}, fmt.Errorf("session not found")
+		}
+
+		return Session{}, fmt.Errorf("delete session: %w", err)
 	}
 
 	return session, nil
