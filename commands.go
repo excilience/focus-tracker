@@ -167,7 +167,15 @@ func handleEdit(args []string) {
 }
 
 func handleServe(fs *FocusService) {
-	err := runApiServer(fs)
+
+	db, err := connectDB()
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
+	err = runApiServer(fs, db)
 	if err != nil {
 		fmt.Println("Failed to start API server:", err)
 		return

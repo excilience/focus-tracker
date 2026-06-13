@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"math"
@@ -8,20 +10,20 @@ import (
 	"time"
 )
 
-func runApiServer(fs *FocusService) error {
+func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux := http.NewServeMux()
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
-		getSessionsHandler(w, r, fs)
+		getSessionsHandler(w, r, fs, db)
 	})
-	mux.HandleFunc("GET /sessions/{id}", getSessionByIDHandler)
+	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db) })
 	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
 	mux.HandleFunc("GET /stats", func(w http.ResponseWriter, r *http.Request) {
-		getStatsHandler(w, r, fs)
+		getStatsHandler(w, r, fs, db)
 	})
 	mux.HandleFunc("GET /goal", func(w http.ResponseWriter, r *http.Request) {
-		getGoalHandler(w, r, fs)
+		getGoalHandler(w, r, fs, db)
 	})
 
 	mux.HandleFunc("POST /sessions/start", startSessionHandler)
@@ -130,8 +132,12 @@ func getActiveSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	writeJSON(w, http.StatusOK, response)
 }
 
-func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService) {
-	sessions, err := loadSessions()
+func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed to load sessions",
@@ -161,8 +167,12 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService) {
-	sessions, err := loadSessions()
+func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed to load sessions",
@@ -251,8 +261,12 @@ func writeJSON(w http.ResponseWriter, status int, data any) {
 	}
 }
 
-func getGoalHandler(w http.ResponseWriter, _ *http.Request, fs *FocusService) {
-	sessions, err := loadSessions()
+func getGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusInternalServerError, map[string]string{
 			"error": "failed to load sessions",
@@ -387,7 +401,7 @@ func getSessionByID(id string) (Session, error) {
 
 }
 
-func getSessionByIDHandler(w http.ResponseWriter, r *http.Request) {
+func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -396,7 +410,10 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	session, err := getSessionByID(id)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	session, err := getSessionByIDFromDB(ctx, db, id)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
