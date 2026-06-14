@@ -15,9 +15,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
-		getSessionsHandler(w, r, fs, db)
+		getSessionsHandler(w, r, fs, db, fs.location)
 	})
-	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db) })
+	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs.location) })
 	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
 	mux.HandleFunc("GET /stats", func(w http.ResponseWriter, r *http.Request) {
 		getStatsHandler(w, r, fs, db)
@@ -29,13 +29,15 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("POST /sessions/start", startSessionHandler)
 	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
 	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
-	mux.HandleFunc("POST /sessions/stop", stopSessionHandler)
+	mux.HandleFunc("POST /sessions/stop", func(w http.ResponseWriter, r *http.Request) {
+		stopSessionHandler(w, r, db, fs.location)
+	})
 
 	mux.HandleFunc("PATCH /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
-		deleteSessionHandler(w, r, db)
+		updateSessionHandler(w, r, db, fs.location)
 	})
 	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
-		deleteSessionHandler(w, r, db)
+		deleteSessionHandler(w, r, db, fs.location)
 	})
 
 	addr := ":8080"
@@ -58,8 +60,8 @@ func startSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
-func stopSessionHandler(w http.ResponseWriter, _ *http.Request) {
-	result, err := stopSession()
+func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, location *time.Location) {
+	result, err := stopSession(db)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
@@ -76,9 +78,9 @@ func stopSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	}
 
 	writeJSON(w, http.StatusOK, map[string]any{
-		"message": "focus sesion stopped and saved",
+		"message": "focus session stopped and saved",
 		"saved":   true,
-		"session": result.Session,
+		"session": toSessionResponse(result.Session, location),
 	})
 }
 
@@ -171,7 +173,7 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB, location *time.Location) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -188,7 +190,7 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 	toText := r.URL.Query().Get("to")
 
 	if fromText == "" && toText == "" {
-		writeJSON(w, http.StatusOK, toSessionResponses(sessions))
+		writeJSON(w, http.StatusOK, toSessionResponses(sessions, location))
 		return
 	}
 
@@ -228,7 +230,7 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 
 	filtered := filterSessionsByPeriod(sessions, from, to)
 
-	writeJSON(w, http.StatusOK, toSessionResponses(filtered))
+	writeJSON(w, http.StatusOK, toSessionResponses(filtered, location))
 }
 
 func toStatsResponse(stats FocusStats) StatsResponse {
@@ -304,7 +306,7 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 
 }
 
-func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -348,10 +350,10 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession))
+	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession, location))
 }
 
-func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -372,25 +374,25 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"message": "session deleted",
-		"session": toSessionResponse(deletedSession),
+		"session": toSessionResponse(deletedSession, location),
 	})
 }
 
-func toSessionResponse(session Session) SessionResponse {
+func toSessionResponse(session Session, location *time.Location) SessionResponse {
 	return SessionResponse{
 		ID:              session.ID,
-		Start:           timeFormat(session.Start),
-		End:             timeFormat(session.End),
+		Start:           timeFormat(session.Start.In(location)),
+		End:             timeFormat(session.End.In(location)),
 		DurationSeconds: session.DurationSeconds,
 		DurationHuman:   formatDuration(session.DurationSeconds),
 	}
 }
 
-func toSessionResponses(sessions []Session) []SessionResponse {
+func toSessionResponses(sessions []Session, location *time.Location) []SessionResponse {
 	response := make([]SessionResponse, 0, len(sessions))
 
 	for _, session := range sessions {
-		response = append(response, toSessionResponse(session))
+		response = append(response, toSessionResponse(session, location))
 	}
 
 	return response
@@ -412,7 +414,7 @@ func getSessionByID(id string) (Session, error) {
 
 }
 
-func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
@@ -432,5 +434,5 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toSessionResponse(session))
+	writeJSON(w, http.StatusOK, toSessionResponse(session, location))
 }

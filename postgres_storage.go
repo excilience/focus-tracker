@@ -172,3 +172,21 @@ func deleteSessionFromDB(ctx context.Context, db *sql.DB, id string) (Session, e
 
 	return session, nil
 }
+
+func createSessionInDB(ctx context.Context, db *sql.DB, session Session) error {
+	const query = `
+		INSERT INTO sessions (
+			id,
+			start_time,
+			end_time,
+			duration_seconds
+		)
+		VALUES ($1, $2, $3, $4);
+	`
+
+	_, err := db.ExecContext(ctx, query, session.ID, session.Start, session.End, session.DurationSeconds)
+	if err != nil {
+		return fmt.Errorf("create session: %w", err)
+	}
+	return nil
+}
