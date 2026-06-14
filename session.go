@@ -196,19 +196,3 @@ func averageFocusPerDay(total time.Duration, from, to time.Time) time.Duration {
 	}
 	return total / time.Duration(days)
 }
-
-func filterSessionsByPeriod(sessions []Session, from, to time.Time) []Session {
-	filtered := make([]Session, 0)
-
-	for _, session := range sessions {
-		start := session.Start
-		end := session.End
-
-		if !start.Before(to) || !end.After(from) {
-			continue
-		}
-
-		filtered = append(filtered, session)
-	}
-	return filtered
-}

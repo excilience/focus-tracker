@@ -76,7 +76,7 @@ type FocusProgress struct {
 }
 
 type ActiveSession struct {
-	Start          time.Time `json:"start"`
+	Start          time.Time `json:"start_time"`
 	LastResume     time.Time `json:"last_resume"`
 	FocusedSeconds int       `json:"focused_seconds"`
 	IsPaused       bool      `json:"is_paused"`
