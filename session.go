@@ -1,6 +1,8 @@
 package main
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
 	"os"
 	"time"
@@ -44,7 +46,7 @@ func pauseSession() error {
 	return saveActiveSession(activeSession)
 }
 
-func stopSession() (StopSessionResult, error) {
+func stopSession(db *sql.DB) (StopSessionResult, error) {
 	activeSession, err := loadActiveSession()
 	if err != nil {
 		return StopSessionResult{}, err
@@ -76,7 +78,10 @@ func stopSession() (StopSessionResult, error) {
 		}, nil
 	}
 
-	if err := saveSession(currentSession); err != nil {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := createSessionInDB(ctx, db, currentSession); err != nil {
 		return StopSessionResult{}, err
 	}
 	if err = os.Remove(activeSessionFile); err != nil {

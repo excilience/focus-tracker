@@ -18,7 +18,14 @@ func handleStart() {
 }
 
 func handleStop() {
-	result, err := stopSession()
+	db, err := connectDB()
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
+	result, err := stopSession(db)
 	if err != nil {
 		fmt.Println("Failed to stop session", err)
 		return
