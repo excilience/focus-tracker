@@ -83,6 +83,49 @@ func loadSessionsFromDB(ctx context.Context, db *sql.DB) ([]Session, error) {
 	return sessions, nil
 }
 
+func loadSessionsByPeriodFromDB(ctx context.Context, db *sql.DB, from, to time.Time) ([]Session, error) {
+	const query = `
+		SELECT
+			id,
+			start_time,
+			end_time,
+			duration_seconds
+		FROM sessions
+		WHERE start_time < $2
+			AND end_time > $1
+		ORDER BY start_time;
+	`
+
+	rows, err := db.QueryContext(ctx, query, from, to)
+	if err != nil {
+		return nil, fmt.Errorf("query sessions by period: %w", err)
+	}
+	defer rows.Close()
+
+	sessions := make([]Session, 0)
+
+	for rows.Next() {
+		var session Session
+
+		if err := rows.Scan(
+			&session.ID,
+			&session.Start,
+			&session.End,
+			&session.DurationSeconds,
+		); err != nil {
+			return nil, fmt.Errorf("scan session: %w", err)
+		}
+
+		sessions = append(sessions, session)
+	}
+
+	if err := rows.Err(); err != nil {
+		return nil, fmt.Errorf("iterate sessions: %w", err)
+	}
+
+	return sessions, nil
+}
+
 func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, error) {
 	const query = `
 		SELECT
