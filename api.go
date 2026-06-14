@@ -15,7 +15,7 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 
 	mux.HandleFunc("GET /health", healthHandler)
 	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
-		getSessionsHandler(w, r, fs, db, fs.location)
+		getSessionsHandler(w, r, fs, db)
 	})
 	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs.location) })
 	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
@@ -173,24 +173,23 @@ func healthHandler(w http.ResponseWriter, r *http.Request) {
 	})
 }
 
-func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB, location *time.Location) {
+func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
-
-	sessions, err := loadSessionsFromDB(ctx, db)
-	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "failed to load sessions",
-		})
-		return
-	}
 
 	fromText := r.URL.Query().Get("from")
 	toText := r.URL.Query().Get("to")
 
 	if fromText == "" && toText == "" {
-		writeJSON(w, http.StatusOK, toSessionResponses(sessions, location))
+		sessions, err := loadSessionsFromDB(ctx, db)
+		if err != nil {
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to load sessions",
+			})
+			return
+		}
+		writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs.location))
 		return
 	}
 
@@ -219,18 +218,24 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 	}
 
 	from := fs.StartOfFocusDayFromDate(fromDate)
-	to := fs.StartOfFocusDayFromDate(toDate)
+	to := fs.StartOfFocusDayFromDate(toDate).AddDate(0, 0, 1)
 
 	if !to.After(from) {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "to date must be after from date",
+			"error": "'to' date must be the same as or later than 'from' date",
 		})
 		return
 	}
 
-	filtered := filterSessionsByPeriod(sessions, from, to)
+	sessions, err := loadSessionsByPeriodFromDB(ctx, db, from, to)
+	if err != nil {
+		writeJSON(w, http.StatusInternalServerError, map[string]string{
+			"error": "failed to load sessions by period",
+		})
+		return
+	}
 
-	writeJSON(w, http.StatusOK, toSessionResponses(filtered, location))
+	writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs.location))
 }
 
 func toStatsResponse(stats FocusStats) StatsResponse {
