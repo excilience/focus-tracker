@@ -8,13 +8,7 @@ import (
 	"time"
 )
 
-func startSession() error {
-	if _, err := os.Stat(activeSessionFile); err == nil {
-		return fmt.Errorf("session already started")
-	} else if !os.IsNotExist(err) {
-		return err
-	}
-
+func startSession(ctx context.Context, db *sql.DB) error {
 	now := time.Now()
 
 	activeSession := ActiveSession{
@@ -23,7 +17,12 @@ func startSession() error {
 		FocusedSeconds: 0,
 		IsPaused:       false,
 	}
-	return saveActiveSession(activeSession)
+
+	if err := createActiveSessionInDB(ctx, db, activeSession); err != nil {
+		return fmt.Errorf("start session: %w", err)
+	}
+
+	return nil
 }
 
 func pauseSession() error {

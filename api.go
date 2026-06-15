@@ -18,7 +18,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 		getSessionsHandler(w, r, fs, db)
 	})
 	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs.location) })
-	mux.HandleFunc("GET /sessions/active", getActiveSessionHandler)
+	mux.HandleFunc("GET /sessions/active", func(w http.ResponseWriter, r *http.Request) {
+		getActiveSessionHandler(w, r, db)
+	})
 	mux.HandleFunc("GET /stats", func(w http.ResponseWriter, r *http.Request) {
 		getStatsHandler(w, r, fs, db)
 	})
@@ -26,7 +28,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 		getGoalHandler(w, r, fs, db)
 	})
 
-	mux.HandleFunc("POST /sessions/start", startSessionHandler)
+	mux.HandleFunc("POST /sessions/start", func(w http.ResponseWriter, r *http.Request) {
+		startSessionHandler(w, r, db)
+	})
 	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
 	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
 	mux.HandleFunc("POST /sessions/stop", func(w http.ResponseWriter, r *http.Request) {
@@ -47,8 +51,12 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	return http.ListenAndServe(addr, mux)
 }
 
-func startSessionHandler(w http.ResponseWriter, _ *http.Request) {
-	if err := startSession(); err != nil {
+func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := startSession(ctx, db); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
 		})
@@ -109,8 +117,12 @@ func resumeSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
-func getActiveSessionHandler(w http.ResponseWriter, _ *http.Request) {
-	activeSession, err := loadActiveSession()
+func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	activeSession, err := loadActiveSessionFromDB(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]any{
 			"error": err.Error(),
