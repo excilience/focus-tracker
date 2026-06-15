@@ -8,14 +8,14 @@ import (
 	"time"
 )
 
-func handleStart() {
-	err := startSession()
-	if err != nil {
-		fmt.Println("Failed to start", err)
-		return
-	}
-	fmt.Println("Focus session started")
-}
+// func handleStart() {
+// 	err := startSession()
+// 	if err != nil {
+// 		fmt.Println("Failed to start", err)
+// 		return
+// 	}
+// 	fmt.Println("Focus session started")
+// }
 
 func handleStop() {
 	db, err := connectDB()

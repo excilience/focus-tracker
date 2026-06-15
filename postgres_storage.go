@@ -233,3 +233,61 @@ func createSessionInDB(ctx context.Context, db *sql.DB, session Session) error {
 	}
 	return nil
 }
+
+//active sesions
+
+func createActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession ActiveSession) error {
+	const query = `
+		INSERT INTO active_sessions (
+			id,
+			start_time,
+			last_resume,
+			focused_seconds,
+			is_paused
+		)
+		VALUES (1, $1, $2, $3, $4);
+	`
+
+	_, err := db.ExecContext(
+		ctx,
+		query,
+		activeSession.Start,
+		activeSession.LastResume,
+		activeSession.FocusedSeconds,
+		activeSession.IsPaused,
+	)
+	if err != nil {
+		return fmt.Errorf("create active session: %w", err)
+	}
+
+	return nil
+}
+
+func loadActiveSessionFromDB(ctx context.Context, db *sql.DB) (ActiveSession, error) {
+	const query = `
+		SELECT
+			start_time,
+			last_resume,
+			focused_seconds,
+			is_paused
+		FROM active_sessions
+		WHERE id = 1;
+	`
+	var activeSession ActiveSession
+
+	err := db.QueryRowContext(ctx, query).Scan(
+		&activeSession.Start,
+		&activeSession.LastResume,
+		&activeSession.FocusedSeconds,
+		&activeSession.IsPaused,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return ActiveSession{}, fmt.Errorf("no active session")
+		}
+
+		return ActiveSession{}, fmt.Errorf("load active session: %w", err)
+	}
+
+	return activeSession, nil
+}
