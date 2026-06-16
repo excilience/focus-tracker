@@ -2,13 +2,11 @@ package main
 
 import (
 	"encoding/json"
-	"fmt"
 	"os"
 )
 
 const dataDir = "Data"
 const sessionsFile = dataDir + "/sessions.json"
-const activeSessionFile = dataDir + "/active_session.json"
 
 func ensureDataDir() error {
 	return os.MkdirAll(dataDir, 0755)
@@ -54,38 +52,4 @@ func saveSessions(sessions []Session) error {
 	}
 
 	return os.WriteFile(sessionsFile, jsonData, 0644)
-}
-
-func loadActiveSession() (ActiveSession, error) {
-	data, err := os.ReadFile(activeSessionFile)
-	if err != nil {
-		if os.IsNotExist(err) {
-			return ActiveSession{}, fmt.Errorf("no active sessions")
-		}
-		return ActiveSession{}, err
-	}
-
-	if len(data) == 0 {
-		return ActiveSession{}, fmt.Errorf("active session file is empty")
-	}
-
-	var activeSession ActiveSession
-
-	if err := json.Unmarshal(data, &activeSession); err != nil {
-		return ActiveSession{}, err
-	}
-	return activeSession, nil
-}
-
-func saveActiveSession(activeSession ActiveSession) error {
-	if err := ensureDataDir(); err != nil {
-		return err
-	}
-
-	data, err := json.MarshalIndent(activeSession, "", "\t")
-	if err != nil {
-		return err
-	}
-
-	return os.WriteFile(activeSessionFile, data, 0644)
 }
