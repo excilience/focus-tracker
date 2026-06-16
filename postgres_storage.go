@@ -155,7 +155,7 @@ func getSessionByIDFromDB(ctx context.Context, executor DBExecutor, id string) (
 	return session, nil
 }
 
-func updateSessionDurationInDB(ctx context.Context, executor DBExecutor, id string, duration time.Duration) (Session, error) {
+func updateSessionDuration(ctx context.Context, executor DBExecutor, id string, duration time.Duration) (Session, error) {
 	const query = `
 		UPDATE sessions
 		SET duration_seconds = $1
@@ -186,7 +186,7 @@ func updateSessionDurationInDB(ctx context.Context, executor DBExecutor, id stri
 	return session, nil
 }
 
-func deleteSessionFromDB(ctx context.Context, executor DBExecutor, id string) (Session, error) {
+func deleteSession(ctx context.Context, executor DBExecutor, id string) (Session, error) {
 	const query = `
 		DELETE FROM sessions
 		WHERE id = $1
@@ -216,7 +216,7 @@ func deleteSessionFromDB(ctx context.Context, executor DBExecutor, id string) (S
 	return session, nil
 }
 
-func createSessionInDB(ctx context.Context, executor DBExecutor, session Session) error {
+func createSession(ctx context.Context, executor DBExecutor, session Session) error {
 	const query = `
 		INSERT INTO sessions (
 			id,
@@ -236,7 +236,7 @@ func createSessionInDB(ctx context.Context, executor DBExecutor, session Session
 
 //active sesions
 
-func createActiveSessionInDB(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
+func createActiveSession(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
 	const query = `
 		INSERT INTO active_sessions (
 			id,
@@ -263,7 +263,7 @@ func createActiveSessionInDB(ctx context.Context, executor DBExecutor, activeSes
 	return nil
 }
 
-func loadActiveSessionFromDB(ctx context.Context, executor DBExecutor) (ActiveSession, error) {
+func loadActiveSession(ctx context.Context, executor DBExecutor) (ActiveSession, error) {
 	const query = `
 		SELECT
 			start_time,
@@ -292,7 +292,7 @@ func loadActiveSessionFromDB(ctx context.Context, executor DBExecutor) (ActiveSe
 	return activeSession, nil
 }
 
-func updateActiveSessionInDB(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
+func updateActiveSession(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
 	const query = `
 		UPDATE active_sessions
 		SET

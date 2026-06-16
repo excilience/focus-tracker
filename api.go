@@ -138,7 +138,7 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	activeSession, err := loadActiveSessionFromDB(ctx, db)
+	activeSession, err := loadActiveSession(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]any{
 			"error": err.Error(),
@@ -375,7 +375,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	updatedSession, err := updateSessionDurationInDB(ctx, db, id, duration)
+	updatedSession, err := updateSessionDuration(ctx, db, id, duration)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
@@ -398,7 +398,7 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	deletedSession, err := deleteSessionFromDB(ctx, db, id)
+	deletedSession, err := deleteSession(ctx, db, id)
 	if err != nil {
 		writeJSON(w, http.StatusNotFound, map[string]string{
 			"error": err.Error(),
