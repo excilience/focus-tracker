@@ -46,7 +46,13 @@ func pauseSession(ctx context.Context, db *sql.DB) error {
 
 func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 
-	activeSession, err := loadActiveSessionFromDB(ctx, db)
+	tx, err := db.BeginTx(ctx, nil)
+	if err != nil {
+		return StopSessionResult{}, fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback()
+
+	activeSession, err := loadActiveSessionFromDB(ctx, tx)
 	if err != nil {
 		return StopSessionResult{}, err
 	}
@@ -66,27 +72,25 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 		DurationSeconds: totalSeconds,
 	}
 
-	if totalSeconds < 60 {
-		if err := deleteActiveSessionFromDB(ctx, db); err != nil {
+	saved := totalSeconds >= 60
+
+	if saved {
+		if err := createSessionInDB(ctx, tx, currentSession); err != nil {
 			return StopSessionResult{}, err
 		}
-
-		return StopSessionResult{
-			Session: currentSession,
-			Saved:   false,
-		}, nil
 	}
 
-	if err := createSessionInDB(ctx, db, currentSession); err != nil {
+	if err := deleteActiveSessionFromDB(ctx, tx); err != nil {
 		return StopSessionResult{}, err
 	}
-	if err = deleteActiveSessionFromDB(ctx, db); err != nil {
-		return StopSessionResult{}, err
+
+	if err := tx.Commit(); err != nil {
+		return StopSessionResult{}, fmt.Errorf("commit transaction: %w", err)
 	}
 
 	return StopSessionResult{
 		Session: currentSession,
-		Saved:   true,
+		Saved:   saved,
 	}, nil
 }
 

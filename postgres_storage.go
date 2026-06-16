@@ -126,7 +126,7 @@ func loadSessionsByPeriodFromDB(ctx context.Context, db *sql.DB, from, to time.T
 	return sessions, nil
 }
 
-func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, error) {
+func getSessionByIDFromDB(ctx context.Context, executor DBExecutor, id string) (Session, error) {
 	const query = `
 		SELECT
 			id,
@@ -138,7 +138,7 @@ func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, 
 	`
 
 	var session Session
-	err := db.QueryRowContext(ctx, query, id).Scan(
+	err := executor.QueryRowContext(ctx, query, id).Scan(
 		&session.ID,
 		&session.Start,
 		&session.End,
@@ -155,7 +155,7 @@ func getSessionByIDFromDB(ctx context.Context, db *sql.DB, id string) (Session, 
 	return session, nil
 }
 
-func updateSessionDurationInDB(ctx context.Context, db *sql.DB, id string, duration time.Duration) (Session, error) {
+func updateSessionDurationInDB(ctx context.Context, executor DBExecutor, id string, duration time.Duration) (Session, error) {
 	const query = `
 		UPDATE sessions
 		SET duration_seconds = $1
@@ -168,7 +168,7 @@ func updateSessionDurationInDB(ctx context.Context, db *sql.DB, id string, durat
 	`
 	var session Session
 
-	err := db.QueryRowContext(ctx, query, int(duration.Seconds()), id).Scan(
+	err := executor.QueryRowContext(ctx, query, int(duration.Seconds()), id).Scan(
 		&session.ID,
 		&session.Start,
 		&session.End,
@@ -186,7 +186,7 @@ func updateSessionDurationInDB(ctx context.Context, db *sql.DB, id string, durat
 	return session, nil
 }
 
-func deleteSessionFromDB(ctx context.Context, db *sql.DB, id string) (Session, error) {
+func deleteSessionFromDB(ctx context.Context, executor DBExecutor, id string) (Session, error) {
 	const query = `
 		DELETE FROM sessions
 		WHERE id = $1
@@ -199,7 +199,7 @@ func deleteSessionFromDB(ctx context.Context, db *sql.DB, id string) (Session, e
 
 	var session Session
 
-	err := db.QueryRowContext(ctx, query, id).Scan(
+	err := executor.QueryRowContext(ctx, query, id).Scan(
 		&session.ID,
 		&session.Start,
 		&session.End,
@@ -216,7 +216,7 @@ func deleteSessionFromDB(ctx context.Context, db *sql.DB, id string) (Session, e
 	return session, nil
 }
 
-func createSessionInDB(ctx context.Context, db *sql.DB, session Session) error {
+func createSessionInDB(ctx context.Context, executor DBExecutor, session Session) error {
 	const query = `
 		INSERT INTO sessions (
 			id,
@@ -227,7 +227,7 @@ func createSessionInDB(ctx context.Context, db *sql.DB, session Session) error {
 		VALUES ($1, $2, $3, $4);
 	`
 
-	_, err := db.ExecContext(ctx, query, session.ID, session.Start, session.End, session.DurationSeconds)
+	_, err := executor.ExecContext(ctx, query, session.ID, session.Start, session.End, session.DurationSeconds)
 	if err != nil {
 		return fmt.Errorf("create session: %w", err)
 	}
@@ -236,7 +236,7 @@ func createSessionInDB(ctx context.Context, db *sql.DB, session Session) error {
 
 //active sesions
 
-func createActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession ActiveSession) error {
+func createActiveSessionInDB(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
 	const query = `
 		INSERT INTO active_sessions (
 			id,
@@ -248,7 +248,7 @@ func createActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession Acti
 		VALUES (1, $1, $2, $3, $4);
 	`
 
-	_, err := db.ExecContext(
+	_, err := executor.ExecContext(
 		ctx,
 		query,
 		activeSession.Start,
@@ -263,7 +263,7 @@ func createActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession Acti
 	return nil
 }
 
-func loadActiveSessionFromDB(ctx context.Context, db *sql.DB) (ActiveSession, error) {
+func loadActiveSessionFromDB(ctx context.Context, executor DBExecutor) (ActiveSession, error) {
 	const query = `
 		SELECT
 			start_time,
@@ -275,7 +275,7 @@ func loadActiveSessionFromDB(ctx context.Context, db *sql.DB) (ActiveSession, er
 	`
 	var activeSession ActiveSession
 
-	err := db.QueryRowContext(ctx, query).Scan(
+	err := executor.QueryRowContext(ctx, query).Scan(
 		&activeSession.Start,
 		&activeSession.LastResume,
 		&activeSession.FocusedSeconds,
@@ -292,7 +292,7 @@ func loadActiveSessionFromDB(ctx context.Context, db *sql.DB) (ActiveSession, er
 	return activeSession, nil
 }
 
-func updateActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession ActiveSession) error {
+func updateActiveSessionInDB(ctx context.Context, executor DBExecutor, activeSession ActiveSession) error {
 	const query = `
 		UPDATE active_sessions
 		SET
@@ -303,7 +303,7 @@ func updateActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession Acti
 		WHERE id = 1;
 	`
 
-	result, err := db.ExecContext(
+	result, err := executor.ExecContext(
 		ctx,
 		query,
 		activeSession.Start,
@@ -327,13 +327,13 @@ func updateActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession Acti
 	return nil
 }
 
-func deleteActiveSessionFromDB(ctx context.Context, db *sql.DB) error {
+func deleteActiveSessionFromDB(ctx context.Context, executor DBExecutor) error {
 	const query = `
 		DELETE FROM active_sessions
 		WHERE id = 1;
 	`
 
-	result, err := db.ExecContext(ctx, query)
+	result, err := executor.ExecContext(ctx, query)
 	if err != nil {
 		return fmt.Errorf("delete active session: %w", err)
 	}
