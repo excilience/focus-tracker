@@ -31,8 +31,12 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("POST /sessions/start", func(w http.ResponseWriter, r *http.Request) {
 		startSessionHandler(w, r, db)
 	})
-	mux.HandleFunc("POST /sessions/pause", pauseSessionHandler)
-	mux.HandleFunc("POST /sessions/resume", resumeSessionHandler)
+	mux.HandleFunc("POST /sessions/pause", func(w http.ResponseWriter, r *http.Request) {
+		pauseSessionHandler(w, r, db)
+	})
+	mux.HandleFunc("POST /sessions/resume", func(w http.ResponseWriter, r *http.Request) {
+		resumeSessionHandler(w, r, db)
+	})
 	mux.HandleFunc("POST /sessions/stop", func(w http.ResponseWriter, r *http.Request) {
 		stopSessionHandler(w, r, db, fs.location)
 	})
@@ -69,7 +73,11 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 }
 
 func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, location *time.Location) {
-	result, err := stopSession(db)
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	result, err := stopSession(ctx, db)
 	if err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
@@ -92,8 +100,12 @@ func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, loca
 	})
 }
 
-func pauseSessionHandler(w http.ResponseWriter, _ *http.Request) {
-	if err := pauseSession(); err != nil {
+func pauseSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := pauseSession(ctx, db); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
 		})
@@ -105,8 +117,12 @@ func pauseSessionHandler(w http.ResponseWriter, _ *http.Request) {
 	})
 }
 
-func resumeSessionHandler(w http.ResponseWriter, _ *http.Request) {
-	if err := resumeSession(); err != nil {
+func resumeSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := resumeSession(ctx, db); err != nil {
 		writeJSON(w, http.StatusBadRequest, map[string]string{
 			"error": err.Error(),
 		})

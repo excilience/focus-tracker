@@ -291,3 +291,60 @@ func loadActiveSessionFromDB(ctx context.Context, db *sql.DB) (ActiveSession, er
 
 	return activeSession, nil
 }
+
+func updateActiveSessionInDB(ctx context.Context, db *sql.DB, activeSession ActiveSession) error {
+	const query = `
+		UPDATE active_sessions
+		SET
+			start_time = $1,
+			last_resume = $2,
+			focused_seconds = $3,
+			is_paused = $4
+		WHERE id = 1;
+	`
+
+	result, err := db.ExecContext(
+		ctx,
+		query,
+		activeSession.Start,
+		activeSession.LastResume,
+		activeSession.FocusedSeconds,
+		activeSession.IsPaused,
+	)
+
+	if err != nil {
+		return fmt.Errorf("update active session: %w", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get affected rows: %w", err)
+	}
+
+	if affected == 0 {
+		return fmt.Errorf("no active session")
+	}
+	return nil
+}
+
+func deleteActiveSessionFromDB(ctx context.Context, db *sql.DB) error {
+	const query = `
+		DELETE FROM active_sessions
+		WHERE id = 1;
+	`
+
+	result, err := db.ExecContext(ctx, query)
+	if err != nil {
+		return fmt.Errorf("delete active session: %w", err)
+	}
+
+	affected, err := result.RowsAffected()
+	if err != nil {
+		return fmt.Errorf("get affected rows: %w", err)
+	}
+
+	if affected == 0 {
+		return fmt.Errorf("no active session")
+	}
+	return nil
+}

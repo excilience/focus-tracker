@@ -8,16 +8,24 @@ import (
 	"time"
 )
 
-// func handleStart() {
-// 	err := startSession()
-// 	if err != nil {
-// 		fmt.Println("Failed to start", err)
-// 		return
-// 	}
-// 	fmt.Println("Focus session started")
-// }
+func handleStart(db *sql.DB) {
 
-func handleStop() {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	err := startSession(ctx, db)
+	if err != nil {
+		fmt.Println("Failed to start", err)
+		return
+	}
+	fmt.Println("Focus session started")
+}
+
+func handleStop(db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
 	db, err := connectDB()
 	if err != nil {
 		fmt.Println("Failed to connect to PostgreSQL:", err)
@@ -25,7 +33,7 @@ func handleStop() {
 	}
 	defer db.Close()
 
-	result, err := stopSession(db)
+	result, err := stopSession(ctx, db)
 	if err != nil {
 		fmt.Println("Failed to stop session", err)
 		return
@@ -83,18 +91,24 @@ func handleStats(fs *FocusService, args []string) {
 	fmt.Println("Avg. time spent per day:", formatDuration(int(stats.Avg.Seconds())))
 }
 
-func handlePause() {
-	err := pauseSession()
-	if err != nil {
+func handlePause(db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := pauseSession(ctx, db); err != nil {
 		fmt.Println("Failed to pause session:", err)
 		return
 	}
 	fmt.Println("Focus session paused")
 }
 
-func handleResume() {
-	err := resumeSession()
-	if err != nil {
+func handleResume(db *sql.DB) {
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := resumeSession(ctx, db); err != nil {
 		fmt.Println("Failed to resume session:", err)
 		return
 	}
