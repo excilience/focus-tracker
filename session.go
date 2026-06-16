@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"time"
 )
 
@@ -25,8 +24,8 @@ func startSession(ctx context.Context, db *sql.DB) error {
 	return nil
 }
 
-func pauseSession() error {
-	activeSession, err := loadActiveSession()
+func pauseSession(ctx context.Context, db *sql.DB) error {
+	activeSession, err := loadActiveSessionFromDB(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -42,11 +41,12 @@ func pauseSession() error {
 
 	activeSession.IsPaused = true
 
-	return saveActiveSession(activeSession)
+	return updateActiveSessionInDB(ctx, db, activeSession)
 }
 
-func stopSession(db *sql.DB) (StopSessionResult, error) {
-	activeSession, err := loadActiveSession()
+func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
+
+	activeSession, err := loadActiveSessionFromDB(ctx, db)
 	if err != nil {
 		return StopSessionResult{}, err
 	}
@@ -67,7 +67,7 @@ func stopSession(db *sql.DB) (StopSessionResult, error) {
 	}
 
 	if totalSeconds < 60 {
-		if err := os.Remove(activeSessionFile); err != nil {
+		if err := deleteActiveSessionFromDB(ctx, db); err != nil {
 			return StopSessionResult{}, err
 		}
 
@@ -77,13 +77,10 @@ func stopSession(db *sql.DB) (StopSessionResult, error) {
 		}, nil
 	}
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
-	defer cancel()
-
 	if err := createSessionInDB(ctx, db, currentSession); err != nil {
 		return StopSessionResult{}, err
 	}
-	if err = os.Remove(activeSessionFile); err != nil {
+	if err = deleteActiveSessionFromDB(ctx, db); err != nil {
 		return StopSessionResult{}, err
 	}
 
@@ -93,8 +90,8 @@ func stopSession(db *sql.DB) (StopSessionResult, error) {
 	}, nil
 }
 
-func resumeSession() error {
-	activeSession, err := loadActiveSession()
+func resumeSession(ctx context.Context, db *sql.DB) error {
+	activeSession, err := loadActiveSessionFromDB(ctx, db)
 	if err != nil {
 		return err
 	}
@@ -106,7 +103,7 @@ func resumeSession() error {
 	activeSession.LastResume = time.Now()
 	activeSession.IsPaused = false
 
-	return saveActiveSession(activeSession)
+	return updateActiveSessionInDB(ctx, db, activeSession)
 }
 
 func saveSession(newSession Session) error {

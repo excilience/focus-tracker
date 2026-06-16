@@ -19,22 +19,29 @@ func main() {
 		return
 	}
 
+	db, err := connectDB()
+	if err != nil {
+		fmt.Println("Failed to connect to PostgreSQL:", err)
+		return
+	}
+	defer db.Close()
+
 	if len(os.Args) < 2 {
 		printUsage()
 		return
 	}
 	switch os.Args[1] {
 	case "start":
-		handleStart()
+		handleStart(db)
 
 	case "pause":
-		handlePause()
+		handlePause(db)
 
 	case "stop":
-		handleStop()
+		handleStop(db)
 
 	case "resume":
-		handleResume()
+		handleResume(db)
 
 	case "stats":
 		handleStats(focusService, os.Args)
