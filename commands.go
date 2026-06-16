@@ -203,7 +203,11 @@ func handleServe(fs *FocusService) {
 	}
 }
 func connectDB() (*sql.DB, error) {
-	dsn := "postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable"
+
+	dsn := os.Getenv("DATABASE_URL")
+	if dsn == "" {
+		return nil, fmt.Errorf("DATABASE_URL is not set")
+	}
 
 	db, err := openDatabase(dsn)
 	if err != nil {
