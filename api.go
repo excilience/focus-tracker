@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
@@ -61,9 +62,16 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := startSession(ctx, db); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrSessionAlreadyActive):
+			writeJSON(w, http.StatusConflict, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to start session",
+			})
+		}
 		return
 	}
 
@@ -79,9 +87,17 @@ func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, loca
 
 	result, err := stopSession(ctx, db)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrNoActiveSession):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to stop session",
+			})
+		}
+
 		return
 	}
 
@@ -106,9 +122,21 @@ func pauseSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := pauseSession(ctx, db); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrNoActiveSession):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+
+		case errors.Is(err, ErrSessionAlreadyPaused):
+			writeJSON(w, http.StatusConflict, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to pause session",
+			})
+		}
 		return
 	}
 
@@ -123,9 +151,21 @@ func resumeSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := resumeSession(ctx, db); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrNoActiveSession):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		case errors.Is(err, ErrSessionAlreadyRunning):
+			writeJSON(w, http.StatusConflict, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to resume session",
+			})
+		}
+
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{
@@ -140,9 +180,16 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 
 	activeSession, err := loadActiveSession(ctx, db)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]any{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrNoActiveSession):
+			writeJSON(w, http.StatusNotFound, map[string]any{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to load active session",
+			})
+		}
 		return
 	}
 	focusedSeconds := activeSession.FocusedSeconds
@@ -377,9 +424,17 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 
 	updatedSession, err := updateSessionDuration(ctx, db, id, duration)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrSessionNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to update session",
+			})
+		}
+
 		return
 	}
 
@@ -400,9 +455,16 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 
 	deletedSession, err := deleteSession(ctx, db, id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrSessionNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to delete session",
+			})
+		}
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -461,9 +523,16 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, l
 
 	session, err := getSessionByIDFromDB(ctx, db, id)
 	if err != nil {
-		writeJSON(w, http.StatusNotFound, map[string]string{
-			"error": err.Error(),
-		})
+		switch {
+		case errors.Is(err, ErrSessionNotFound):
+			writeJSON(w, http.StatusNotFound, map[string]string{
+				"error": err.Error(),
+			})
+		default:
+			writeJSON(w, http.StatusInternalServerError, map[string]string{
+				"error": "failed to get session",
+			})
+		}
 		return
 	}
 
