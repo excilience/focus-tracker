@@ -146,7 +146,7 @@ func getSessionByIDFromDB(ctx context.Context, executor DBExecutor, id string) (
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Session{}, fmt.Errorf("session not found")
+			return Session{}, ErrSessionNotFound
 		}
 
 		return Session{}, fmt.Errorf("query sessions by id: %w", err)
@@ -177,7 +177,7 @@ func updateSessionDuration(ctx context.Context, executor DBExecutor, id string, 
 
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Session{}, fmt.Errorf("session not found")
+			return Session{}, ErrSessionNotFound
 		}
 
 		return Session{}, fmt.Errorf("update session duration: %w", err)
@@ -207,7 +207,7 @@ func deleteSession(ctx context.Context, executor DBExecutor, id string) (Session
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return Session{}, fmt.Errorf("session not found")
+			return Session{}, ErrSessionNotFound
 		}
 
 		return Session{}, fmt.Errorf("delete session: %w", err)
@@ -283,7 +283,7 @@ func loadActiveSession(ctx context.Context, executor DBExecutor) (ActiveSession,
 	)
 	if err != nil {
 		if errors.Is(err, sql.ErrNoRows) {
-			return ActiveSession{}, fmt.Errorf("no active session")
+			return ActiveSession{}, ErrNoActiveSession
 		}
 
 		return ActiveSession{}, fmt.Errorf("load active session: %w", err)
