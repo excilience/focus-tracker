@@ -15,7 +15,7 @@ func cleanTestDB(t *testing.T, db *sql.DB) {
 
 	ctx := context.Background()
 
-	_, err := db.ExecContext(ctx, `DELETE FROM active_sesions`)
+	_, err := db.ExecContext(ctx, `DELETE FROM active_sessions`)
 	if err != nil {
 		t.Fatalf("clean active_sessions: %v", err)
 	}
