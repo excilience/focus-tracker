@@ -58,7 +58,7 @@ func main() {
 	case "help", "--help", "-h":
 		printUsage()
 
-	case "serve":
+	case "api":
 		handleServe(focusService)
 
 	case "db-import":
