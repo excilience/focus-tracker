@@ -21,11 +21,11 @@ func printUsage() {
 
 func printStatsUsage() {
 	fmt.Println("Usage:")
-	fmt.Println("	go run . stats")
 	fmt.Println("	go run . stats day")
 	fmt.Println("	go run . stats week")
 	fmt.Println("	go run . month")
 	fmt.Println("	go run . year")
+	fmt.Println("	go run . total")
 }
 
 func printEditUsage() {

@@ -50,7 +50,7 @@ func main() {
 		handleGoal(focusService, db)
 
 	case "history":
-		handleHistory(focusService, db)
+		handleHistory(db)
 
 	case "edit":
 		handleEdit(db, os.Args)
