@@ -62,7 +62,7 @@ func handleStats(fs *FocusService, args []string, db *sql.DB) {
 		return
 	}
 
-	if len(os.Args) < 3 {
+	if len(args) < 3 {
 		printStatsUsage()
 		return
 	}
@@ -146,7 +146,7 @@ func handleGoal(fs *FocusService, db *sql.DB) {
 	}
 }
 
-func handleHistory(fs *FocusService, db *sql.DB) {
+func handleHistory(db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -172,13 +172,13 @@ func handleHistory(fs *FocusService, db *sql.DB) {
 }
 
 func handleEdit(db *sql.DB, args []string) {
-	if len(os.Args) < 4 {
+	if len(args) < 4 {
 		printEditUsage()
 		return
 	}
 
-	id := os.Args[2]
-	durationText := os.Args[3]
+	id := args[2]
+	durationText := args[3]
 
 	duration, err := time.ParseDuration(durationText)
 	if err != nil {
