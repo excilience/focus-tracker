@@ -110,67 +110,6 @@ func resumeSession(ctx context.Context, db *sql.DB) error {
 	return updateActiveSession(ctx, db, activeSession)
 }
 
-func saveSession(newSession Session) error {
-	allSessions, err := loadSessions()
-	if err != nil {
-		return err
-	}
-
-	allSessions = append(allSessions, newSession)
-
-	return saveSessions(allSessions)
-}
-
-func editSessionDuration(id string, newDuration time.Duration) (Session, error) {
-	if newDuration < 0 {
-		return Session{}, fmt.Errorf("duration can't be less than 0")
-	}
-
-	sessions, err := loadSessions()
-	if err != nil {
-		return Session{}, err
-	}
-
-	for i, session := range sessions {
-		if session.ID == id {
-			sessions[i].DurationSeconds = int(newDuration.Seconds())
-
-			if err := saveSessions(sessions); err != nil {
-				return Session{}, err
-			}
-
-			return sessions[i], nil
-		}
-	}
-
-	return Session{}, fmt.Errorf("session not found")
-}
-
-func deleteSessionByID(id string) (Session, error) {
-	sessions, err := loadSessions()
-	if err != nil {
-		return Session{}, err
-	}
-
-	for i, session := range sessions {
-		if session.ID == id {
-
-			sessions = append(sessions[:i], sessions[i+1:]...)
-
-			if err := saveSessions(sessions); err != nil {
-				return Session{}, err
-			}
-
-			return session, nil
-		}
-	}
-	return Session{}, fmt.Errorf("session with ID %q not found", id)
-}
-
-func newSessionID(start time.Time) string {
-	return start.Format("20060102-150405")
-}
-
 func getTotalFocusTimeAll(sessions []Session) int {
 	total := 0
 	for _, session := range sessions {
