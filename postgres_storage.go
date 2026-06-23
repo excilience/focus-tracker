@@ -8,6 +8,9 @@ import (
 	"time"
 )
 
+func newSessionID(start time.Time) string {
+	return start.Format("20060102-150405")
+}
 func insertSession(ctx context.Context, db *sql.DB, session Session) error {
 	const query = `
 		INSERT INTO sessions (

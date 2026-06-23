@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"os"
 	"time"
@@ -46,8 +47,11 @@ func handleStop(db *sql.DB) {
 	}
 }
 
-func handleStats(fs *FocusService, args []string) {
-	sessions, err := loadSessions()
+func handleStats(fs *FocusService, args []string, db *sql.DB) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		fmt.Println("Failed to load sessions:", err)
 		return
@@ -115,8 +119,11 @@ func handleResume(db *sql.DB) {
 	fmt.Println("Focus session resumed")
 }
 
-func handleGoal(fs *FocusService) {
-	sessions, err := loadSessions()
+func handleGoal(fs *FocusService, db *sql.DB) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		fmt.Println("Failed to load sessions:", err)
 		return
@@ -139,8 +146,11 @@ func handleGoal(fs *FocusService) {
 	}
 }
 
-func handleHistory() {
-	sessions, err := loadSessions()
+func handleHistory(fs *FocusService, db *sql.DB) {
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
 		fmt.Println("Failed to load sessions:", err)
 		return
@@ -161,7 +171,7 @@ func handleHistory() {
 	}
 }
 
-func handleEdit(args []string) {
+func handleEdit(db *sql.DB, args []string) {
 	if len(os.Args) < 4 {
 		printEditUsage()
 		return
@@ -176,9 +186,17 @@ func handleEdit(args []string) {
 		return
 	}
 
-	updatedSession, err := editSessionDuration(id, duration)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	updatedSession, err := updateSessionDuration(ctx, db, id, duration)
 	if err != nil {
-		fmt.Println("Failed to edit session:", err)
+		switch {
+		case errors.Is(err, ErrSessionNotFound):
+			fmt.Println("Session not found:", id)
+		default:
+			fmt.Println("Failed to edit session:", err)
+		}
 		return
 	}
 
@@ -215,34 +233,6 @@ func connectDB() (*sql.DB, error) {
 	}
 
 	return db, nil
-}
-
-func dbImport() {
-	db, err := connectDB()
-	if err != nil {
-		fmt.Println("Failed to connect to PostgreSQL:", err)
-		return
-	}
-	defer db.Close()
-
-	fmt.Println("Connected to PostgreSQL")
-
-	sessions, err := loadSessions()
-	if err != nil {
-		fmt.Println("Failed to load sessions:", err)
-		return
-	}
-
-	ctx, cancel := context.WithTimeout(context.Background(), 10*time.Second)
-	defer cancel()
-
-	if err := importSessions(ctx, db, sessions); err != nil {
-		fmt.Println("Failed to import sessions", err)
-		return
-
-	}
-
-	fmt.Printf("Processed %d sessions for PostgreSQL import\n", len(sessions))
 }
 
 func dbList() {

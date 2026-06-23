@@ -493,22 +493,6 @@ func toSessionResponses(sessions []Session, location *time.Location) []SessionRe
 	return response
 }
 
-func getSessionByID(id string) (Session, error) {
-	sessions, err := loadSessions()
-	if err != nil {
-		return Session{}, err
-	}
-
-	for _, session := range sessions {
-		if session.ID == id {
-			return session, nil
-		}
-	}
-
-	return Session{}, fmt.Errorf("session not found")
-
-}
-
 func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
