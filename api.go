@@ -64,13 +64,9 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if err := startSession(ctx, db); err != nil {
 		switch {
 		case errors.Is(err, ErrSessionAlreadyActive):
-			writeJSON(w, http.StatusConflict, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyActive, err.Error())
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to start session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to start session")
 		}
 		return
 	}
@@ -89,13 +85,9 @@ func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, loca
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNoActiveSession):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to stop session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to stop session")
 		}
 
 		return
@@ -124,18 +116,12 @@ func pauseSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if err := pauseSession(ctx, db); err != nil {
 		switch {
 		case errors.Is(err, ErrNoActiveSession):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
 
 		case errors.Is(err, ErrSessionAlreadyPaused):
-			writeJSON(w, http.StatusConflict, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyPaused, err.Error())
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to pause session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to pause session")
 		}
 		return
 	}
@@ -153,17 +139,13 @@ func resumeSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	if err := resumeSession(ctx, db); err != nil {
 		switch {
 		case errors.Is(err, ErrNoActiveSession):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
+
 		case errors.Is(err, ErrSessionAlreadyRunning):
-			writeJSON(w, http.StatusConflict, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyRunning, err.Error())
+
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to resume session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to resume session")
 		}
 
 		return
@@ -182,13 +164,10 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrNoActiveSession):
-			writeJSON(w, http.StatusNotFound, map[string]any{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
+
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to load active session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load active session")
 		}
 		return
 	}
@@ -220,9 +199,7 @@ func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, d
 
 	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "failed to load sessions",
-		})
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
 		return
 	}
 
@@ -233,9 +210,7 @@ func getStatsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, d
 
 	stats, err := fs.StatsForCommand(sessions, period, time.Now())
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": err.Error(),
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, err.Error())
 		return
 	}
 
@@ -259,9 +234,7 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 	if fromText == "" && toText == "" {
 		sessions, err := loadSessionsFromDB(ctx, db)
 		if err != nil {
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to load sessions",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
 			return
 		}
 		writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs.location))
@@ -269,26 +242,23 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 	}
 
 	if fromText == "" || toText == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error":   "both 'from' and 'to' are required",
-			"example": "/sessions?from=YYYY-MM-DD&to=YYYY-MM-DD",
-		})
+		writeAPIErrorWithDetails(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "both 'from' and 'to' are required",
+			map[string]any{
+				"example": "/sessions?from=YYYY-MM-DD&to=YYYY-MM-DD",
+			},
+		)
 		return
 	}
 
 	fromDate, err := time.ParseInLocation(dateLayout, fromText, fs.location)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "invalid from date, expected YYYY-MM-DD",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid from date, expected YYYY-MM-DD")
 		return
 	}
 
 	toDate, err := time.ParseInLocation(dateLayout, toText, fs.location)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "invalid to date, expected YYYY-MM-DD",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid to date, expected YYYY-MM-DD")
 		return
 	}
 
@@ -296,17 +266,13 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 	to := fs.StartOfFocusDayFromDate(toDate).AddDate(0, 0, 1)
 
 	if !to.After(from) {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "'to' date must be the same as or later than 'from' date",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "'to' date must be the same as or later than 'from' date")
 		return
 	}
 
 	sessions, err := loadSessionsByPeriodFromDB(ctx, db, from, to)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "failed to load sessions by period",
-		})
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions by period")
 		return
 	}
 
@@ -354,9 +320,7 @@ func getGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db
 
 	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
-		writeJSON(w, http.StatusInternalServerError, map[string]string{
-			"error": "failed to load sessions",
-		})
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
 		return
 	}
 
@@ -389,33 +353,25 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "session id is required",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
 		return
 	}
 
 	var request updateSessionRequest
 
 	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "invalid JSON body",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
 		return
 	}
 
 	if request.Duration == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "duration is required",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "duration is required")
 		return
 	}
 
 	duration, err := time.ParseDuration(request.Duration)
 	if err != nil {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "invalid duration format",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid duration format")
 		return
 	}
 
@@ -426,15 +382,11 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrSessionNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
-		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to update session",
-			})
-		}
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
 
+		default:
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to updatge session")
+		}
 		return
 	}
 
@@ -444,9 +396,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "session id is required",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
 		return
 	}
 
@@ -457,13 +407,10 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrSessionNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
+
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to delete session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "faield to delete session")
 		}
 		return
 	}
@@ -496,9 +443,7 @@ func toSessionResponses(sessions []Session, location *time.Location) []SessionRe
 func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 	id := r.PathValue("id")
 	if id == "" {
-		writeJSON(w, http.StatusBadRequest, map[string]string{
-			"error": "session id is required",
-		})
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
 		return
 	}
 
@@ -509,13 +454,10 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, l
 	if err != nil {
 		switch {
 		case errors.Is(err, ErrSessionNotFound):
-			writeJSON(w, http.StatusNotFound, map[string]string{
-				"error": err.Error(),
-			})
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
+
 		default:
-			writeJSON(w, http.StatusInternalServerError, map[string]string{
-				"error": "failed to get session",
-			})
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to get session")
 		}
 		return
 	}
