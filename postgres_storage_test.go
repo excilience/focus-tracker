@@ -3,9 +3,13 @@ package main
 import (
 	"context"
 	"database/sql"
+	"encoding/json"
 	"errors"
+	"net/http"
+	"net/http/httptest"
 	"os"
 	"reflect"
+	"strings"
 	"testing"
 	"time"
 )
@@ -256,5 +260,103 @@ func TestLoadSessionsByPeriodFromDB(t *testing.T) {
 
 	if !reflect.DeepEqual(gotIDs, expectedIDs) {
 		t.Errorf("IDs = %v; expected %v", gotIDs, expectedIDs)
+	}
+}
+
+func TestUpdateSessionHandlerInvalidDurationResponse(t *testing.T) {
+	location := time.FixedZone("UTC+3", 3*60*60)
+
+	body := strings.NewReader(`{
+		"duration": "wrong-duration"
+	}`)
+
+	req := httptest.NewRequest(
+		http.MethodPatch,
+		"/sessions/test-id",
+		body,
+	)
+	req.SetPathValue("id", "test-id")
+
+	rr := httptest.NewRecorder()
+
+	updateSessionHandler(
+		rr,
+		req,
+		nil,
+		location,
+	)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf(
+			"status = %d; expected %d",
+			rr.Code,
+			http.StatusBadRequest,
+		)
+	}
+
+	var response APIErrorResponse
+
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	if err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if response.Error.Code != ErrorCodeInvalidRequest {
+		t.Errorf(
+			"error code = %q; expected %q",
+			response.Error.Code,
+			ErrorCodeInvalidRequest,
+		)
+	}
+
+	if response.Error.Message != "invalid duration format" {
+		t.Errorf(
+			"error message = %q; expected %q",
+			response.Error.Message,
+			"invalid duration format",
+		)
+	}
+}
+
+func TestGetSessionsHandlerMissingDateRangeResponse(t *testing.T) {
+	location := time.FixedZone("UTC+3", 3*60*60)
+
+	fs := &FocusService{
+		settings: Settings{
+			DayStartHour: 4,
+		},
+		location: location,
+	}
+
+	req := httptest.NewRequest(http.MethodGet, "/sessions?from=2026-06-01", nil)
+
+	rr := httptest.NewRecorder()
+
+	getSessionsHandler(rr, req, fs, nil)
+
+	if rr.Code != http.StatusBadRequest {
+		t.Fatalf("status = %d; expected %d", rr.Code, http.ErrBodyReadAfterClose)
+	}
+
+	var response APIErrorResponse
+
+	err := json.NewDecoder(rr.Body).Decode(&response)
+	if err != nil {
+		t.Fatalf("decode response: %v", err)
+	}
+
+	if response.Error.Code != ErrorCodeInvalidRequest {
+		t.Errorf("error code = %q; expected %q", response.Error.Code, ErrorCodeInvalidRequest)
+	}
+
+	example, ok := response.Error.Details["example"].(string)
+	if !ok {
+		t.Fatalf("expected details.example to be a string")
+	}
+
+	expectedExample := "/sessions?from=YYYY-MM-DD&to=YYYY-MM-DD"
+
+	if example != expectedExample {
+		t.Errorf("details.example = %q; expected %q", example, expectedExample)
 	}
 }
