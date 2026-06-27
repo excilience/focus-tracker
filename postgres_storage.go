@@ -325,7 +325,7 @@ func updateActiveSession(ctx context.Context, executor DBExecutor, activeSession
 	}
 
 	if affected == 0 {
-		return fmt.Errorf("no active session")
+		return ErrNoActiveSession
 	}
 	return nil
 }
@@ -347,7 +347,7 @@ func deleteActiveSessionFromDB(ctx context.Context, executor DBExecutor) error {
 	}
 
 	if affected == 0 {
-		return fmt.Errorf("no active session")
+		return ErrNoActiveSession
 	}
 	return nil
 }
