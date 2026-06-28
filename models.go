@@ -1,6 +1,7 @@
 package main
 
 import (
+	"net/http"
 	"time"
 )
 
@@ -102,4 +103,9 @@ type SessionResponse struct {
 	End             string `json:"end"`
 	DurationSeconds int    `json:"duration_seconds"`
 	DurationHuman   string `json:"duration_human"`
+}
+
+type statusRecorder struct {
+	http.ResponseWriter
+	status int
 }

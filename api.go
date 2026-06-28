@@ -52,7 +52,33 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 
 	fmt.Println("API server started on http://localhost" + addr)
 
-	return http.ListenAndServe(addr, mux)
+	return http.ListenAndServe(addr, loggingMiddleware(mux))
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		recorder := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+
+		next.ServeHTTP(recorder, r)
+
+		fmt.Printf(
+			"%s %s %d %s\n",
+			r.Method,
+			r.URL.RequestURI(),
+			recorder.status,
+			time.Since(start),
+		)
+	})
 }
 
 func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
