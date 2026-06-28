@@ -4,9 +4,13 @@ import (
 	"context"
 	"database/sql"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"math"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -50,9 +54,44 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 
 	addr := ":8080"
 
-	fmt.Println("API server started on http://localhost" + addr)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: loggingMiddleware(mux),
+	}
+	serverErr := make(chan error, 1)
 
-	return http.ListenAndServe(addr, loggingMiddleware(mux))
+	go func() {
+		fmt.Println("API server started on http://localhost" + addr)
+
+		if err := server.ListenAndServe(); err != nil &&
+			!errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+			return
+		}
+
+		serverErr <- nil
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(stop)
+
+	select {
+	case <-stop:
+		fmt.Println("\nShutting down API server...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("shutdown server: %w", err)
+		}
+
+		return nil
+
+	case err := <-serverErr:
+		return err
+	}
 }
 
 func (r *statusRecorder) WriteHeader(status int) {
