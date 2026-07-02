@@ -87,7 +87,7 @@ type ActiveSession struct {
 
 type ActiveSessionResponse struct {
 	Start          string `json:"start"`
-	LastResume     string `json:"last_resume"`
+	LastResume     string `json:"last_resume,omitempty"`
 	FocusedSeconds int    `json:"focused_seconds"`
 	FocusedHuman   string `json:"focused_human"`
 	IsPaused       bool   `json:"is_paused"`

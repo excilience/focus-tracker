@@ -1,0 +1,195 @@
+import { useEffect, useState } from "react";
+import {
+  getActiveSession,
+  getHealth,
+  pauseSession,
+  resumeSession,
+  startSession,
+  stopSession,
+  type ActiveSession,
+} from "./api";
+import "./App.css";
+
+function formatSeconds(totalSeconds: number): string {
+  const hours = Math.floor(totalSeconds / 3600);
+  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const seconds = totalSeconds % 60;
+
+  if (hours > 0) {
+    return `${hours}h ${minutes}m ${seconds}s`;
+  }
+
+  if (minutes > 0) {
+    return `${minutes}m ${seconds}s`;
+  }
+
+  return `${seconds}s`;
+}
+
+
+
+function App() {
+  const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "error">("checking");
+  const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
+  const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
+
+  async function refresh() {
+    setError("");
+
+    try {
+      await getHealth();
+      setApiStatus("ok");
+    } catch {
+      setApiStatus("error");
+      setActiveSession(null);
+      setActiveSessionSyncedAt(null);
+      setLiveFocusedSeconds(0);
+      return;
+    }
+
+    const session = await getActiveSession();
+    setActiveSession(session);
+    setActiveSessionSyncedAt(session ? Date.now() : null);
+    setLiveFocusedSeconds(session?.focused_seconds ?? 0);
+  }
+
+  async function runAction(action: () => Promise<unknown>) {
+    setLoading(true);
+    setError("");
+
+    try {
+      await action();
+      await refresh();
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Unknown error");
+    } finally {
+      setLoading(false);
+    }
+  }
+
+  useEffect(() => {
+    if (!activeSession) {
+      setLiveFocusedSeconds(0);
+      return;
+    }
+
+    if (activeSession.is_paused) {
+      setLiveFocusedSeconds(activeSession.focused_seconds);
+      return;
+    }
+
+    if (activeSessionSyncedAt === null) {
+      setLiveFocusedSeconds(activeSession.focused_seconds);
+      return;
+    }
+
+    const updateLiveSeconds = () => {
+      const secondsSinceSync = Math.floor((Date.now() - activeSessionSyncedAt) / 1000);
+      setLiveFocusedSeconds(activeSession.focused_seconds + Math.max(0, secondsSinceSync));
+    };
+
+    updateLiveSeconds();
+
+    const intervalID = window.setInterval(updateLiveSeconds, 1000);
+
+    return () => {
+      window.clearInterval(intervalID);
+    };
+  }, [activeSession, activeSessionSyncedAt]);
+
+  const hasActiveSession = activeSession !== null;
+  const isPaused = activeSession?.is_paused ?? false;
+
+  return (
+    <main className="page">
+      <section className="card">
+        <p className="eyebrow">Focus Tracker</p>
+        <h1>Dashboard</h1>
+
+        <div className="statusGrid">
+          <div>
+            <span className="label">API</span>
+            <strong className={apiStatus === "ok" ? "good" : "bad"}>
+              {apiStatus}
+            </strong>
+          </div>
+
+          <div>
+            <span className="label">Active session</span>
+            <strong>{hasActiveSession ? "yes" : "no"}</strong>
+          </div>
+
+          <div>
+            <span className="label">State</span>
+            <strong>
+              {!hasActiveSession ? "idle" : isPaused ? "paused" : "running"}
+            </strong>
+          </div>
+        </div>
+
+        {activeSession ? (
+          <div className="sessionBox">
+            <div>
+              <span className="label">Started</span>
+              <strong>{activeSession.start}</strong>
+            </div>
+
+            <div>
+              <span className="label">Focused</span>
+              <strong>{formatSeconds(liveFocusedSeconds)}</strong>
+            </div>
+
+            <div>
+              <span className="label">Focused seconds</span>
+              <strong>{liveFocusedSeconds}</strong>
+            </div>
+          </div>
+        ) : (
+          <p className="emptyState">No active focus session yet.</p>
+        )}
+
+        {error && <p className="error">{error}</p>}
+
+        <div className="buttons">
+          <button
+            onClick={() => runAction(startSession)}
+            disabled={loading || hasActiveSession}
+          >
+            Start
+          </button>
+
+          <button
+            onClick={() => runAction(pauseSession)}
+            disabled={loading || !hasActiveSession || isPaused}
+          >
+            Pause
+          </button>
+
+          <button
+            onClick={() => runAction(resumeSession)}
+            disabled={loading || !hasActiveSession || !isPaused}
+          >
+            Resume
+          </button>
+
+          <button
+            className="danger"
+            onClick={() => runAction(stopSession)}
+            disabled={loading || !hasActiveSession}
+          >
+            Stop
+          </button>
+        </div>
+
+        <button className="secondary" onClick={refresh} disabled={loading}>
+          Refresh
+        </button>
+      </section>
+    </main>
+  );
+}
+
+export default App;

@@ -26,3 +26,6 @@ test:
 
 run-api:
 	DATABASE_URL="$(DB_URL)" go run . api
+
+run-dev:
+	cd ui && npm run dev
