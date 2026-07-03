@@ -28,9 +28,19 @@ export type Session = {
     id: string;
     start: string;
     end: string;
+    focus_day: string;
     duration_seconds: number;
     duration_human: string;
 };
+
+
+export function getSessions(from: string, to: string): Promise<Session[]> {
+    return request<Session[]>(`/sessions?from=${from}&to=${to}`);
+}
+
+export function getAllSessions(): Promise<Session[]> {
+    return request<Session[]>("/sessions");
+}
 
 export type StopSessionResponse = {
     message: string;

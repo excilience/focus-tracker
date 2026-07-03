@@ -2,16 +2,32 @@
   font-family:
     Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
     sans-serif;
-  color: #172033;
-  background: #232424;
+  color: #f8fafc;
+  background: #050712;
 }
 
 * {
   box-sizing: border-box;
 }
 
-body {
+html,
+body,
+#root {
+  width: 100%;
+  min-width: 320px;
+  min-height: 100vh;
   margin: 0;
+  padding: 0;
+}
+
+body {
+  background: #050712;
+}
+
+/* ВАЖНО: убираем стандартное vite-сжатие */
+#root {
+  max-width: none;
+  text-align: initial;
 }
 
 button {
@@ -29,33 +45,77 @@ button:disabled {
   opacity: 0.45;
 }
 
+/* Page */
+
 .page {
+  width: 100%;
   min-height: 100vh;
-  display: grid;
-  place-items: center;
   padding: 32px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
+
+/* Tabs */
+
+.tabs {
+  display: flex;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 36px;
+}
+
+.tab {
+  background: #374151;
+  color: #d1d5db;
+}
+
+.activeTab {
+  background: #2563eb;
+  color: white;
+}
+
+/* Base card */
 
 .card {
   width: min(760px, 100%);
   padding: 36px;
   border-radius: 28px;
-  background: rgb(33, 33, 33);
-  box-shadow: 0 24px 80px rgba(15, 23, 42, 0.12);
+  background: #11131d;
+  box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
+}
+
+/* History should not be a small card */
+
+.historyCard {
+  width: 100%;
+  max-width: 1800px;
+  margin: 0 auto;
+
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  box-shadow: none;
 }
 
 .eyebrow {
   margin: 0 0 8px;
-  color: #124dcc;
+  color: #60a5fa;
   font-weight: 800;
   letter-spacing: 0.08em;
   text-transform: uppercase;
+  text-align: center;
 }
 
 h1 {
-  margin: 0 0 28px;
+  margin: 0 0 32px;
   font-size: 44px;
+  color: #f8fafc;
+  text-align: center;
 }
+
+/* Dashboard */
 
 .statusGrid {
   display: grid;
@@ -69,7 +129,8 @@ h1 {
 .emptyState {
   padding: 18px;
   border-radius: 18px;
-  background: #d6d8d6ea;
+  background: #171923;
+  color: #e5e7eb;
 }
 
 .sessionBox {
@@ -82,22 +143,23 @@ h1 {
 .label {
   display: block;
   margin-bottom: 6px;
-  color: #64748b;
+  color: #94a3b8;
   font-size: 14px;
   font-weight: 700;
 }
 
 .good {
-  color: #16a34a;
+  color: #22c55e;
 }
 
 .bad,
 .error {
-  color: #dc2626;
+  color: #f87171;
 }
 
 .emptyState {
-  color: #64748b;
+  color: #94a3b8;
+  text-align: center;
 }
 
 .buttons {
@@ -116,13 +178,107 @@ h1 {
   background: #210480;
 }
 
-@media (max-width: 640px) {
+/* Quick History */
+
+.quickWeeks {
+  width: 100%;
+  display: grid;
+  gap: 64px;
+}
+
+.quickWeek {
+  width: 100%;
+  padding-top: 32px;
+  border-top: 1px solid rgba(148, 163, 184, 0.18);
+}
+
+.quickWeek:first-child {
+  padding-top: 0;
+  border-top: 0;
+}
+
+.quickWeek h2 {
+  margin: 0 0 28px;
+  font-size: 30px;
+  text-align: center;
+  color: #f8fafc;
+}
+
+.weekTotal {
+  color: #bfdbfe;
+  font-weight: 800;
+}
+
+/* На большом экране всегда 7 дней в ряд */
+.quickDaysGrid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 18px;
+}
+
+.quickDayCell {
+  min-width: 0;
+  min-height: 118px;
+  padding: 18px 14px;
+  border-radius: 16px;
+
+  background: #151722;
+  border: 1px solid rgba(148, 163, 184, 0.1);
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  text-align: center;
+}
+
+.quickDayDate {
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 900;
+  line-height: 1.25;
+
+  white-space: normal;
+  overflow: visible;
+  text-overflow: unset;
+}
+
+.quickDayDash {
+  color: #64748b;
+  font-size: 22px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.quickDayTotal {
+  color: #f8fafc;
+  font-size: 17px;
+  font-weight: 900;
+  white-space: nowrap;
+}
+
+/* Responsive */
+
+@media (max-width: 1200px) {
+  .quickDaysGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 760px) {
+  .page {
+    padding: 24px 16px;
+  }
+
   .card {
     padding: 24px;
   }
 
   h1 {
-    font-size: 34px;
+    font-size: 36px;
   }
 
   .statusGrid,
@@ -132,5 +288,49 @@ h1 {
 
   .buttons {
     flex-direction: column;
+  }
+
+  .quickWeeks {
+    gap: 44px;
+  }
+
+  .quickWeek h2 {
+    font-size: 24px;
+  }
+
+  .quickDaysGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .quickDayCell {
+    min-height: 100px;
+    padding: 16px 12px;
+  }
+
+  .quickDayDate {
+    font-size: 14px;
+  }
+
+  .quickDayTotal {
+    font-size: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .page {
+    padding: 20px 12px;
+  }
+
+  .tabs {
+    width: 100%;
+  }
+
+  .tab {
+    flex: 1;
+  }
+
+  .quickDaysGrid {
+    grid-template-columns: 1fr;
   }
 }

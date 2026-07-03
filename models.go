@@ -101,6 +101,7 @@ type SessionResponse struct {
 	ID              string `json:"id"`
 	Start           string `json:"start"`
 	End             string `json:"end"`
+	FocusDay        string `json:"focus_day"`
 	DurationSeconds int    `json:"duration_seconds"`
 	DurationHuman   string `json:"duration_human"`
 }

@@ -9,6 +9,7 @@ import {
   type ActiveSession,
 } from "./api";
 import "./App.css";
+import { QuickHistoryView } from "./QuickHistoryView";
 
 function formatSeconds(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
@@ -32,6 +33,7 @@ function App() {
   const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "error">("checking");
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
+  const [activeTab, setActiveTab] = useState<"dashboard" | "history">("dashboard");
   const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -105,89 +107,109 @@ function App() {
 
   return (
     <main className="page">
-      <section className="card">
-        <p className="eyebrow">Focus Tracker</p>
-        <h1>Dashboard</h1>
-
-        <div className="statusGrid">
-          <div>
-            <span className="label">API</span>
-            <strong className={apiStatus === "ok" ? "good" : "bad"}>
-              {apiStatus}
-            </strong>
-          </div>
-
-          <div>
-            <span className="label">Active session</span>
-            <strong>{hasActiveSession ? "yes" : "no"}</strong>
-          </div>
-
-          <div>
-            <span className="label">State</span>
-            <strong>
-              {!hasActiveSession ? "idle" : isPaused ? "paused" : "running"}
-            </strong>
-          </div>
-        </div>
-
-        {activeSession ? (
-          <div className="sessionBox">
-            <div>
-              <span className="label">Started</span>
-              <strong>{activeSession.start}</strong>
-            </div>
-
-            <div>
-              <span className="label">Focused</span>
-              <strong>{formatSeconds(liveFocusedSeconds)}</strong>
-            </div>
-
-            <div>
-              <span className="label">Focused seconds</span>
-              <strong>{liveFocusedSeconds}</strong>
-            </div>
-          </div>
-        ) : (
-          <p className="emptyState">No active focus session yet.</p>
-        )}
-
-        {error && <p className="error">{error}</p>}
-
-        <div className="buttons">
-          <button
-            onClick={() => runAction(startSession)}
-            disabled={loading || hasActiveSession}
-          >
-            Start
-          </button>
-
-          <button
-            onClick={() => runAction(pauseSession)}
-            disabled={loading || !hasActiveSession || isPaused}
-          >
-            Pause
-          </button>
-
-          <button
-            onClick={() => runAction(resumeSession)}
-            disabled={loading || !hasActiveSession || !isPaused}
-          >
-            Resume
-          </button>
-
-          <button
-            className="danger"
-            onClick={() => runAction(stopSession)}
-            disabled={loading || !hasActiveSession}
-          >
-            Stop
-          </button>
-        </div>
-
-        <button className="secondary" onClick={refresh} disabled={loading}>
-          Refresh
+      <div className="tabs">
+        <button
+          className={activeTab === "dashboard" ? "tab activeTab" : "tab"}
+          onClick={() => setActiveTab("dashboard")}
+        >
+          Dashboard
         </button>
-      </section>
+
+        <button
+          className={activeTab === "history" ? "tab activeTab" : "tab"}
+          onClick={() => setActiveTab("history")}
+        >
+          History
+        </button>
+      </div>
+
+      {activeTab === "dashboard" ? (
+        <section className="card">
+          <p className="eyebrow">Focus Tracker</p>
+          <h1>Dashboard</h1>
+
+          <div className="statusGrid">
+            <div>
+              <span className="label">API</span>
+              <strong className={apiStatus === "ok" ? "good" : "bad"}>
+                {apiStatus}
+              </strong>
+            </div>
+
+            <div>
+              <span className="label">Active session</span>
+              <strong>{hasActiveSession ? "yes" : "no"}</strong>
+            </div>
+
+            <div>
+              <span className="label">State</span>
+              <strong>
+                {!hasActiveSession ? "idle" : isPaused ? "paused" : "running"}
+              </strong>
+            </div>
+          </div>
+
+          {activeSession ? (
+            <div className="sessionBox">
+              <div>
+                <span className="label">Started</span>
+                <strong>{activeSession.start}</strong>
+              </div>
+
+              <div>
+                <span className="label">Focused</span>
+                <strong>{formatSeconds(liveFocusedSeconds)}</strong>
+              </div>
+
+              <div>
+                <span className="label">Focused seconds</span>
+                <strong>{liveFocusedSeconds}</strong>
+              </div>
+            </div>
+          ) : (
+            <p className="emptyState">No active focus session yet.</p>
+          )}
+
+          {error && <p className="error">{error}</p>}
+
+          <div className="buttons">
+            <button
+              onClick={() => runAction(startSession)}
+              disabled={loading || hasActiveSession}
+            >
+              Start
+            </button>
+
+            <button
+              onClick={() => runAction(pauseSession)}
+              disabled={loading || !hasActiveSession || isPaused}
+            >
+              Pause
+            </button>
+
+            <button
+              onClick={() => runAction(resumeSession)}
+              disabled={loading || !hasActiveSession || !isPaused}
+            >
+              Resume
+            </button>
+
+            <button
+              className="danger"
+              onClick={() => runAction(stopSession)}
+              disabled={loading || !hasActiveSession}
+            >
+              Stop
+            </button>
+          </div>
+
+          <button className="secondary" onClick={refresh} disabled={loading}>
+            Refresh
+          </button>
+        </section>
+      ) : (
+        <QuickHistoryView />
+      )}
     </main>
   );
 }
