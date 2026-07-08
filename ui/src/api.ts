@@ -33,6 +33,11 @@ export type Session = {
     duration_human: string;
 };
 
+export type DeleteSessionResponse = {
+    message: string;
+    session: Session;
+};
+
 
 export function getSessions(from: string, to: string): Promise<Session[]> {
     return request<Session[]>(`/sessions?from=${from}&to=${to}`);
@@ -105,5 +110,20 @@ export function resumeSession(): Promise<MessageResponse> {
 export function stopSession(): Promise<StopSessionResponse> {
     return request<StopSessionResponse>("/sessions/stop", {
         method: "POST",
+    });
+}
+
+export function updateSessionDuration(sessionID: string, duration: string): Promise<Session> {
+    return request<Session>(`/sessions/${sessionID}`, {
+        method: "PATCH",
+        body: JSON.stringify({
+            duration: duration.replaceAll(" ", ""),
+        }),
+    });
+}
+
+export function deleteSession(sessionID: string): Promise<DeleteSessionResponse> {
+    return request<DeleteSessionResponse>(`/sessions/${sessionID}`, {
+        method: "DELETE",
     });
 }

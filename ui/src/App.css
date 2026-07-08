@@ -32,17 +32,71 @@ body {
 
 button {
   border: 0;
-  border-radius: 12px;
-  padding: 12px 18px;
-  font-weight: 700;
+  position: relative;
+  overflow: hidden;
+
+  border-radius: 19px;
+  padding: 10px 19px;
+
+  color: #ffffff;
+  font-weight: 800;
+  letter-spacing: 0.01em;
+
   cursor: pointer;
-  background: #2563eb;
-  color: white;
+
+  background:
+    linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81),
+    #4f46e5;
+
+  box-shadow:
+    0 10px 24px rgba(79, 70, 229, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.16);
+
+  transition:
+    transform 160ms ease,
+    box-shadow 160ms ease,
+    background 160ms ease,
+    opacity 160ms ease;
+}
+
+button::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+
+  background: linear-gradient(120deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.16) 45%,
+      transparent 70%);
+
+  transform: translateX(-120%);
+  transition: transform 450ms ease;
+}
+
+button:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 14px 30px rgba(79, 70, 229, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
+button:hover::before {
+  transform: translateX(120%);
+}
+
+button:active {
+  transform: translateY(0) scale(0.98);
 }
 
 button:disabled {
   cursor: not-allowed;
   opacity: 0.45;
+  transform: none;
+  box-shadow: none;
+}
+
+button:disabled::before {
+  display: none;
 }
 
 /* Page */
@@ -67,13 +121,37 @@ button:disabled {
 }
 
 .tab {
-  background: #374151;
+  background:
+    linear-gradient(135deg, rgba(55, 65, 81, 0.95), rgba(31, 41, 55, 0.95)),
+    #374151;
+
   color: #d1d5db;
+
+  border: 1px solid rgba(148, 163, 184, 0.16);
+
+  box-shadow:
+    0 8px 20px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.tab:hover {
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.4);
 }
 
 .activeTab {
-  background: #2563eb;
   color: white;
+
+  background:
+    linear-gradient(135deg, #60a5fa, #2563eb 55%, #1d4ed8),
+    #2563eb;
+
+  border-color: rgba(147, 197, 253, 0.65);
+
+  box-shadow:
+    0 12px 30px rgba(37, 99, 235, 0.38),
+    0 0 0 1px rgba(147, 197, 253, 0.16),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 /* Base card */
@@ -170,12 +248,31 @@ h1 {
 }
 
 .danger {
-  background: #9e2121;
+  background:
+    linear-gradient(135deg, #fb7185, #dc2626 55%, #991b1b),
+    #dc2626;
+
+  box-shadow:
+    0 12px 28px rgba(220, 38, 38, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.danger:hover {
+  box-shadow:
+    0 16px 34px rgba(220, 38, 38, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .secondary {
   margin-top: 16px;
-  background: #210480;
+
+  background:
+    linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81),
+    #4f46e5;
+
+  box-shadow:
+    0 12px 28px rgba(79, 70, 229, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 /* Quick History */
@@ -332,5 +429,236 @@ h1 {
 
   .quickDaysGrid {
     grid-template-columns: 1fr;
+  }
+}
+
+/* Session Views */
+
+.sessionsCard {
+  width: min(1000px, 100%);
+}
+
+.sessionsList {
+  display: grid;
+  gap: 28px;
+}
+
+.sessionDayGroup {
+  display: grid;
+  gap: 12px;
+}
+
+.sessionDayHeader {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 16px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #334155;
+}
+
+.sessionDayHeader h2 {
+  margin: 0;
+  color: #f8fafc;
+  font-size: 24px;
+  font-weight: 900;
+}
+
+.sessionDayCount {
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sessionRows {
+  display: grid;
+  gap: 0;
+}
+
+.sessionItem {
+  display: grid;
+  grid-template-columns: 1fr auto auto;
+  align-items: center;
+  gap: 24px;
+  padding: 12px 0;
+  border-bottom: 1px solid rgba(71, 85, 105, 0.45);
+}
+
+.sessionItem:last-child {
+  border-bottom: none;
+}
+
+.sessionRange {
+  color: #e2e8f0;
+  font-size: 18px;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.sessionDuration {
+  color: #f8fafc;
+  font-size: 18px;
+  font-weight: 800;
+  white-space: nowrap;
+}
+
+.sessionActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+}
+
+.sessionMiniButton {
+  width: auto;
+  min-width: 58px;
+  height: 34px;
+  padding: 0 13px;
+
+  border-radius: 999px;
+  border: 1px solid rgba(147, 197, 253, 0.45);
+
+  background:
+    linear-gradient(135deg, #60a5fa, #2563eb 60%, #1d4ed8),
+    #2563eb;
+
+  color: #ffffff;
+  font-size: 13px;
+  font-weight: 900;
+
+  box-shadow:
+    0 8px 18px rgba(37, 99, 235, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.sessionMiniButton:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 24px rgba(37, 99, 235, 0.42),
+    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+}
+
+.sessionCancelButton {
+  border-color: rgba(148, 163, 184, 0.35);
+
+  background:
+    linear-gradient(135deg, #64748b, #475569 60%, #334155),
+    #475569;
+
+  box-shadow:
+    0 8px 18px rgba(15, 23, 42, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+}
+
+.sessionDeleteButton {
+  width: 34px;
+  height: 34px;
+  padding: 0;
+
+  border-radius: 999px;
+  border: 1px solid rgba(254, 202, 202, 0.35);
+
+  background:
+    linear-gradient(135deg, #fb7185, #dc2626 58%, #991b1b),
+    #dc2626;
+
+  color: #ffffff;
+  font-size: 17px;
+  font-weight: 900;
+  line-height: 1;
+
+  box-shadow:
+    0 8px 18px rgba(220, 38, 38, 0.28),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.sessionDeleteButton:hover {
+  transform: translateY(-1px);
+  box-shadow:
+    0 12px 24px rgba(220, 38, 38, 0.38),
+    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+}
+
+.sessionEditRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.durationInput {
+  width: 115px;
+  height: 32px;
+  padding: 0 10px;
+  border: 1px solid #334155;
+  border-radius: 10px;
+  background: #020617;
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.durationInput::placeholder {
+  color: #64748b;
+}
+
+.loadMoreButton {
+  display: block;
+  margin: 34px auto 0;
+
+  padding: 12px 22px;
+  border-radius: 999px;
+
+  background:
+    linear-gradient(135deg, #475569, #334155 55%, #1e293b),
+    #334155;
+
+  color: #f8fafc;
+  font-size: 14px;
+  font-weight: 900;
+
+  border: 1px solid rgba(148, 163, 184, 0.22);
+
+  box-shadow:
+    0 12px 28px rgba(15, 23, 42, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.loadMoreButton:hover {
+  background:
+    linear-gradient(135deg, #64748b, #475569 55%, #334155),
+    #475569;
+}
+
+.loadMoreButton:hover {
+  background: #475569;
+}
+
+@media (max-width: 760px) {
+  .sessionDayHeader {
+    align-items: flex-start;
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .sessionDayHeader h2 {
+    font-size: 21px;
+  }
+
+  .sessionItem {
+    grid-template-columns: 1fr;
+    align-items: flex-start;
+    gap: 8px;
+    padding: 14px 0;
+  }
+
+  .sessionRange,
+  .sessionDuration {
+    font-size: 16px;
+  }
+
+  .sessionActions {
+    justify-content: flex-start;
   }
 }

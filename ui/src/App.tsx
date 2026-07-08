@@ -10,6 +10,7 @@ import {
 } from "./api";
 import "./App.css";
 import { QuickHistoryView } from "./QuickHistoryView";
+import { SessionsView } from "./SessionsView"
 
 function formatSeconds(totalSeconds: number): string {
   const hours = Math.floor(totalSeconds / 3600);
@@ -33,7 +34,7 @@ function App() {
   const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "error">("checking");
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "history">("dashboard");
+  const [activeTab, setActiveTab] = useState<"dashboard" | "history" | "sessions">("dashboard");
   const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -121,9 +122,16 @@ function App() {
         >
           History
         </button>
+
+        <button
+          className={activeTab === "sessions" ? "tab activeTab" : "tab"}
+          onClick={() => setActiveTab("sessions")}
+        >
+          Sessions
+        </button>
       </div>
 
-      {activeTab === "dashboard" ? (
+      {activeTab === "dashboard" && (
         <section className="card">
           <p className="eyebrow">Focus Tracker</p>
           <h1>Dashboard</h1>
@@ -207,9 +215,9 @@ function App() {
             Refresh
           </button>
         </section>
-      ) : (
-        <QuickHistoryView />
       )}
+      {activeTab === "history" && <QuickHistoryView />}
+      {activeTab === "sessions" && <SessionsView />}
     </main>
   );
 }
