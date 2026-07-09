@@ -48,6 +48,10 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("PATCH /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
 		updateSessionHandler(w, r, db, fs)
 	})
+
+	mux.HandleFunc("PATCH /goal", func(w http.ResponseWriter, r *http.Request) {
+		updateGoalHandler(w, r, fs, db)
+	})
 	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
 		deleteSessionHandler(w, r, db, fs)
 	})
@@ -402,6 +406,46 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 
 }
 
+func updateGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+	var request updateGoalRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	if request.DailyGoal == "" {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "daily_goal is required")
+		return
+	}
+
+	dailyGoal, err := time.ParseDuration(request.DailyGoal)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid daily_goal format")
+		return
+	}
+
+	if dailyGoal <= 0 {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "daily_goal must be higher than zero")
+		return
+	}
+
+	fs.settings.DailyGoal = int(dailyGoal.Minutes())
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
+	if err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
+		return
+	}
+
+	progress := fs.DailyProgress(sessions)
+
+	writeJSON(w, http.StatusOK, toGoalResponse(fs, progress, time.Now()))
+
+}
 func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 	id := r.PathValue("id")
 	if id == "" {

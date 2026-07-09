@@ -110,3 +110,7 @@ type statusRecorder struct {
 	http.ResponseWriter
 	status int
 }
+
+type updateGoalRequest struct {
+	DailyGoal string `json:"daily_goal"`
+}
