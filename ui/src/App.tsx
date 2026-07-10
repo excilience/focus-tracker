@@ -6,6 +6,9 @@ import {
   resumeSession,
   startSession,
   stopSession,
+  getGoal,
+  updateGoal,
+  type GoalResponse,
   type ActiveSession,
 } from "./api";
 import "./App.css";
@@ -34,6 +37,9 @@ function App() {
   const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "error">("checking");
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
+  const [goal, setGoal] = useState<GoalResponse | null>(null);
+  const [goalInput, setGoalInput] = useState("");
+  const [goalSaving, setGoalSaving] = useState(false);
   const [activeTab, setActiveTab] = useState<"dashboard" | "history" | "sessions">("dashboard");
   const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
@@ -57,6 +63,10 @@ function App() {
     setActiveSession(session);
     setActiveSessionSyncedAt(session ? Date.now() : null);
     setLiveFocusedSeconds(session?.focused_seconds ?? 0);
+
+    const goalResult = await getGoal();
+    setGoal(goalResult);
+    setGoalInput(goalResult.goal_human.replaceAll(" ", ""));
   }
 
   async function runAction(action: () => Promise<unknown>) {
@@ -70,6 +80,21 @@ function App() {
       setError(error instanceof Error ? error.message : "Unknown error");
     } finally {
       setLoading(false);
+    }
+  }
+
+  async function saveGoal() {
+    setGoalSaving(true);
+    setError("");
+
+    try {
+      const updatedGoal = await updateGoal(goalInput);
+      setGoal(updatedGoal);
+      setGoalInput(updatedGoal.goal_human.replaceAll(" ", ""));
+    } catch (error) {
+      setError(error instanceof Error ? error.message : "Failed to update goal");
+    } finally {
+      setGoalSaving(false);
     }
   }
 
@@ -176,6 +201,48 @@ function App() {
             </div>
           ) : (
             <p className="emptyState">No active focus session yet.</p>
+          )}
+
+          {goal && (
+            <div className="goalBox">
+              <div className="goalHeader">
+                <div>
+                  <span className="label">Daily Goal</span>
+                  <strong>{goal.goal_human}</strong>
+                </div>
+
+                <div>
+                  <span className="label">Progress</span>
+                  <strong>{goal.percent}%</strong>
+                </div>
+              </div>
+
+              <div className="goalGrid">
+                <div>
+                  <span className="label">Focused today</span>
+                  <strong>{goal.focused_human}</strong>
+                </div>
+
+                <div>
+                  <span className="label">Remaining</span>
+                  <strong>{goal.remaining_human}</strong>
+                </div>
+              </div>
+
+              <div className="goalEditor">
+                <input
+                  className="goalInput"
+                  value={goalInput}
+                  onChange={(event) => setGoalInput(event.target.value)}
+                  placeholder="2h or 1h30m"
+                  disabled={goalSaving}
+                />
+
+                <button onClick={saveGoal} disabled={goalSaving}>
+                  Save Goal
+                </button>
+              </div>
+            </div>
           )}
 
           {error && <p className="error">{error}</p>}

@@ -661,4 +661,52 @@ h1 {
   .sessionActions {
     justify-content: flex-start;
   }
+
+  /** Daily Goal**/
+  .goalBox {
+    margin-top: 20px;
+    padding: 18px;
+    border-radius: 18px;
+    background: #111827;
+    border: 1px solid #243044;
+  }
+
+  .goalHeader,
+  .goalGrid,
+  .goalEditor {
+    display: grid;
+    gap: 16px;
+  }
+
+  .goalHeader,
+  .goalGrid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .goalEditor {
+    grid-template-columns: 1fr auto;
+    margin-top: 18px;
+  }
+
+  .goalInput {
+    padding: 12px 14px;
+    border: 1px solid #334155;
+    border-radius: 12px;
+    background: #020617;
+    color: #f8fafc;
+    font-weight: 800;
+  }
+
+  .goalInput::placeholder {
+    color: #64748b;
+  }
+
+  @media (max-width: 640px) {
+
+    .goalHeader,
+    .goalGrid,
+    .goalEditor {
+      grid-template-columns: 1fr;
+    }
+  }
 }

@@ -33,6 +33,32 @@ export type Session = {
     duration_human: string;
 };
 
+export type GoalResponse = {
+    focus_day: string;
+    focused_seconds: number;
+    focused_human: string;
+    goal_seconds: number;
+    goal_human: string;
+    remaining_secconds: number;
+    remaining_human: string;
+    percent: number;
+    is_completed: boolean;
+}
+
+export function getGoal(): Promise<GoalResponse> {
+    return request<GoalResponse>("/goal");
+}
+
+
+export function updateGoal(dailyGoal: string): Promise<GoalResponse> {
+    return request<GoalResponse>("/goal", {
+        method: "PATCH",
+        body: JSON.stringify({
+            daily_goal: dailyGoal.replaceAll(" ", ""),
+        })
+    });
+}
+
 export type DeleteSessionResponse = {
     message: string;
     session: Session;
