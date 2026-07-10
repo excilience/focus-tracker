@@ -61,6 +61,18 @@ function getTimeText(dateText: string): string {
     return "";
 }
 
+function formatFocusDay(dayText: string): string {
+    const parts = dayText.split("-");
+
+    if (parts.length !== 3) {
+        return dayText;
+    }
+
+    const [year, month, day] = parts;
+
+    return `${day}.${month}.${year}`;
+}
+
 export function SessionsView() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
@@ -92,10 +104,16 @@ export function SessionsView() {
             groups.get(day)!.push(session);
         }
 
-        return Array.from(groups.entries()).map(([day, sessions]) => ({
-            day,
-            sessions,
-        }));
+        return Array.from(groups.entries())
+            .sort(([dayA], [dayB]) => {
+                return new Date(dayB).getTime() - new Date(dayA).getTime();
+            })
+            .map(([day, sessions]) => ({
+                day,
+                sessions: [...sessions].sort((a, b) => {
+                    return new Date(b.start).getTime() - new Date(a.start).getTime();
+                }),
+            }));
     }, [sortedSessions]);
 
     const visibleGroups = groupedSessions.slice(0, visibleDayCount);
@@ -198,7 +216,7 @@ export function SessionsView() {
                         {visibleGroups.map((group) => (
                             <section className="sessionDayGroup" key={group.day}>
                                 <div className="sessionDayHeader">
-                                    <h2>Day: {group.day}</h2>
+                                    <h2>Day: {formatFocusDay(group.day)}</h2>
 
                                     <span className="sessionDayCount">
                                         {group.sessions.length} session
