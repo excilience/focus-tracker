@@ -39,7 +39,7 @@ export type GoalResponse = {
     focused_human: string;
     goal_seconds: number;
     goal_human: string;
-    remaining_secconds: number;
+    remaining_seconds: number;
     remaining_human: string;
     percent: number;
     is_completed: boolean;

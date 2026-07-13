@@ -1,7 +1,5 @@
 :root {
-  font-family:
-    Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
-    sans-serif;
+  font-family: Inter, ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
   color: #f8fafc;
   background: #050712;
 }
@@ -24,7 +22,6 @@ body {
   background: #050712;
 }
 
-/* ВАЖНО: убираем стандартное vite-сжатие */
 #root {
   max-width: none;
   text-align: initial;
@@ -34,50 +31,29 @@ button {
   border: 0;
   position: relative;
   overflow: hidden;
-
   border-radius: 19px;
   padding: 10px 19px;
-
   color: #ffffff;
   font-weight: 800;
   letter-spacing: 0.01em;
-
   cursor: pointer;
-
-  background:
-    linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81),
-    #4f46e5;
-
-  box-shadow:
-    0 10px 24px rgba(79, 70, 229, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.16);
-
-  transition:
-    transform 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease,
-    opacity 160ms ease;
+  background: linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81), #4f46e5;
+  box-shadow: 0 10px 24px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, opacity 160ms ease;
 }
 
 button::before {
   content: "";
   position: absolute;
   inset: 0;
-
-  background: linear-gradient(120deg,
-      transparent 0%,
-      rgba(255, 255, 255, 0.16) 45%,
-      transparent 70%);
-
+  background: linear-gradient(120deg, transparent 0%, rgba(255, 255, 255, 0.16) 45%, transparent 70%);
   transform: translateX(-120%);
   transition: transform 450ms ease;
 }
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow:
-    0 14px 30px rgba(79, 70, 229, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 14px 30px rgba(79, 70, 229, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 button:hover::before {
@@ -100,19 +76,16 @@ button:disabled::before {
 }
 
 /* Page */
-
 .page {
   width: 100%;
   min-height: 100vh;
   padding: 32px;
-
   display: flex;
   flex-direction: column;
   align-items: center;
 }
 
 /* Tabs */
-
 .tabs {
   display: flex;
   justify-content: center;
@@ -121,17 +94,10 @@ button:disabled::before {
 }
 
 .tab {
-  background:
-    linear-gradient(135deg, rgba(55, 65, 81, 0.95), rgba(31, 41, 55, 0.95)),
-    #374151;
-
+  background: linear-gradient(135deg, rgba(55, 65, 81, 0.95), rgba(31, 41, 55, 0.95)), #374151;
   color: #d1d5db;
-
   border: 1px solid rgba(148, 163, 184, 0.16);
-
-  box-shadow:
-    0 8px 20px rgba(0, 0, 0, 0.18),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
 }
 
 .tab:hover {
@@ -141,21 +107,12 @@ button:disabled::before {
 
 .activeTab {
   color: white;
-
-  background:
-    linear-gradient(135deg, #60a5fa, #2563eb 55%, #1d4ed8),
-    #2563eb;
-
+  background: linear-gradient(135deg, #60a5fa, #2563eb 55%, #1d4ed8), #2563eb;
   border-color: rgba(147, 197, 253, 0.65);
-
-  box-shadow:
-    0 12px 30px rgba(37, 99, 235, 0.38),
-    0 0 0 1px rgba(147, 197, 253, 0.16),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.38), 0 0 0 1px rgba(147, 197, 253, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 /* Base card */
-
 .card {
   width: min(760px, 100%);
   padding: 36px;
@@ -164,13 +121,11 @@ button:disabled::before {
   box-shadow: 0 24px 80px rgba(0, 0, 0, 0.35);
 }
 
-/* History should not be a small card */
-
+/* History Card */
 .historyCard {
   width: 100%;
   max-width: 1800px;
   margin: 0 auto;
-
   padding: 0;
   border-radius: 0;
   background: transparent;
@@ -194,7 +149,6 @@ h1 {
 }
 
 /* Dashboard */
-
 .statusGrid {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -248,35 +202,21 @@ h1 {
 }
 
 .danger {
-  background:
-    linear-gradient(135deg, #fb7185, #dc2626 55%, #991b1b),
-    #dc2626;
-
-  box-shadow:
-    0 12px 28px rgba(220, 38, 38, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, #fb7185, #dc2626 55%, #991b1b), #dc2626;
+  box-shadow: 0 12px 28px rgba(220, 38, 38, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .danger:hover {
-  box-shadow:
-    0 16px 34px rgba(220, 38, 38, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 16px 34px rgba(220, 38, 38, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .secondary {
   margin-top: 16px;
-
-  background:
-    linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81),
-    #4f46e5;
-
-  box-shadow:
-    0 12px 28px rgba(79, 70, 229, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  background: linear-gradient(135deg, #818cf8, #4f46e5 55%, #312e81), #4f46e5;
+  box-shadow: 0 12px 28px rgba(79, 70, 229, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 /* Quick History */
-
 .quickWeeks {
   width: 100%;
   display: grid;
@@ -306,7 +246,6 @@ h1 {
   font-weight: 800;
 }
 
-/* На большом экране всегда 7 дней в ряд */
 .quickDaysGrid {
   width: 100%;
   display: grid;
@@ -319,16 +258,13 @@ h1 {
   min-height: 118px;
   padding: 18px 14px;
   border-radius: 16px;
-
   background: #151722;
   border: 1px solid rgba(148, 163, 184, 0.1);
-
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   gap: 12px;
-
   text-align: center;
 }
 
@@ -337,10 +273,7 @@ h1 {
   font-size: 16px;
   font-weight: 900;
   line-height: 1.25;
-
-  white-space: normal;
-  overflow: visible;
-  text-overflow: unset;
+  white-space: nowrap;
 }
 
 .quickDayDash {
@@ -357,83 +290,7 @@ h1 {
   white-space: nowrap;
 }
 
-/* Responsive */
-
-@media (max-width: 1200px) {
-  .quickDaysGrid {
-    grid-template-columns: repeat(4, minmax(0, 1fr));
-  }
-}
-
-@media (max-width: 760px) {
-  .page {
-    padding: 24px 16px;
-  }
-
-  .card {
-    padding: 24px;
-  }
-
-  h1 {
-    font-size: 36px;
-  }
-
-  .statusGrid,
-  .sessionBox {
-    grid-template-columns: 1fr;
-  }
-
-  .buttons {
-    flex-direction: column;
-  }
-
-  .quickWeeks {
-    gap: 44px;
-  }
-
-  .quickWeek h2 {
-    font-size: 24px;
-  }
-
-  .quickDaysGrid {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: 14px;
-  }
-
-  .quickDayCell {
-    min-height: 100px;
-    padding: 16px 12px;
-  }
-
-  .quickDayDate {
-    font-size: 14px;
-  }
-
-  .quickDayTotal {
-    font-size: 15px;
-  }
-}
-
-@media (max-width: 480px) {
-  .page {
-    padding: 20px 12px;
-  }
-
-  .tabs {
-    width: 100%;
-  }
-
-  .tab {
-    flex: 1;
-  }
-
-  .quickDaysGrid {
-    grid-template-columns: 1fr;
-  }
-}
-
 /* Session Views */
-
 .sessionsCard {
   width: min(1000px, 100%);
 }
@@ -515,69 +372,43 @@ h1 {
   min-width: 58px;
   height: 34px;
   padding: 0 13px;
-
   border-radius: 999px;
   border: 1px solid rgba(147, 197, 253, 0.45);
-
-  background:
-    linear-gradient(135deg, #60a5fa, #2563eb 60%, #1d4ed8),
-    #2563eb;
-
+  background: linear-gradient(135deg, #60a5fa, #2563eb 60%, #1d4ed8), #2563eb;
   color: #ffffff;
   font-size: 13px;
   font-weight: 900;
-
-  box-shadow:
-    0 8px 18px rgba(37, 99, 235, 0.32),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 8px 18px rgba(37, 99, 235, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .sessionMiniButton:hover {
   transform: translateY(-1px);
-  box-shadow:
-    0 12px 24px rgba(37, 99, 235, 0.42),
-    inset 0 1px 0 rgba(255, 255, 255, 0.34);
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.42), inset 0 1px 0 rgba(255, 255, 255, 0.34);
 }
 
 .sessionCancelButton {
   border-color: rgba(148, 163, 184, 0.35);
-
-  background:
-    linear-gradient(135deg, #64748b, #475569 60%, #334155),
-    #475569;
-
-  box-shadow:
-    0 8px 18px rgba(15, 23, 42, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.18);
+  background: linear-gradient(135deg, #64748b, #475569 60%, #334155), #475569;
+  box-shadow: 0 8px 18px rgba(15, 23, 42, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.18);
 }
 
 .sessionDeleteButton {
   width: 34px;
   height: 34px;
   padding: 0;
-
   border-radius: 999px;
   border: 1px solid rgba(254, 202, 202, 0.35);
-
-  background:
-    linear-gradient(135deg, #fb7185, #dc2626 58%, #991b1b),
-    #dc2626;
-
+  background: linear-gradient(135deg, #fb7185, #dc2626 58%, #991b1b), #dc2626;
   color: #ffffff;
   font-size: 17px;
   font-weight: 900;
   line-height: 1;
-
-  box-shadow:
-    0 8px 18px rgba(220, 38, 38, 0.28),
-    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
 }
 
 .sessionDeleteButton:hover {
   transform: translateY(-1px);
-  box-shadow:
-    0 12px 24px rgba(220, 38, 38, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  box-shadow: 0 12px 24px rgba(220, 38, 38, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.28);
 }
 
 .sessionEditRow {
@@ -606,36 +437,698 @@ h1 {
 .loadMoreButton {
   display: block;
   margin: 34px auto 0;
-
   padding: 12px 22px;
   border-radius: 999px;
-
-  background:
-    linear-gradient(135deg, #475569, #334155 55%, #1e293b),
-    #334155;
-
+  background: linear-gradient(135deg, #475569, #334155 55%, #1e293b), #334155;
   color: #f8fafc;
   font-size: 14px;
   font-weight: 900;
-
   border: 1px solid rgba(148, 163, 184, 0.22);
+  box-shadow: 0 12px 28px rgba(15, 23, 42, 0.32), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.loadMoreButton:hover {
+  background: linear-gradient(135deg, #64748b, #475569 55%, #334155), #475569;
+}
+
+/* Daily Goal */
+.goalBox {
+  margin-top: 20px;
+  padding: 18px;
+  border-radius: 18px;
+  background: #111827;
+  border: 1px solid #243044;
+}
+
+.goalHeader,
+.goalGrid,
+.goalEditor {
+  display: grid;
+  gap: 16px;
+}
+
+.goalHeader,
+.goalGrid {
+  grid-template-columns: repeat(2, 1fr);
+}
+
+.goalEditor {
+  grid-template-columns: 1fr auto;
+  margin-top: 18px;
+}
+
+.goalInput {
+  padding: 12px 14px;
+  border: 1px solid #334155;
+  border-radius: 12px;
+  background: #020617;
+  color: #f8fafc;
+  font-weight: 800;
+}
+
+.goalInput::placeholder {
+  color: #64748b;
+}
+
+/* New Dashboard / Focus Card */
+.focusCard {
+  width: min(620px, 100%);
+  min-height: 780px;
+  padding: 54px 44px 44px;
+
+  position: relative;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+
+  border-radius: 38px;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+
+  background:
+    radial-gradient(circle at 16% 10%,
+      rgba(0, 42, 208, 0.332),
+      transparent 38%),
+
+    linear-gradient(180deg,
+      rgba(12, 14, 22, 0.98),
+      rgba(6, 8, 14, 0.99));
 
   box-shadow:
-    0 12px 28px rgba(15, 23, 42, 0.32),
+    0 30px 80px rgba(0, 0, 0, 0.42),
+    0 0 0 1px rgba(255, 255, 255, 0.02),
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.02);
+}
+
+.focusRingWrap {
+  position: relative;
+  width: 360px;
+  height: 360px;
+  margin-top: 6px;
+}
+
+.focusRing {
+  width: 100%;
+  height: 100%;
+  overflow: visible;
+  transform: rotate(90deg);
+}
+
+.focusRingTrack,
+.focusRingProgress {
+  fill: none;
+  stroke-linecap: round;
+}
+
+.focusRingTrack {
+  stroke: rgba(100, 116, 139, 0.42);
+}
+
+.focusRingProgress {
+  stroke: #126bfa;
+
+  filter:
+    drop-shadow(0 0 16px rgba(59, 130, 246, 0.58)) drop-shadow(0 0 36px rgba(37, 99, 235, 0.28));
+
+  transition: stroke-dashoffset 320ms ease;
+}
+
+.focusRingActive {
+  animation: ringPulse 3.8s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+
+  0%,
+  100% {
+    filter:
+      drop-shadow(0 0 10px rgba(59, 130, 246, 0.34)) drop-shadow(0 0 20px rgba(37, 99, 235, 0.14));
+  }
+
+  50% {
+    filter:
+      drop-shadow(0 0 16px rgba(59, 130, 246, 0.5)) drop-shadow(0 0 28px rgba(37, 99, 235, 0.22));
+  }
+}
+
+.focusRingContent {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 0 36px;
+}
+
+.focusMainValue {
+  max-width: 100%;
+  color: #f8fafc;
+  font-size: 62px;
+  font-weight: 500;
+  line-height: 1;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.10);
+}
+
+.focusGoalValue {
+  margin: 16px 0 10px;
+  color: #f8fafc;
+  font-size: 88px;
+  font-weight: 600;
+  line-height: 0.9;
+  text-shadow: 0 0 22px rgba(255, 255, 255, 0.14);
+}
+
+.focusSubLabel {
+  margin-top: 10px;
+  color: #c2c8d4;
+  font-size: 18px;
+  font-weight: 500;
+}
+
+.focusCompleted {
+  margin: 40px 0 0;
+  color: #d6dbe5;
+  font-size: 24px;
+  font-weight: 500;
+}
+
+.compactGoalEditor {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  width: min(360px, 100%);
+  margin-top: 18px;
+}
+
+.compactGoalInput {
+  width: 100%;
+  height: 42px;
+  padding: 0 16px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 999px;
+  background: rgba(2, 6, 23, 0.42);
+  color: #f8fafc;
+  font-size: 15px;
+  font-weight: 800;
+  text-align: center;
+  outline: none;
+  backdrop-filter: blur(10px);
+}
+
+.compactGoalInput::placeholder {
+  color: #64748b;
+}
+
+.compactGoalInput:focus {
+  border-color: rgba(117, 92, 255, 0.75);
+  box-shadow: 0 0 0 4px rgba(117, 92, 255, 0.13);
+}
+
+.compactGoalButton {
+  height: 42px;
+  padding: 0 18px;
+  border-radius: 999px;
+  font-size: 13px;
+}
+
+.focusError {
+  margin: 16px 0 0;
+  text-align: center;
+}
+
+.focusControls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 28px;
+  margin-top: auto;
+  padding-top: 24px;
+}
+
+/* Round Buttons */
+.roundButton,
+.mainRoundButton {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border-radius: 999px;
+  line-height: 1;
+}
+
+.roundButton {
+  width: 84px;
+  height: 84px;
+  border: 1px solid rgba(255, 255, 255, 0.10);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.10), rgba(255, 255, 255, 0.04)), rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(16px);
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.24), inset 0 1px 0 rgba(255, 255, 255, 0.12);
+}
+
+.roundButton:hover {
+  transform: translateY(-2px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.13), rgba(255, 255, 255, 0.06)), rgba(255, 255, 255, 0.07);
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.16);
+}
+
+.refreshButton {
+  border-color: rgba(167, 139, 250, 0.2);
+
+  background:
+    linear-gradient(180deg,
+      rgba(167, 139, 250, 0.16),
+      rgba(109, 76, 255, 0.08)),
+    rgba(20, 18, 38, 0.76);
+
+  color: #ddd6fe;
+
+  box-shadow:
+    0 12px 28px rgba(91, 60, 180, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.refreshButton {
+  border-color: rgba(148, 163, 184, 0.18);
+
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.09),
+      rgba(255, 255, 255, 0.03)),
+    rgba(30, 34, 46, 0.82);
+
+  color: #cbd5e1;
+
+  box-shadow:
+    0 12px 28px rgba(0, 0, 0, 0.24),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.16);
+}
+
+.refreshButton:hover {
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.13),
+      rgba(255, 255, 255, 0.05)),
+    rgba(39, 44, 58, 0.9);
+
+  border-color: rgba(203, 213, 225, 0.26);
+
+  box-shadow:
+    0 16px 34px rgba(0, 0, 0, 0.3),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    inset 0 -8px 16px rgba(0, 0, 0, 0.18);
+}
+
+.refreshButton .iconRefresh {
+  color: #d1d5db;
+}
+
+.stopButton {
+  border-color: rgba(248, 113, 113, 0.25);
+
+  background:
+    linear-gradient(180deg,
+      rgba(248, 113, 113, 0.22),
+      rgba(185, 28, 28, 0.12)),
+    rgba(69, 10, 10, 0.72);
+
+  box-shadow:
+    0 12px 28px rgba(185, 28, 28, 0.22),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+}
+
+.stopButton:hover {
+  background:
+    linear-gradient(180deg,
+      rgba(248, 113, 113, 0.3),
+      rgba(185, 28, 28, 0.18)),
+    rgba(69, 10, 10, 0.82);
+
+  box-shadow:
+    0 16px 34px rgba(220, 38, 38, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.14);
+}
+
+.mainRoundButton {
+  width: 122px;
+  height: 122px;
+
+  border: 1px solid rgba(0, 119, 255, 0.34);
+
+  background:
+    radial-gradient(circle at 34% 24%,
+      rgba(255, 255, 255, 0.34),
+      transparent 28%),
+    radial-gradient(circle at 50% 100%,
+      rgba(8, 27, 80, 0.62),
+      transparent 55%),
+    linear-gradient(145deg,
+      #106ddf 0%,
+      #2563eb 45%,
+      #1e3a8a 100%);
+
+  box-shadow:
+    0 16px 32px rgba(29, 78, 216, 0.3),
+    0 0 18px rgba(59, 130, 246, 0.16),
+    inset 0 2px 1px rgba(255, 255, 255, 0.26),
+    inset 0 -12px 22px rgba(8, 27, 80, 0.46);
+}
+
+.mainRoundButton:hover {
+  transform: translateY(-3px);
+
+  box-shadow:
+    0 20px 38px rgba(29, 78, 216, 0.38),
+    0 0 24px rgba(59, 130, 246, 0.2),
+    inset 0 2px 1px rgba(255, 255, 255, 0.3),
+    inset 0 -14px 24px rgba(8, 27, 80, 0.5);
+}
+
+.roundButton:disabled,
+.mainRoundButton:disabled {
+  opacity: 0.38;
+  transform: none;
+  box-shadow: none;
+}
+
+/* Icons */
+.iconRefresh {
+  display: block;
+  color: #ffffff;
+  font-size: 36px;
+  line-height: 1;
+  transform: translateY(-1px);
+}
+
+.iconPlay {
+  display: block;
+  width: 0;
+  height: 0;
+  margin-left: 6px;
+  border-top: 18px solid transparent;
+  border-bottom: 18px solid transparent;
+  border-left: 30px solid #ffffff;
+}
+
+.iconPause {
+  position: relative;
+  display: block;
+  width: 28px;
+  height: 32px;
+}
+
+.iconPause::before,
+.iconPause::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  width: 8px;
+  height: 100%;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+.iconPause::before {
+  left: 0;
+}
+
+.iconPause::after {
+  right: 0;
+}
+
+.iconStop {
+  display: block;
+  width: 26px;
+  height: 26px;
+  border-radius: 3px;
+  background: #ffffff;
+}
+
+/* Goal edit button */
+
+.focusCard {
+  position: relative;
+}
+
+.goalEditButton {
+  position: absolute;
+  top: 24px;
+  right: 24px;
+  z-index: 5;
+
+  width: 48px;
+  height: 48px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.12);
+
+  background:
+    linear-gradient(180deg,
+      rgba(255, 255, 255, 0.1),
+      rgba(255, 255, 255, 0.04)),
+    rgba(255, 255, 255, 0.05);
+
+  color: #f8fafc;
+  font-size: 22px;
+  line-height: 1;
+
+  box-shadow:
+    0 10px 24px rgba(0, 0, 0, 0.25),
     inset 0 1px 0 rgba(255, 255, 255, 0.12);
 }
 
-.loadMoreButton:hover {
+.goalEditButton:hover {
+  transform: translateY(-2px) rotate(-5deg);
+
   background:
-    linear-gradient(135deg, #64748b, #475569 55%, #334155),
-    #475569;
+    linear-gradient(180deg,
+      rgba(96, 165, 250, 0.2),
+      rgba(37, 99, 235, 0.08)),
+    rgba(30, 41, 59, 0.82);
 }
 
-.loadMoreButton:hover {
-  background: #475569;
+/* Modal overlay */
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  padding: 24px;
+
+  background: rgba(2, 6, 23, 0.78);
+  backdrop-filter: blur(10px);
+
+  animation: modalOverlayAppear 160ms ease-out;
+}
+
+/* Modal window */
+
+.goalModal {
+  width: min(420px, 100%);
+  padding: 30px;
+
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 24px;
+
+  background:
+    radial-gradient(circle at 50% 0%,
+      rgba(117, 92, 255, 0.16),
+      transparent 50%),
+    #151822;
+
+  box-shadow:
+    0 30px 90px rgba(0, 0, 0, 0.6),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06);
+
+  animation: goalModalAppear 180ms ease-out;
+}
+
+.goalModalInput {
+  width: 100%;
+  height: 56px;
+  padding: 0 18px;
+
+  border: 1px solid rgba(148, 163, 184, 0.3);
+  border-radius: 16px;
+
+  background: #080b14;
+  color: #f8fafc;
+
+  font-family: inherit;
+  font-size: 19px;
+  font-weight: 700;
+  text-align: center;
+
+  outline: none;
+}
+
+.goalModalInput::placeholder {
+  color: #64748b;
+}
+
+.goalModalInput:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.16);
+}
+
+.goalModalTitle {
+  margin: 0 0 22px;
+  color: #f8fafc;
+  font-size: 24px;
+  font-weight: 700;
+  text-align: center;
+}
+
+.goalModalSaveButton {
+  width: 100%;
+  height: 52px;
+  margin-top: 18px;
+  padding: 0 20px;
+
+  border-radius: 16px;
+
+  background:
+    linear-gradient(145deg, #60a5fa, #2563eb 58%, #1d4ed8);
+
+  color: #ffffff;
+  font-size: 15px;
+  font-weight: 800;
+
+  box-shadow:
+    0 14px 30px rgba(37, 99, 235, 0.34),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+}
+
+.goalModalSaveButton:hover {
+  transform: translateY(-1px);
+
+  box-shadow:
+    0 18px 36px rgba(100, 70, 255, 0.4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.24);
+}
+
+.goalModalSaveButton:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+@keyframes modalOverlayAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.goalModalHint {
+  display: block;
+  margin-top: 14px;
+
+  color: #8993a5;
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+}
+
+@keyframes modalOverlayAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes goalModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* Media Queries */
+@media (max-width: 1200px) {
+  .quickDaysGrid {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
 }
 
 @media (max-width: 760px) {
+  .page {
+    padding: 24px 16px;
+  }
+
+  .card {
+    padding: 24px;
+  }
+
+  h1 {
+    font-size: 36px;
+  }
+
+  .statusGrid,
+  .sessionBox {
+    grid-template-columns: 1fr;
+  }
+
+  .buttons {
+    flex-direction: column;
+  }
+
+  .quickWeeks {
+    gap: 44px;
+  }
+
+  .quickWeek h2 {
+    font-size: 24px;
+  }
+
+  .quickDaysGrid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 14px;
+  }
+
+  .quickDayCell {
+    min-height: 100px;
+    padding: 16px 12px;
+  }
+
+  .quickDayDate {
+    font-size: 14px;
+  }
+
+  .quickDayTotal {
+    font-size: 15px;
+  }
+
   .sessionDayHeader {
     align-items: flex-start;
     flex-direction: column;
@@ -662,51 +1155,142 @@ h1 {
     justify-content: flex-start;
   }
 
-  /** Daily Goal**/
-  .goalBox {
-    margin-top: 20px;
-    padding: 18px;
-    border-radius: 18px;
-    background: #111827;
-    border: 1px solid #243044;
+  .focusCard {
+    min-height: 680px;
+    padding: 38px 22px 30px;
+    border-radius: 28px;
   }
+
+  .focusRingWrap {
+    width: 320px;
+    height: 320px;
+  }
+
+  .focusMainValue {
+    font-size: 44px;
+  }
+
+  .focusGoalValue {
+    font-size: 68px;
+  }
+
+  .focusSubLabel {
+    font-size: 16px;
+  }
+
+  .focusCompleted {
+    margin-top: 28px;
+    font-size: 21px;
+  }
+
+  .focusControls {
+    gap: 20px;
+    padding-top: 36px;
+  }
+
+  .roundButton {
+    width: 70px;
+    height: 70px;
+  }
+
+  .mainRoundButton {
+    width: 100px;
+    height: 100px;
+  }
+
+  .iconRefresh {
+    font-size: 30px;
+  }
+
+  .iconPlay {
+    margin-left: 4px;
+    border-top-width: 14px;
+    border-bottom-width: 14px;
+    border-left-width: 24px;
+  }
+
+  .iconPause {
+    width: 22px;
+    height: 28px;
+  }
+
+  .iconPause::before,
+  .iconPause::after {
+    width: 7px;
+  }
+
+  .iconStop {
+    width: 22px;
+    height: 22px;
+  }
+}
+
+@media (max-width: 640px) {
 
   .goalHeader,
   .goalGrid,
   .goalEditor {
-    display: grid;
-    gap: 16px;
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (max-width: 480px) {
+  .tabs {
+    width: 100%;
   }
 
-  .goalHeader,
-  .goalGrid {
-    grid-template-columns: repeat(2, 1fr);
+  .tab {
+    flex: 1;
+  }
+}
+
+@media (max-width: 420px) {
+  .focusRingWrap {
+    width: 280px;
+    height: 280px;
   }
 
-  .goalEditor {
-    grid-template-columns: 1fr auto;
-    margin-top: 18px;
+  .focusMainValue {
+    font-size: 38px;
   }
 
-  .goalInput {
-    padding: 12px 14px;
-    border: 1px solid #334155;
-    border-radius: 12px;
-    background: #020617;
-    color: #f8fafc;
-    font-weight: 800;
+  .compactGoalEditor {
+    flex-direction: column;
   }
 
-  .goalInput::placeholder {
-    color: #64748b;
+  .compactGoalButton {
+    width: 100%;
   }
 
-  @media (max-width: 640px) {
+  .goalModal {
+    padding: 22px;
+    border-radius: 20px;
+  }
 
-    .goalHeader,
-    .goalGrid,
-    .goalEditor {
-      grid-template-columns: 1fr;
-    }
+  .goalModalInput {
+    height: 52px;
+    font-size: 18px;
+  }
+}
+
+@keyframes modalOverlayAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+@keyframes goalModalAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.97);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
   }
 }
