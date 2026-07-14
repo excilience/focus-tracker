@@ -19,7 +19,46 @@ body,
 }
 
 body {
-  background: #050712;
+  position: relative;
+  isolation: isolate;
+
+  background:
+    radial-gradient(circle at 12% 8%,
+      rgba(83, 37, 235, 0.14),
+      transparent 20%),
+    radial-gradient(circle at 88% 92%,
+      rgba(63, 29, 216, 0.08),
+      transparent 28%),
+    linear-gradient(180deg,
+      #050712 0%,
+      #040610 55%,
+      #02040b 100%);
+
+  background-attachment: fixed;
+}
+
+body::before {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+
+  opacity: 0.22;
+
+  background-image:
+    linear-gradient(rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px),
+    linear-gradient(90deg,
+      rgba(255, 255, 255, 0.018) 1px,
+      transparent 1px);
+
+  background-size: 56px 56px;
+
+  mask-image:
+    radial-gradient(circle at center,
+      black,
+      transparent 78%);
 }
 
 #root {
@@ -507,8 +546,8 @@ h1 {
   border: 1px solid rgba(255, 255, 255, 0.08);
 
   background:
-    radial-gradient(circle at 16% 10%,
-      rgba(0, 42, 208, 0.332),
+    radial-gradient(circle at 12% 8%,
+      rgba(83, 37, 235, 0.14),
       transparent 38%),
 
     linear-gradient(180deg,
@@ -521,6 +560,27 @@ h1 {
     inset 0 1px 0 rgba(255, 255, 255, 0.05),
     inset 0 -1px 0 rgba(255, 255, 255, 0.02);
 }
+
+
+.focusCard::before {
+  content: "";
+  position: absolute;
+  inset: 14% 10% -8%;
+
+  z-index: -1;
+  pointer-events: none;
+
+  border-radius: 50%;
+
+  background:
+    radial-gradient(circle,
+      rgba(37, 99, 235, 0.16),
+      transparent 68%);
+
+  filter: blur(42px);
+}
+
+
 
 .focusRingWrap {
   position: relative;
@@ -682,6 +742,42 @@ h1 {
   padding: 0;
   border-radius: 999px;
   line-height: 1;
+}
+
+.completedBlock {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+
+  margin-top: 46px;
+}
+
+.completedLabel {
+  color: #64748b;
+  font-size: 13px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.completedValue {
+  color: #e2e8f0;
+  font-size: 25px;
+  font-weight: 600;
+}
+
+.controlItem {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 10px;
+}
+
+.controlLabel {
+  color: #64748b72;
+  font-size: 12px;
+  font-weight: 700;
 }
 
 .roundButton {

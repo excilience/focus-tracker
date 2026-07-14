@@ -29,10 +29,19 @@ function formatTimer(totalSeconds: number): string {
 }
 
 function formatFocusedTime(totalSeconds: number): string {
-  const hours = Math.floor(totalSeconds / 3600);
-  const minutes = Math.floor((totalSeconds % 3600) / 60);
+  const totalMinutes = Math.floor(totalSeconds / 60);
+  const hours = Math.floor(totalMinutes / 60);
+  const minutes = totalMinutes % 60;
 
-  return `${hours}h ${String(minutes).padStart(2, "0")}m`;
+  if (hours === 0) {
+    return `${minutes}m`;
+  }
+
+  if (minutes === 0) {
+    return `${hours}h`;
+  }
+
+  return `${hours}h ${minutes}m`;
 }
 
 function formatGoal(goal: GoalResponse | null): string {
@@ -274,7 +283,7 @@ function App() {
                     {formatTimer(liveFocusedSeconds)}
                   </strong>
                   <span className="focusSubLabel">
-                    {isPaused ? "pause" : "current session"}
+                    {isPaused ? "Paused" : "Focusing"}
                   </span>
                 </>
               ) : (
@@ -286,9 +295,13 @@ function App() {
             </div>
           </div>
 
-          <p className="focusCompleted">
-            Completed: {formatFocusedTime(liveDailyFocusedSeconds)}
-          </p>
+          <div className="completedBlock">
+            <span className="completedLabel">Completed today</span>
+
+            <strong className="completedValue">
+              {formatFocusedTime(liveDailyFocusedSeconds)}
+            </strong>
+          </div>
 
           {apiStatus === "error" && (
             <p className="error focusError">API is unavailable</p>
@@ -297,14 +310,18 @@ function App() {
           {error && <p className="error focusError">{error}</p>}
 
           <div className="focusControls">
-            <button
-              className="roundButton refreshButton"
-              onClick={refresh}
-              disabled={loading}
-              aria-label="Refresh"
-            >
-              <span className="iconRefresh">↺</span>
-            </button>
+            <div className="controlItem">
+              <button
+                className="roundButton refreshButton"
+                onClick={refresh}
+                disabled={loading}
+                aria-label="Refresh"
+              >
+                <span className="iconRefresh">↺</span>
+              </button>
+
+              <span className="controlLabel">Refresh</span>
+            </div>
 
             {!hasActiveSession ? (
               <button
@@ -335,14 +352,18 @@ function App() {
               </button>
             )}
 
-            <button
-              className="roundButton stopButton"
-              onClick={() => runAction(stopSession)}
-              disabled={loading || !hasActiveSession}
-              aria-label="Stop"
-            >
-              <span className="iconStop" />
-            </button>
+            <div className="controlItem">
+              <button
+                className="roundButton stopButton"
+                onClick={() => runAction(stopSession)}
+                disabled={loading || !hasActiveSession}
+                aria-label="Stop"
+              >
+                <span className="iconStop" />
+              </button>
+
+              <span className="controlLabel">Stop</span>
+            </div>
           </div>
         </section>
       )}
