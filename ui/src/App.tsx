@@ -14,6 +14,7 @@ import {
 import "./App.css";
 import { QuickHistoryView } from "./QuickHistoryView";
 import { SessionsView } from "./SessionsView"
+import { GlobalHistoryView } from "./GlobalHistoryView";
 
 
 function formatTimer(totalSeconds: number): string {
@@ -72,7 +73,9 @@ function App() {
   const [goalInput, setGoalInput] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState<"dashboard" | "history" | "sessions">("dashboard");
+  const [activeTab, setActiveTab] = useState<
+    "dashboard" | "history" | "sessions" | "globalHistory"
+  >("dashboard");
   const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -234,6 +237,13 @@ function App() {
           onClick={() => setActiveTab("sessions")}
         >
           Sessions
+        </button>
+
+        <button
+          className={activeTab === "globalHistory" ? "tab activeTab" : "tab"}
+          onClick={() => setActiveTab("globalHistory")}
+        >
+          Worklog
         </button>
       </div>
 
@@ -406,6 +416,7 @@ function App() {
 
       {activeTab === "history" && <QuickHistoryView />}
       {activeTab === "sessions" && <SessionsView />}
+      {activeTab === "globalHistory" && <GlobalHistoryView />}
     </main>
   );
 }
