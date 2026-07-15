@@ -13,6 +13,8 @@ type WeekGroup = {
     totalSeconds: number;
 };
 
+type WeekSort = "newest" | "least-time" | "most-time";
+
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -132,6 +134,7 @@ export function QuickHistoryView() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
+    const [weekSort, setWeekSort] = useState<WeekSort>("newest");
 
     const weeks = useMemo(() => {
         return groupSessionsByCalendarWeeks(sessions);
@@ -155,10 +158,41 @@ export function QuickHistoryView() {
         loadSessions();
     }, []);
 
+    function getSortedWeeks(weeks: WeekGroup[]): WeekGroup[] {
+        return [...weeks].sort((a, b) => {
+            if (weekSort === "least-time") {
+                return a.totalSeconds - b.totalSeconds;
+            }
+
+            if (weekSort === "most-time") {
+                return b.totalSeconds - a.totalSeconds;
+            }
+
+            return a.weekNumber - b.weekNumber;
+        });
+    }
+
     return (
         <section className="card historyCard">
             <p className="eyebrow">History</p>
             <h1>Quick History</h1>
+
+            <div className="historyToolbar">
+                <div className="historySort">
+                    <span>Sort weeks</span>
+
+                    <select
+                        value={weekSort}
+                        onChange={(event) =>
+                            setWeekSort(event.target.value as WeekSort)
+                        }
+                    >
+                        <option value="newest">Newest first</option>
+                        <option value="most-time">Most focused time</option>
+                        <option value="least-time">Least focused time</option>
+                    </select>
+                </div>
+            </div>
 
             {loading && <p className="emptyState">Loading history...</p>}
 
@@ -170,34 +204,34 @@ export function QuickHistoryView() {
 
             {!loading && !error && weeks.length > 0 && (
                 <div className="quickWeeks">
-                    {weeks
-                        .filter((week) => week.totalSeconds > 0)
-                        .map((week) => (
-                            <section className="quickWeek" key={week.weekNumber}>
-                                <h2>
-                                    Week {week.weekNumber}{" "}
-                                    <span className="weekTotal">
-                                        ({formatDuration(week.totalSeconds)})
-                                    </span>
-                                </h2>
+                    {getSortedWeeks(
+                        weeks.filter((week) => week.totalSeconds > 0),
+                    ).map((week) => (
+                        <section className="quickWeek" key={week.weekNumber}>
+                            <h2>
+                                Week {week.weekNumber}{" "}
+                                <span className="weekTotal">
+                                    ({formatDuration(week.totalSeconds)})
+                                </span>
+                            </h2>
 
-                                <div className="quickDaysGrid">
-                                    {week.days
-                                        .filter((day) => day.totalSeconds > 0)
-                                        .map((day) => (
-                                            <article className="quickDayCell" key={day.dateKey}>
-                                                <span className="quickDayDate">
-                                                    {formatDayTitle(day.date)}
-                                                </span>
+                            <div className="quickDaysGrid">
+                                {week.days
+                                    .filter((day) => day.totalSeconds > 0)
+                                    .map((day) => (
+                                        <article className="quickDayCell" key={day.dateKey}>
+                                            <span className="quickDayDate">
+                                                {formatDayTitle(day.date)}
+                                            </span>
 
-                                                <strong className="quickDayTotal">
-                                                    ⏱ {formatDuration(day.totalSeconds)}
-                                                </strong>
-                                            </article>
-                                        ))}
-                                </div>
-                            </section>
-                        ))}
+                                            <strong className="quickDayTotal">
+                                                ⏱ {formatDuration(day.totalSeconds)}
+                                            </strong>
+                                        </article>
+                                    ))}
+                            </div>
+                        </section>
+                    ))}
                 </div>
             )}
         </section>
