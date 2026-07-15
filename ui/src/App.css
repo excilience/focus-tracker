@@ -126,29 +126,96 @@ button:disabled::before {
 
 /* Tabs */
 .tabs {
+  width: fit-content;
+  max-width: 100%;
+  margin: 0 auto 36px;
+  padding: 5px;
+
   display: flex;
   justify-content: center;
-  gap: 12px;
-  margin-bottom: 36px;
+  align-items: center;
+  gap: 4px;
+
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  border-radius: 18px;
+
+  background:
+    linear-gradient(180deg,
+      rgba(25, 24, 39, 0.96),
+      rgba(18, 17, 29, 0.96));
+
+  box-shadow:
+    0 14px 34px rgba(0, 0, 0, 0.26),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
 
 .tab {
-  background: linear-gradient(135deg, rgba(55, 65, 81, 0.95), rgba(31, 41, 55, 0.95)), #374151;
-  color: #d1d5db;
-  border: 1px solid rgba(148, 163, 184, 0.16);
-  box-shadow: 0 8px 20px rgba(0, 0, 0, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  min-height: 44px;
+  padding: 0 22px;
+
+  position: relative;
+  overflow: hidden;
+
+  border: 1px solid transparent;
+  border-radius: 13px;
+
+  background: transparent;
+  color: #9ca3af;
+
+  font-size: 14px;
+  font-weight: 700;
+  white-space: nowrap;
+
+  box-shadow: none;
+  cursor: pointer;
+
+  transition:
+    color 160ms ease,
+    background 160ms ease,
+    border-color 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.tab::before {
+  display: none;
 }
 
 .tab:hover {
-  color: #ffffff;
-  border-color: rgba(96, 165, 250, 0.4);
+  transform: none;
+  color: #dbeafe;
+  border-color: transparent;
+  background: rgba(96, 165, 250, 0.06);
+  box-shadow: none;
 }
 
 .activeTab {
-  color: white;
-  background: linear-gradient(135deg, #60a5fa, #2563eb 55%, #1d4ed8), #2563eb;
-  border-color: rgba(147, 197, 253, 0.65);
-  box-shadow: 0 12px 30px rgba(37, 99, 235, 0.38), 0 0 0 1px rgba(147, 197, 253, 0.16), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.28);
+
+  background:
+    linear-gradient(180deg,
+      rgba(4, 75, 190, 0.436),
+      rgba(35, 101, 242, 0.936));
+
+  box-shadow:
+    0 8px 22px rgba(37, 99, 235, 0.14),
+    0 0 14px rgba(96, 165, 250, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+.activeTab:hover {
+  color: #ffffff;
+  border-color: rgba(96, 165, 250, 0.42);
+
+  background:
+    linear-gradient(180deg,
+      rgba(10, 88, 214, 0.56),
+      rgba(43, 112, 255, 0.98));
+
+  box-shadow:
+    0 10px 26px rgba(37, 99, 235, 0.22),
+    0 0 18px rgba(96, 165, 250, 0.12),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Base card */
@@ -1716,6 +1783,47 @@ h1 {
 }
 
 @media (max-width: 640px) {
+
+  @media (max-width: 640px) {
+    .tabs {
+      width: 100%;
+      max-width: 100%;
+      margin-bottom: 24px;
+      padding: 4px;
+
+      justify-content: flex-start;
+      overflow-x: auto;
+
+      border-radius: 16px;
+
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tabs::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab {
+      flex: 0 0 auto;
+      min-height: 40px;
+      padding: 0 16px;
+
+      border-radius: 12px;
+      font-size: 13px;
+    }
+
+    .activeTab,
+    .activeTab:hover {
+      box-shadow:
+        0 6px 18px rgba(37, 99, 235, 0.14),
+        0 0 10px rgba(96, 165, 250, 0.07);
+    }
+
+    .tab:active {
+      transform: scale(0.97);
+    }
+  }
 
   .goalHeader,
   .goalGrid,
