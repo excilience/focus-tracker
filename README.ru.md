@@ -1,33 +1,60 @@
 # Focus Tracker
 
-Простой трекер фокус-сессий для командной строки, написанный на Go.
+Focus Tracker — это приложение  для учёта времени, проведённого в фокусе, с возможностью отслеживать продуктивность через историю рабочих сессий.
 
-Focus Tracker помогает отслеживать сфокусированные рабочие сессии, ставить их на паузу и продолжать, смотреть статистику, просматривать историю сессий и отслеживать дневную цель.
+Focus Tracker помогает отслеживать время сфокусированной работы: запускать, ставить на паузу и завершать сессии, смотреть статистику, проверять прогресс по дневной цели, просматривать историю и работать с данными через HTTP API.
 
-## Что он делает
+## Возможности
 
-С помощью Focus Tracker можно:
+Focus Tracker поддерживает:
 
-* начать фокус-сессию
-* поставить активную сессию на паузу и продолжить её
-* остановить и сохранить сессию
-* посмотреть статистику фокуса за день, неделю, месяц, год или за всё время
-* проверить прогресс дневной цели
-* посмотреть историю сессий
-* вручную изменить длительность сессии
+* запуск фокус-сессии
+* паузу и продолжение активной сессии
+* завершение и сохранение сессии
+* просмотр статистики за день, неделю, месяц, год или за всё время
+* проверку прогресса по дневной цели
+* просмотр истории сессий
+* ручное редактирование длительности сессии
+* HTTP API для сессий, статистики, целей и активной сессии
+* хранение данных в PostgreSQL
+* миграции базы данных через `golang-migrate`
+* локальную разработку через Docker Compose и Makefile
+* unit-тесты и PostgreSQL integration tests
 
-Данные сессий хранятся локально в JSON-файлах.
+## Tech stack
+
+* Go
+* PostgreSQL
+* Docker Compose
+* golang-migrate
+* net/http
 
 ## Установка
 
-Клонируйте репозиторий:
+Склонируй репозиторий:
 
 ```bash
 git clone https://github.com/excilience/focus-tracker
 cd focus-tracker
 ```
 
-## Настройки
+Установи Go-зависимости:
+
+```bash
+go mod download
+```
+
+## Конфигурация
+
+Приложение использует переменную окружения `DATABASE_URL` для подключения к PostgreSQL.
+
+Для локальной разработки:
+
+```bash
+export DATABASE_URL="postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable"
+```
+
+Если ты используешь готовый Makefile, это значение уже указано там по умолчанию.
 
 Настройки приложения сейчас задаются в `main.go`:
 
@@ -39,109 +66,88 @@ settings := Settings{
 }
 ```
 
-## Как работают фокус-дни
+## Локальная разработка
 
-Приложение использует `DayStartHour`, чтобы определить, когда начинается ваш фокус-день.
-
-Например:
-
-```go
-DayStartHour: 4
-```
-
-означает, что новый день начинается в **04:00**, а не в **00:00**.
-
-Поэтому если вы работаете после полуночи, например в `01:30`, эта сессия всё ещё относится к предыдущему фокус-дню.
-
-Это полезно, если ваш реальный день часто заканчивается после полуночи.
-
-Пример:
-
-```text
-DayStartHour = 4
-
-May 25, 01:30 -> относится к фокус-дню May 24
-May 25, 05:00 -> относится к фокус-дню May 25
-```
-
-## Часовой пояс
-
-Приложение использует часовой пояс из настроек:
-
-```go
-settings := Settings{
-	DayStartHour: 4,
-	Timezone:     "Europe/Moscow",
-	DailyGoal:    120,
-}
-```
-
-Если `Timezone` пустой:
-
-```go
-Timezone: ""
-```
-
-приложение использует локальный часовой пояс вашей системы.
-
-Также можно вручную указать конкретный IANA timezone:
-
-```go
-Timezone: "Europe/Moscow"
-Timezone: "Asia/Yekaterinburg"
-Timezone: "Asia/Dubai"
-```
-
-Часовой пояс используется для расчёта фокус-дней, недель, месяцев, годов и дневного прогресса.
-
-## Дневная цель
-
-`DailyGoal` указывается в минутах.
-
-Пример:
-
-```go
-DailyGoal: 120
-```
-
-означает:
-
-```text
-Дневная цель = 120 минут = 2 часа
-```
-
-Проверить дневной прогресс можно командой:
+Запустить PostgreSQL:
 
 ```bash
-focus goal
+make db-up
 ```
 
-## Структура проекта
+Применить миграции базы данных:
+
+```bash
+make migrate-up
+```
+
+Запустить тесты:
+
+```bash
+make test
+```
+
+Запустить API server:
+
+```bash
+make run-api
+```
+
+Полностью сбросить локальную базу данных:
+
+```bash
+make db-reset
+```
+
+Эта команда удаляет Docker volume, заново создаёт PostgreSQL и применяет миграции.
+
+## База данных
+
+Focus Tracker хранит данные в PostgreSQL.
+
+Локальная база данных запускается через Docker Compose.
+
+Схема базы данных управляется миграциями в директории `migrations/`:
 
 ```text
-focus-tracker/
-├── main.go          # запуск приложения и маршрутизация команд
-├── commands.go      # обработчики CLI-команд
-├── models.go        # структуры и типы данных
-├── session.go       # логика start, stop, pause, resume и edit
-├── storage.go       # загрузка и сохранение JSON
-├── format.go        # вспомогательные функции форматирования времени
-├── usage.go         # help-сообщения
-├── go.mod
-└── data/            # локальное JSON-хранилище, создаётся автоматически
+migrations/
+├── 000001_create_sessions.up.sql
+├── 000001_create_sessions.down.sql
+├── 000002_create_active_sessions.up.sql
+└── 000002_create_active_sessions.down.sql
+```
+
+Применить миграции вручную:
+
+```bash
+migrate -path migrations -database "$DATABASE_URL" up
+```
+
+Откатить одну миграцию:
+
+```bash
+migrate -path migrations -database "$DATABASE_URL" down 1
+```
+
+Проверить текущую версию миграций:
+
+```bash
+migrate -path migrations -database "$DATABASE_URL" version
 ```
 
 ## Запуск во время разработки
 
-Из папки проекта:
+Запустить CLI-команду:
+
+```bash
+DATABASE_URL="postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable" go run . start
+```
+
+Или используй команды из Makefile, если они доступны.
+
+Примеры:
 
 ```bash
 go run . start
-```
-
-Другие примеры:
-
-```bash
 go run . pause
 go run . resume
 go run . stop
@@ -151,15 +157,21 @@ go run . goal
 go run . history
 ```
 
-## Сборка
+## Build
 
-Соберите приложение:
+Собрать приложение:
 
 ```bash
 go build -o focus
 ```
 
-Затем запустите его:
+Указать строку подключения к базе данных:
+
+```bash
+export DATABASE_URL="postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable"
+```
+
+После этого можно запускать приложение:
 
 ```bash
 ./focus start
@@ -174,9 +186,9 @@ go build -o focus.exe
 .\focus.exe start
 ```
 
-## Команды
+## CLI commands
 
-### Управление
+### Управление сессией
 
 ```bash
 focus start
@@ -214,41 +226,247 @@ focus edit <session-id> <duration>
 focus edit 20260525-143012 1h30m
 ```
 
-Чтобы найти ID сессии:
+Чтобы найти `session-id`, используй:
 
 ```bash
 focus history
 ```
 
-## Хранение данных
+## HTTP API
 
-Focus Tracker хранит данные локально в JSON-файлах.
-
-Папка `data/` создаётся автоматически после первой команды, которой нужно сохранить данные, например:
+Запустить API server:
 
 ```bash
-focus start
+make run-api
 ```
 
-После этого проект будет содержать:
+Health check:
+
+```bash
+curl http://localhost:8080/health
+```
+
+### Sessions
+
+Получить список сессий:
+
+```bash
+curl http://localhost:8080/sessions
+```
+
+Получить сессию по ID:
+
+```bash
+curl http://localhost:8080/sessions/<session-id>
+```
+
+Запустить сессию:
+
+```bash
+curl -X POST http://localhost:8080/sessions/start
+```
+
+Поставить активную сессию на паузу:
+
+```bash
+curl -X POST http://localhost:8080/sessions/pause
+```
+
+Продолжить активную сессию:
+
+```bash
+curl -X POST http://localhost:8080/sessions/resume
+```
+
+Завершить активную сессию:
+
+```bash
+curl -X POST http://localhost:8080/sessions/stop
+```
+
+Получить активную сессию:
+
+```bash
+curl http://localhost:8080/sessions/active
+```
+
+Обновить длительность сессии:
+
+```bash
+curl -X PATCH http://localhost:8080/sessions/<session-id> \
+  -H "Content-Type: application/json" \
+  -d '{"duration":"1h30m"}'
+```
+
+Удалить сессию:
+
+```bash
+curl -X DELETE http://localhost:8080/sessions/<session-id>
+```
+
+Отфильтровать сессии по дате:
+
+```bash
+curl "http://localhost:8080/sessions?from=2026-06-01&to=2026-06-30"
+```
+
+### Statistics
+
+Получить статистику:
+
+```bash
+curl "http://localhost:8080/stats?period=day"
+curl "http://localhost:8080/stats?period=week"
+curl "http://localhost:8080/stats?period=month"
+curl "http://localhost:8080/stats?period=year"
+curl "http://localhost:8080/stats?period=total"
+```
+
+### Goal
+
+Получить прогресс по дневной цели:
+
+```bash
+curl http://localhost:8080/goal
+```
+
+## Как работают focus days
+
+Приложение использует настройку `DayStartHour`, чтобы определить, когда начинается твой фокус-день.
+
+Например:
+
+```go
+DayStartHour: 4
+```
+
+означает, что новый день будет начинаться в **04:00**, а не в **00:00**.
+
+Поэтому если ты работаешь после полуночи, например в `01:30`, эта сессия всё ещё относится к предыдущему фокус-дню.
+
+Это удобно, если твой реальный день часто заканчивается после полуночи.
+
+Пример:
 
 ```text
-data/
-├── sessions.json
-└── active_session.json
+DayStartHour = 4
+
+May 25, 01:30 -> belongs to May 24 focus day
+May 25, 05:00 -> belongs to May 25 focus day
 ```
 
-Директория создаётся автоматически, когда это необходимо.
+## Timezone
 
-`active_session.json` используется, пока фокус-сессия запущена.
+Приложение использует timezone из настроек:
 
-`sessions.json` хранит завершённые фокус-сессии.
+```go
+settings := Settings{
+	DayStartHour: 4,
+	Timezone:     "Europe/Moscow",
+	DailyGoal:    120,
+}
+```
 
-## Примечания
+Если `Timezone` пустой:
 
-Сессии короче одной минуты не сохраняются.
+```go
+Timezone: ""
+```
+
+приложение использует локальную timezone твоей системы.
+
+Также можно указать конкретную IANA timezone вручную:
+
+```go
+Timezone: "Europe/Moscow"
+Timezone: "Asia/Yekaterinburg"
+Timezone: "Asia/Dubai"
+```
+
+Timezone используется для расчёта фокус-дней, недель, месяцев, лет и дневного прогресса.
+
+PostgreSQL может хранить или отображать timestamps в UTC, но приложение конвертирует время в настроенную timezone при расчёте статистики и форматировании API responses.
+
+## Daily goal
+
+`DailyGoal` указывается в минутах.
+
+Пример:
+
+```go
+DailyGoal: 120
+```
+
+означает:
+
+```text
+Daily goal = 120 minutes = 2 hours
+```
+
+Проверить дневной прогресс можно через CLI:
+
+```bash
+focus goal
+```
+
+или через API:
+
+```bash
+curl http://localhost:8080/goal
+```
+
+## Tests
+
+Запустить все тесты:
+
+```bash
+make test
+```
+
+Или вручную:
+
+```bash
+TEST_DATABASE_URL="postgres://focus:focus@localhost:5433/focus_tracker?sslmode=disable" go test -v ./...
+```
+
+В проекте есть:
+
+* unit tests для логики focus-day и статистики
+* HTTP handler tests
+* PostgreSQL integration tests
+
+PostgreSQL integration tests требуют запущенную базу данных с применёнными миграциями.
+
+## Project structure
+
+```text
+focus-tracker/
+├── migrations/                # Database migrations
+├── api.go                     # HTTP API handlers and routes
+├── commands.go                # CLI command handlers
+├── database.go                # Database connection logic
+├── docker-compose.yml         # Local PostgreSQL setup
+├── errors.go                  # Domain errors
+├── executor.go                # Shared DB executor interface
+├── focus_service_test.go      # Unit tests for focus and stats logic
+├── format.go                  # Time formatting helpers
+├── go.mod
+├── go.sum
+├── main.go                    # Application startup and command routing
+├── Makefile                   # Local development commands
+├── models.go                  # Data structures and types
+├── postgres_storage_test.go   # PostgreSQL integration tests
+├── postgres_storage.go        # PostgreSQL storage functions
+├── service.go                 # Focus statistics and period calculation logic
+├── session.go                 # Start, stop, pause, resume, and edit logic
+├── storage.go                 # Legacy JSON storage logic
+└── usage.go                   # Help messages
+```
+
+## Notes
+
+Сессии короче одной минуты завершаются, но не сохраняются.
 
 Время на паузе не считается сфокусированным временем.
 
-Сейчас для хранения используются JSON-файлы.
-
+Приложение использует PostgreSQL для постоянного хранения данных.

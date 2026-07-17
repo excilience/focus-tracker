@@ -44,25 +44,22 @@ func main() {
 		handleResume(db)
 
 	case "stats":
-		handleStats(focusService, os.Args)
+		handleStats(focusService, os.Args, db)
 
 	case "goal":
-		handleGoal(focusService)
+		handleGoal(focusService, db)
 
 	case "history":
-		handleHistory()
+		handleHistory(db)
 
 	case "edit":
-		handleEdit(os.Args)
+		handleEdit(db, os.Args)
 
 	case "help", "--help", "-h":
 		printUsage()
 
-	case "serve":
+	case "api":
 		handleServe(focusService)
-
-	case "db-import":
-		dbImport()
 
 	case "db-list":
 		dbList()
