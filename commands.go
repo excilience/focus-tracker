@@ -27,13 +27,6 @@ func handleStop(db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	db, err := connectDB()
-	if err != nil {
-		fmt.Println("Failed to connect to PostgreSQL:", err)
-		return
-	}
-	defer db.Close()
-
 	result, err := stopSession(ctx, db)
 	if err != nil {
 		fmt.Println("Failed to stop session", err)

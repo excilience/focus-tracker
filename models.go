@@ -87,7 +87,7 @@ type ActiveSession struct {
 
 type ActiveSessionResponse struct {
 	Start          string `json:"start"`
-	LastResume     string `json:"last_resume"`
+	LastResume     string `json:"last_resume,omitempty"`
 	FocusedSeconds int    `json:"focused_seconds"`
 	FocusedHuman   string `json:"focused_human"`
 	IsPaused       bool   `json:"is_paused"`
@@ -101,6 +101,7 @@ type SessionResponse struct {
 	ID              string `json:"id"`
 	Start           string `json:"start"`
 	End             string `json:"end"`
+	FocusDay        string `json:"focus_day"`
 	DurationSeconds int    `json:"duration_seconds"`
 	DurationHuman   string `json:"duration_human"`
 }
@@ -108,4 +109,8 @@ type SessionResponse struct {
 type statusRecorder struct {
 	http.ResponseWriter
 	status int
+}
+
+type updateGoalRequest struct {
+	DailyGoal string `json:"daily_goal"`
 }

@@ -21,7 +21,7 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
 		getSessionsHandler(w, r, fs, db)
 	})
-	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs.location) })
+	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs) })
 	mux.HandleFunc("GET /sessions/active", func(w http.ResponseWriter, r *http.Request) {
 		getActiveSessionHandler(w, r, db)
 	})
@@ -42,21 +42,28 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 		resumeSessionHandler(w, r, db)
 	})
 	mux.HandleFunc("POST /sessions/stop", func(w http.ResponseWriter, r *http.Request) {
-		stopSessionHandler(w, r, db, fs.location)
+		stopSessionHandler(w, r, db, fs)
 	})
 
 	mux.HandleFunc("PATCH /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
-		updateSessionHandler(w, r, db, fs.location)
+		updateSessionHandler(w, r, db, fs)
+	})
+
+	mux.HandleFunc("PATCH /goal", func(w http.ResponseWriter, r *http.Request) {
+		updateGoalHandler(w, r, fs, db)
 	})
 	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
-		deleteSessionHandler(w, r, db, fs.location)
+		deleteSessionHandler(w, r, db, fs)
 	})
 
 	addr := ":8080"
 
+	handler := devCORSMiddleware(mux)
+	handler = loggingMiddleware(handler)
+
 	server := &http.Server{
 		Addr:    addr,
-		Handler: loggingMiddleware(mux),
+		Handler: handler,
 	}
 	serverErr := make(chan error, 1)
 
@@ -92,6 +99,26 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	case err := <-serverErr:
 		return err
 	}
+}
+
+func devCORSMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		origin := r.Header.Get("Origin")
+
+		if origin == "http://localhost:5173" || origin == "http://127.0.0.1:5173" {
+			w.Header().Set("Access-Control-Allow-Origin", origin)
+			w.Header().Set("Vary", "Origin")
+			w.Header().Set("Access-Control-Allow-Methods", "GET, POST, PATCH, DELETE, OPTIONS")
+			w.Header().Set("Access-Control-Allow-Headers", "Content-Type")
+		}
+
+		if r.Method == http.MethodOptions {
+			w.WriteHeader(http.StatusNoContent)
+			return
+		}
+
+		next.ServeHTTP(w, r)
+	})
 }
 
 func (r *statusRecorder) WriteHeader(status int) {
@@ -135,7 +162,7 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	})
 }
 
-func stopSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
+func stopSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
@@ -157,7 +184,7 @@ func stopSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, loca
 	writeJSON(w, http.StatusOK, map[string]any{
 		"message": "focus session stopped and saved",
 		"saved":   true,
-		"session": toSessionResponse(result.Session, location),
+		"session": toSessionResponse(result.Session, fs),
 	})
 }
 
@@ -266,7 +293,7 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
 			return
 		}
-		writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs.location))
+		writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs))
 		return
 	}
 
@@ -305,7 +332,7 @@ func getSessionsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs.location))
+	writeJSON(w, http.StatusOK, toSessionResponses(sessions, fs))
 }
 
 func toStatsResponse(stats FocusStats) StatsResponse {
@@ -379,7 +406,47 @@ func toGoalResponse(fs *FocusService, progress FocusProgress, now time.Time) Goa
 
 }
 
-func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
+func updateGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+	var request updateGoalRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	if request.DailyGoal == "" {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "daily_goal is required")
+		return
+	}
+
+	dailyGoal, err := time.ParseDuration(request.DailyGoal)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid daily_goal format")
+		return
+	}
+
+	if dailyGoal <= 0 {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "daily_goal must be higher than zero")
+		return
+	}
+
+	fs.settings.DailyGoal = int(dailyGoal.Minutes())
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
+	if err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
+		return
+	}
+
+	progress := fs.DailyProgress(sessions)
+
+	writeJSON(w, http.StatusOK, toGoalResponse(fs, progress, time.Now()))
+
+}
+func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
@@ -413,10 +480,10 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession, location))
+	writeJSON(w, http.StatusOK, toSessionResponse(updatedSession, fs))
 }
 
-func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
+func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
@@ -433,31 +500,36 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
 		"message": "session deleted",
-		"session": toSessionResponse(deletedSession, location),
+		"session": toSessionResponse(deletedSession, fs),
 	})
 }
 
-func toSessionResponse(session Session, location *time.Location) SessionResponse {
+func toSessionResponse(session Session, fs *FocusService) SessionResponse {
+	start := session.Start.In(fs.location)
+	end := session.End.In(fs.location)
+	focusDay := fs.StartOfFocusDay(start)
+
 	return SessionResponse{
 		ID:              session.ID,
-		Start:           timeFormat(session.Start.In(location)),
-		End:             timeFormat(session.End.In(location)),
+		Start:           timeFormat(start),
+		End:             timeFormat(end),
+		FocusDay:        focusDay.Format(dateLayout),
 		DurationSeconds: session.DurationSeconds,
 		DurationHuman:   formatDuration(session.DurationSeconds),
 	}
 }
 
-func toSessionResponses(sessions []Session, location *time.Location) []SessionResponse {
+func toSessionResponses(sessions []Session, fs *FocusService) []SessionResponse {
 	response := make([]SessionResponse, 0, len(sessions))
 
 	for _, session := range sessions {
-		response = append(response, toSessionResponse(session, location))
+		response = append(response, toSessionResponse(session, fs))
 	}
 
 	return response
 }
 
-func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
+func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 	id := r.PathValue("id")
 	if id == "" {
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "session id is required")
@@ -473,5 +545,5 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, l
 		return
 	}
 
-	writeJSON(w, http.StatusOK, toSessionResponse(session, location))
+	writeJSON(w, http.StatusOK, toSessionResponse(session, fs))
 }

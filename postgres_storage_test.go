@@ -264,7 +264,14 @@ func TestLoadSessionsByPeriodFromDB(t *testing.T) {
 }
 
 func TestUpdateSessionHandlerInvalidDurationResponse(t *testing.T) {
-	location := time.FixedZone("UTC+3", 3*60*60)
+	fs := &FocusService{
+		settings: Settings{
+			DayStartHour: 4,
+			Timezone:     "UTC+3",
+			DailyGoal:    3600,
+		},
+		location: time.FixedZone("UTC+3", 3*60*60),
+	}
 
 	body := strings.NewReader(`{
 		"duration": "wrong-duration"
@@ -283,7 +290,7 @@ func TestUpdateSessionHandlerInvalidDurationResponse(t *testing.T) {
 		rr,
 		req,
 		nil,
-		location,
+		fs,
 	)
 
 	if rr.Code != http.StatusBadRequest {

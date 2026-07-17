@@ -316,7 +316,14 @@ func TestStatsForPeriodMonth(t *testing.T) {
 }
 
 func TestUpdateSessionHandlerInvalidDuration(t *testing.T) {
-	location := time.FixedZone("UTC+3", 3*60*60)
+	fs := &FocusService{
+		settings: Settings{
+			DayStartHour: 4,
+			Timezone:     "UTC+3",
+			DailyGoal:    3600,
+		},
+		location: time.FixedZone("UTC+3", 3*60*60),
+	}
 
 	body := strings.NewReader(`{
 		"duration": "wrong-duration"
@@ -336,7 +343,7 @@ func TestUpdateSessionHandlerInvalidDuration(t *testing.T) {
 		rr,
 		req,
 		nil,
-		location,
+		fs,
 	)
 
 	if rr.Code != http.StatusBadRequest {
@@ -348,7 +355,14 @@ func TestUpdateSessionHandlerInvalidDuration(t *testing.T) {
 }
 
 func TestUpdateSessionHandlerInvalidJSON(t *testing.T) {
-	location := time.FixedZone("UTC+3", 3*60*60)
+	fs := &FocusService{
+		settings: Settings{
+			DayStartHour: 4,
+			Timezone:     "UTC+3",
+			DailyGoal:    3600,
+		},
+		location: time.FixedZone("UTC+3", 3*60*60),
+	}
 
 	body := strings.NewReader(`{	JSON: "Bad JSON"`)
 
@@ -358,7 +372,7 @@ func TestUpdateSessionHandlerInvalidJSON(t *testing.T) {
 
 	rr := httptest.NewRecorder()
 
-	updateSessionHandler(rr, req, nil, location)
+	updateSessionHandler(rr, req, nil, fs)
 
 	if rr.Code != http.StatusBadRequest {
 		t.Errorf("status = %d; expected %d", rr.Code, http.StatusBadRequest)
