@@ -3,11 +3,21 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"time"
 )
 
 func startSession(ctx context.Context, db *sql.DB) error {
+	_, err := loadActiveSession(ctx, db)
+	if err == nil {
+		return ErrSessionAlreadyActive
+	}
+
+	if !errors.Is(err, ErrNoActiveSession) {
+		return fmt.Errorf("load active session: %w", err)
+	}
+
 	now := time.Now()
 
 	activeSession := ActiveSession{
@@ -31,7 +41,7 @@ func pauseSession(ctx context.Context, db *sql.DB) error {
 	}
 
 	if activeSession.IsPaused {
-		return fmt.Errorf("session is already paused")
+		return ErrSessionAlreadyPaused
 	}
 
 	now := time.Now()
@@ -54,7 +64,7 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 
 	activeSession, err := loadActiveSession(ctx, tx)
 	if err != nil {
-		return StopSessionResult{}, err
+		return StopSessionResult{}, fmt.Errorf("load active session: %w", err)
 	}
 
 	now := time.Now()
@@ -76,12 +86,12 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 
 	if saved {
 		if err := createSession(ctx, tx, currentSession); err != nil {
-			return StopSessionResult{}, err
+			return StopSessionResult{}, fmt.Errorf("create session: %w", err)
 		}
 	}
 
 	if err := deleteActiveSessionFromDB(ctx, tx); err != nil {
-		return StopSessionResult{}, err
+		return StopSessionResult{}, fmt.Errorf("delete active session: %w", err)
 	}
 
 	if err := tx.Commit(); err != nil {
@@ -101,7 +111,7 @@ func resumeSession(ctx context.Context, db *sql.DB) error {
 	}
 
 	if !activeSession.IsPaused {
-		return fmt.Errorf("session is not paused")
+		return ErrSessionAlreadyRunning
 	}
 
 	activeSession.LastResume = time.Now()

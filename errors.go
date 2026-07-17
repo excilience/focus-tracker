@@ -30,7 +30,7 @@ type APIErrorResponse struct {
 type APIError struct {
 	Code    string         `json:"code"`
 	Message string         `json:"message"`
-	Details map[string]any `json:"details"`
+	Details map[string]any `json:"details,omitempty"`
 }
 
 func writeAPIError(w http.ResponseWriter, status int, code string, message string) {
@@ -45,4 +45,27 @@ func writeAPIErrorWithDetails(w http.ResponseWriter, status int, code string, me
 			Details: details,
 		},
 	})
+}
+
+func writeDomainError(w http.ResponseWriter, err error, defaultMessage string) {
+	switch {
+	case errors.Is(err, ErrSessionNotFound):
+		writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
+
+	case errors.Is(err, ErrNoActiveSession):
+		writeAPIError(w, http.StatusNotFound, ErrorCodeNoActiveSession, err.Error())
+
+	case errors.Is(err, ErrSessionAlreadyActive):
+		writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyActive, err.Error())
+
+	case errors.Is(err, ErrSessionAlreadyPaused):
+		writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyPaused, err.Error())
+
+	case errors.Is(err, ErrSessionAlreadyRunning):
+		writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyRunning, err.Error())
+
+	default:
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, defaultMessage)
+
+	}
 }

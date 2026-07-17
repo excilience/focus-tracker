@@ -9,6 +9,7 @@ db-down:
 db-reset:
 	docker compose down -v
 	docker compose up -d
+	sleep 2
 	migrate -path migrations -database "$(DB_URL)" up
 
 migrate-up:
@@ -16,6 +17,9 @@ migrate-up:
 
 migrate-down:
 	migrate -path migrations -database "$(DB_URL)" down 1
+
+migrate-version:
+	migrate -path migrations -database "$(DB_URL)" version
 
 test:
 	TEST_DATABASE_URL="$(DB_URL)" go test -v ./...

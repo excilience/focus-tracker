@@ -8,6 +8,9 @@ import (
 	"fmt"
 	"math"
 	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 	"time"
 )
 
@@ -51,9 +54,70 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 
 	addr := ":8080"
 
-	fmt.Println("API server started on http://localhost" + addr)
+	server := &http.Server{
+		Addr:    addr,
+		Handler: loggingMiddleware(mux),
+	}
+	serverErr := make(chan error, 1)
 
-	return http.ListenAndServe(addr, mux)
+	go func() {
+		fmt.Println("API server started on http://localhost" + addr)
+
+		if err := server.ListenAndServe(); err != nil &&
+			!errors.Is(err, http.ErrServerClosed) {
+			serverErr <- err
+			return
+		}
+
+		serverErr <- nil
+	}()
+
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt, syscall.SIGTERM)
+	defer signal.Stop(stop)
+
+	select {
+	case <-stop:
+		fmt.Println("\nShutting down API server...")
+
+		ctx, cancel := context.WithTimeout(context.Background(), 3*time.Second)
+		defer cancel()
+
+		if err := server.Shutdown(ctx); err != nil {
+			return fmt.Errorf("shutdown server: %w", err)
+		}
+
+		return nil
+
+	case err := <-serverErr:
+		return err
+	}
+}
+
+func (r *statusRecorder) WriteHeader(status int) {
+	r.status = status
+	r.ResponseWriter.WriteHeader(status)
+}
+
+func loggingMiddleware(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now()
+
+		recorder := &statusRecorder{
+			ResponseWriter: w,
+			status:         http.StatusOK,
+		}
+
+		next.ServeHTTP(recorder, r)
+
+		fmt.Printf(
+			"%s %s %d %s\n",
+			r.Method,
+			r.URL.RequestURI(),
+			recorder.status,
+			time.Since(start),
+		)
+	})
 }
 
 func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
@@ -62,12 +126,7 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := startSession(ctx, db); err != nil {
-		switch {
-		case errors.Is(err, ErrSessionAlreadyActive):
-			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyActive, err.Error())
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to start session")
-		}
+		writeDomainError(w, err, "failed to start session")
 		return
 	}
 
@@ -76,20 +135,14 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	})
 }
 
-func stopSessionHandler(w http.ResponseWriter, _ *http.Request, db *sql.DB, location *time.Location) {
+func stopSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, location *time.Location) {
 
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
 	result, err := stopSession(ctx, db)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrNoActiveSession):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to stop session")
-		}
-
+		writeDomainError(w, err, "failed to stop session")
 		return
 	}
 
@@ -114,15 +167,7 @@ func pauseSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := pauseSession(ctx, db); err != nil {
-		switch {
-		case errors.Is(err, ErrNoActiveSession):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		case errors.Is(err, ErrSessionAlreadyPaused):
-			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyPaused, err.Error())
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to pause session")
-		}
+		writeDomainError(w, err, "failed to pause session")
 		return
 	}
 
@@ -137,17 +182,7 @@ func resumeSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	defer cancel()
 
 	if err := resumeSession(ctx, db); err != nil {
-		switch {
-		case errors.Is(err, ErrNoActiveSession):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		case errors.Is(err, ErrSessionAlreadyRunning):
-			writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyRunning, err.Error())
-
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to resume session")
-		}
-
+		writeDomainError(w, err, "failed to resume session")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]string{
@@ -162,13 +197,7 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 
 	activeSession, err := loadActiveSession(ctx, db)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrNoActiveSession):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load active session")
-		}
+		writeDomainError(w, err, "failed to load active session")
 		return
 	}
 	focusedSeconds := activeSession.FocusedSeconds
@@ -380,13 +409,7 @@ func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 
 	updatedSession, err := updateSessionDuration(ctx, db, id, duration)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrSessionNotFound):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to updatge session")
-		}
+		writeDomainError(w, err, "failed to update session")
 		return
 	}
 
@@ -405,13 +428,7 @@ func deleteSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, lo
 
 	deletedSession, err := deleteSession(ctx, db, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrSessionNotFound):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "faield to delete session")
-		}
+		writeDomainError(w, err, "failed to delete session")
 		return
 	}
 	writeJSON(w, http.StatusOK, map[string]any{
@@ -452,13 +469,7 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, l
 
 	session, err := getSessionByIDFromDB(ctx, db, id)
 	if err != nil {
-		switch {
-		case errors.Is(err, ErrSessionNotFound):
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, err.Error())
-
-		default:
-			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to get session")
-		}
+		writeDomainError(w, err, "failed to get session")
 		return
 	}
 
