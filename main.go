@@ -1,22 +1,18 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"os"
+	"time"
 )
 
 func main() {
 
-	settings := Settings{
-		DayStartHour: 4,
-		Timezone:     "Europe/Istanbul",
-		DailyGoal:    120,
-	}
-
-	focusService, err := NewFocusService(settings)
-	if err != nil {
-		fmt.Println("Failed to create focus service:", err)
-		return
+	defaultSettings := Settings{
+		DayStartHour: 0,
+		Timezone:     "",
+		DailyGoal:    60,
 	}
 
 	db, err := connectDB()
@@ -25,6 +21,30 @@ func main() {
 		return
 	}
 	defer db.Close()
+
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := ensureAppSettings(ctx, db, defaultSettings); err != nil {
+		fmt.Println("Failed to ensure app settings:", err)
+		return
+	}
+
+	dbSettings, err := loadAppSettings(ctx, db)
+	if err != nil {
+		fmt.Println("Failed to load app settings:", err)
+		return
+	}
+
+	runtimeSettings := defaultSettings
+	runtimeSettings.DailyGoal = dbSettings.DailyGoalMinutes
+	runtimeSettings.DayStartHour = dbSettings.DayStartHour
+
+	focusService, err := NewFocusService(runtimeSettings)
+	if err != nil {
+		fmt.Println("Failed to create focus service:", err)
+		return
+	}
 
 	if len(os.Args) < 2 {
 		printUsage()
@@ -59,13 +79,13 @@ func main() {
 		printUsage()
 
 	case "api":
-		handleServe(focusService)
+		handleServe(focusService, db)
 
 	case "db-list":
-		dbList()
+		dbList(db)
 
 	case "db-get":
-		dbGetSession(os.Args[2:])
+		dbGetSession(db, os.Args[2:])
 
 	default:
 		fmt.Println("Unknown command")

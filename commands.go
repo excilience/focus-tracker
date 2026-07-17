@@ -198,23 +198,15 @@ func handleEdit(db *sql.DB, args []string) {
 	fmt.Println("New duration:", formatDuration(updatedSession.DurationSeconds))
 }
 
-func handleServe(fs *FocusService) {
-
-	db, err := connectDB()
-	if err != nil {
-		fmt.Println("Failed to connect to PostgreSQL:", err)
-		return
-	}
-	defer db.Close()
-
-	err = runApiServer(fs, db)
+func handleServe(fs *FocusService, db *sql.DB) {
+	err := runApiServer(fs, db)
 	if err != nil {
 		fmt.Println("Failed to start API server:", err)
 		return
 	}
 }
-func connectDB() (*sql.DB, error) {
 
+func connectDB() (*sql.DB, error) {
 	dsn := os.Getenv("DATABASE_URL")
 	if dsn == "" {
 		return nil, fmt.Errorf("DATABASE_URL is not set")
@@ -228,14 +220,7 @@ func connectDB() (*sql.DB, error) {
 	return db, nil
 }
 
-func dbList() {
-	db, err := connectDB()
-	if err != nil {
-		fmt.Println("Failed to connect to PostgreSQL:", err)
-		return
-	}
-	defer db.Close()
-
+func dbList(db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
@@ -250,7 +235,7 @@ func dbList() {
 	}
 }
 
-func dbGetSession(args []string) {
+func dbGetSession(db *sql.DB, args []string) {
 
 	if len(os.Args) < 3 {
 		fmt.Println("Usage: focus db-get <session-id>")
@@ -258,13 +243,6 @@ func dbGetSession(args []string) {
 	}
 
 	id := args[0]
-
-	db, err := connectDB()
-	if err != nil {
-		fmt.Println("Failed to connect to PostgreSQL:", err)
-		return
-	}
-	defer db.Close()
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
