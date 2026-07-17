@@ -2,12 +2,14 @@ import { useEffect, useState } from "react";
 import {
   getActiveSession,
   getHealth,
+  getSettings,
   pauseSession,
   resumeSession,
   startSession,
   stopSession,
   getGoal,
   updateGoal,
+  updateSettings,
   type GoalResponse,
   type ActiveSession,
 } from "./api";
@@ -73,6 +75,7 @@ function App() {
   const [goalInput, setGoalInput] = useState("");
   const [goalSaving, setGoalSaving] = useState(false);
   const [isGoalModalOpen, setIsGoalModalOpen] = useState(false);
+  const [dayStartHourInput, setDayStartHourInput] = useState("");
   const [activeTab, setActiveTab] = useState<
     "dashboard" | "history" | "sessions" | "globalHistory"
   >("dashboard");
@@ -111,6 +114,9 @@ function App() {
     const goalResult = await getGoal();
     setGoal(goalResult);
     setGoalInput(goalResult.goal_human.replaceAll(" ", ""));
+
+    const settingsResult = await getSettings();
+    setDayStartHourInput(String(settingsResult.day_start_hour));
   }
 
   async function runAction(action: () => Promise<unknown>) {
@@ -127,15 +133,31 @@ function App() {
     }
   }
 
-  async function saveGoal() {
+  async function saveSettings() {
+    const parsedDayStartHour = Number(dayStartHourInput);
+
+    if (!Number.isInteger(parsedDayStartHour) || parsedDayStartHour < 0 || parsedDayStartHour > 23) {
+      setError("Day start hour must be between 0 and 23");
+      return;
+    }
+
     setGoalSaving(true);
     setError("");
 
     try {
       const updatedGoal = await updateGoal(goalInput);
+      const updatedSettings = await updateSettings(parsedDayStartHour);
+
+
       setGoal(updatedGoal);
+
+
       setGoalInput(updatedGoal.goal_human.replaceAll(" ", ""));
+      setDayStartHourInput(String(updatedSettings.day_start_hour));
+
       setIsGoalModalOpen(false);
+
+      await refresh();
     } catch (error) {
       setError(error instanceof Error ? error.message : "Failed to update goal");
     } finally {
@@ -388,25 +410,52 @@ function App() {
             onMouseDown={(event) => event.stopPropagation()}
             onSubmit={(event) => {
               event.preventDefault();
-              void saveGoal();
+              void saveSettings();
             }}
           >
-            <h2 className="goalModalTitle">Set Daily Goal</h2>
+            <h2 className="goalModalTitle">Settings</h2>
 
-            <input
-              className="goalModalInput"
-              value={goalInput}
-              onChange={(event) => setGoalInput(event.target.value)}
-              placeholder="For example: 2h or 1h30m"
-              disabled={goalSaving}
-              aria-label="Daily focus goal"
-              autoFocus
-            />
+            <label className="goalModalField">
+              <span className="goalModalLabel">Daily goal</span>
+              <input
+                className="goalModalInput goalModalInputGoal"
+                value={goalInput}
+                onChange={(event) => setGoalInput(event.target.value)}
+                placeholder="For example: 2h or 1h30m"
+                disabled={goalSaving}
+                aria-label="Daily focus goal"
+                autoFocus
+              />
+            </label>
+
+            <label className="goalModalField">
+              <span className="goalModalLabel">Day start hour</span>
+
+              <div className="hourInputRow">
+                <input
+                  className="goalModalInput goalModalInputHour"
+                  type="number"
+                  min={0}
+                  max={23}
+                  value={dayStartHourInput}
+                  onChange={(event) => setDayStartHourInput(event.target.value)}
+                  placeholder="0"
+                  disabled={goalSaving}
+                  aria-label="Day start hour"
+                />
+
+                <span className="hourSuffix">:00</span>
+              </div>
+
+              <span className="goalModalHint">
+                Sessions before this time count toward the previous day.
+              </span>
+            </label>
 
             <button
               type="submit"
               className="goalModalSaveButton"
-              disabled={goalSaving || !goalInput.trim()}
+              disabled={goalSaving || !goalInput.trim() || !dayStartHourInput.trim()}
             >
               {goalSaving ? "Saving..." : "Save"}
             </button>

@@ -58,8 +58,8 @@ export function updateSettings(dayStartHour: number): Promise<SettingsResponse> 
         method: "PATCH",
         body: JSON.stringify({
             day_start_hour: dayStartHour,
-        })
-    })
+        }),
+    });
 }
 
 export function getGoal(): Promise<GoalResponse> {
