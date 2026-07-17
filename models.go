@@ -114,3 +114,11 @@ type statusRecorder struct {
 type updateGoalRequest struct {
 	DailyGoal string `json:"daily_goal"`
 }
+
+type SettingsResponse struct {
+	DayStartHour int `json:"day_start_hour"`
+}
+
+type updateSettingsRequest struct {
+	DayStartHour *int `json:"day_start_hour"`
+}

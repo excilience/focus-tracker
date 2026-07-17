@@ -21,7 +21,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("GET /sessions", func(w http.ResponseWriter, r *http.Request) {
 		getSessionsHandler(w, r, fs, db)
 	})
-	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) { getSessionByIDHandler(w, r, db, fs) })
+	mux.HandleFunc("GET /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
+		getSessionByIDHandler(w, r, db, fs)
+	})
 	mux.HandleFunc("GET /sessions/active", func(w http.ResponseWriter, r *http.Request) {
 		getActiveSessionHandler(w, r, db)
 	})
@@ -30,6 +32,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	})
 	mux.HandleFunc("GET /goal", func(w http.ResponseWriter, r *http.Request) {
 		getGoalHandler(w, r, fs, db)
+	})
+	mux.HandleFunc("GET /settings", func(w http.ResponseWriter, r *http.Request) {
+		getSettingsHandler(w, r, fs)
 	})
 
 	mux.HandleFunc("POST /sessions/start", func(w http.ResponseWriter, r *http.Request) {
@@ -52,6 +57,11 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("PATCH /goal", func(w http.ResponseWriter, r *http.Request) {
 		updateGoalHandler(w, r, fs, db)
 	})
+
+	mux.HandleFunc("PATCH /settings", func(w http.ResponseWriter, r *http.Request) {
+		updateSettingsHandler(w, r, fs, db)
+	})
+
 	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
 		deleteSessionHandler(w, r, db, fs)
 	})
@@ -430,10 +440,17 @@ func updateGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService,
 		return
 	}
 
-	fs.settings.DailyGoal = int(dailyGoal.Minutes())
+	dailyGoalMinutes := int(dailyGoal.Minutes())
 
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
+
+	if err := updateDailyGoalMinutes(ctx, db, dailyGoalMinutes); err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to update goal")
+		return
+	}
+
+	fs.settings.DailyGoal = dailyGoalMinutes
 
 	sessions, err := loadSessionsFromDB(ctx, db)
 	if err != nil {
@@ -446,6 +463,7 @@ func updateGoalHandler(w http.ResponseWriter, r *http.Request, fs *FocusService,
 	writeJSON(w, http.StatusOK, toGoalResponse(fs, progress, time.Now()))
 
 }
+
 func updateSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {
 	id := r.PathValue("id")
 	if id == "" {
@@ -546,4 +564,47 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, f
 	}
 
 	writeJSON(w, http.StatusOK, toSessionResponse(session, fs))
+}
+
+func toSettingsResponse(fs *FocusService) SettingsResponse {
+	return SettingsResponse{
+		DayStartHour: fs.settings.DayStartHour,
+	}
+}
+
+func getSettingsHandler(w http.ResponseWriter, _ *http.Request, fs *FocusService) {
+	writeJSON(w, http.StatusOK, toSettingsResponse(fs))
+}
+
+func updateSettingsHandler(w http.ResponseWriter, r *http.Request, fs *FocusService, db *sql.DB) {
+	var request updateSettingsRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	if request.DayStartHour == nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "day_start_hour is required")
+		return
+	}
+
+	dayStartHour := *request.DayStartHour
+
+	if dayStartHour < 0 || dayStartHour > 23 {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "day_start_hour must be between 0 and 23")
+		return
+	}
+
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	if err := updateDayStartHour(ctx, db, dayStartHour); err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to update day start hour")
+		return
+	}
+
+	fs.settings.DayStartHour = dayStartHour
+
+	writeJSON(w, http.StatusOK, toSettingsResponse(fs))
 }

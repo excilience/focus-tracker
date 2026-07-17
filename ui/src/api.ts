@@ -45,6 +45,23 @@ export type GoalResponse = {
     is_completed: boolean;
 }
 
+export type SettingsResponse = {
+    day_start_hour: number;
+};
+
+export function getSettings(): Promise<SettingsResponse> {
+    return request<SettingsResponse>("/settings");
+}
+
+export function updateSettings(dayStartHour: number): Promise<SettingsResponse> {
+    return request<SettingsResponse>("/settings", {
+        method: "PATCH",
+        body: JSON.stringify({
+            day_start_hour: dayStartHour,
+        })
+    })
+}
+
 export function getGoal(): Promise<GoalResponse> {
     return request<GoalResponse>("/goal");
 }
