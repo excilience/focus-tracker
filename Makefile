@@ -25,7 +25,7 @@ test:
 	TEST_DATABASE_URL="$(DB_URL)" go test -v ./...
 
 run-api:
-	DATABASE_URL="$(DB_URL)" go run . api
+	DATABASE_URL="$(DB_URL)" go run ./cmd/focus api
 
 run-dev:
 	cd ui && npm run dev
