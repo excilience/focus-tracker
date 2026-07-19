@@ -14,6 +14,18 @@ import (
 	"time"
 )
 
+const (
+	testSessionID1             = "11111111-1111-1111-1111-111111111111"
+	testSessionIDDelete        = "22222222-2222-2222-2222-222222222222"
+	testSessionIDUpdate        = "33333333-3333-3333-3333-333333333333"
+	testSessionIDBeforePeriod  = "44444444-4444-4444-4444-444444444444"
+	testSessionIDOverlapsStart = "55555555-5555-5555-5555-555555555555"
+	testSessionIDInsidePeriod  = "66666666-6666-6666-6666-666666666666"
+	testSessionIDOverlapsEnd   = "77777777-7777-7777-7777-777777777777"
+	testSessionIDAfterPeriod   = "88888888-8888-8888-8888-888888888888"
+	testMissingSessionID       = "99999999-9999-9999-9999-999999999999"
+)
+
 func cleanTestDB(t *testing.T, db *sql.DB) {
 	t.Helper()
 
@@ -62,7 +74,7 @@ func TestCreateSessionInDBAndGetByID(t *testing.T) {
 	location := time.FixedZone("UTC+3", 3*60*60)
 
 	expected := Session{
-		ID:              "test-session-1",
+		ID:              testSessionID1,
 		Start:           time.Date(2026, time.June, 14, 10, 0, 0, 0, location),
 		End:             time.Date(2026, time.June, 14, 11, 0, 0, 0, location),
 		DurationSeconds: int((1 * time.Hour).Seconds()),
@@ -105,7 +117,7 @@ func TestGetSessionByIDFromDBNotFound(t *testing.T) {
 
 	ctx := context.Background()
 
-	_, err := getSessionByIDFromDB(ctx, db, "missing-session-id")
+	_, err := getSessionByIDFromDB(ctx, db, testMissingSessionID)
 	if !errors.Is(err, ErrSessionNotFound) {
 		t.Fatalf("expected ErrSessionNotFound; got %v", err)
 	}
@@ -119,7 +131,7 @@ func TestDeleteSession(t *testing.T) {
 	location := time.FixedZone("UTC+3", 3*60*60)
 
 	session := Session{
-		ID:              "test-session-delete",
+		ID:              testSessionIDDelete,
 		Start:           time.Date(2026, time.June, 14, 10, 0, 0, 0, location),
 		End:             time.Date(2026, time.June, 14, 11, 0, 0, 0, location),
 		DurationSeconds: int((1 * time.Hour).Seconds()),
@@ -154,7 +166,7 @@ func TestUpdateSessionDuration(t *testing.T) {
 	location := time.FixedZone("UTC+3", 3*60*60)
 
 	session := Session{
-		ID:              "test-session-update",
+		ID:              testSessionIDUpdate,
 		Start:           time.Date(2026, time.June, 14, 10, 0, 0, 0, location),
 		End:             time.Date(2026, time.June, 14, 11, 0, 0, 0, location),
 		DurationSeconds: int((1 * time.Hour).Seconds()),
@@ -201,31 +213,31 @@ func TestLoadSessionsByPeriodFromDB(t *testing.T) {
 
 	sessions := []Session{
 		{
-			ID:              "before-period",
+			ID:              testSessionIDBeforePeriod,
 			Start:           time.Date(2026, time.June, 14, 8, 0, 0, 0, location),
 			End:             time.Date(2026, time.June, 14, 9, 0, 0, 0, location),
 			DurationSeconds: int((1 * time.Hour).Seconds()),
 		},
 		{
-			ID:              "overlaps-start",
+			ID:              testSessionIDOverlapsStart,
 			Start:           time.Date(2026, time.June, 14, 9, 30, 0, 0, location),
 			End:             time.Date(2026, time.June, 14, 10, 30, 0, 0, location),
 			DurationSeconds: int((1 * time.Hour).Seconds()),
 		},
 		{
-			ID:              "inside-period",
+			ID:              testSessionIDInsidePeriod,
 			Start:           time.Date(2026, time.June, 14, 11, 0, 0, 0, location),
 			End:             time.Date(2026, time.June, 14, 12, 0, 0, 0, location),
 			DurationSeconds: int((1 * time.Hour).Seconds()),
 		},
 		{
-			ID:              "overlaps-end",
+			ID:              testSessionIDOverlapsEnd,
 			Start:           time.Date(2026, time.June, 14, 12, 30, 0, 0, location),
 			End:             time.Date(2026, time.June, 14, 13, 30, 0, 0, location),
 			DurationSeconds: int((1 * time.Hour).Seconds()),
 		},
 		{
-			ID:              "after-period",
+			ID:              testSessionIDAfterPeriod,
 			Start:           time.Date(2026, time.June, 14, 14, 0, 0, 0, location),
 			End:             time.Date(2026, time.June, 14, 15, 0, 0, 0, location),
 			DurationSeconds: int((1 * time.Hour).Seconds()),
@@ -253,9 +265,9 @@ func TestLoadSessionsByPeriodFromDB(t *testing.T) {
 	}
 
 	expectedIDs := []string{
-		"overlaps-start",
-		"inside-period",
-		"overlaps-end",
+		testSessionIDOverlapsStart,
+		testSessionIDInsidePeriod,
+		testSessionIDOverlapsEnd,
 	}
 
 	if !reflect.DeepEqual(gotIDs, expectedIDs) {
@@ -279,10 +291,10 @@ func TestUpdateSessionHandlerInvalidDurationResponse(t *testing.T) {
 
 	req := httptest.NewRequest(
 		http.MethodPatch,
-		"/sessions/test-id",
+		"/sessions/"+testMissingSessionID,
 		body,
 	)
-	req.SetPathValue("id", "test-id")
+	req.SetPathValue("id", testMissingSessionID)
 
 	rr := httptest.NewRecorder()
 

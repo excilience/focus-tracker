@@ -6,11 +6,14 @@ import (
 	"errors"
 	"fmt"
 	"time"
+
+	"github.com/google/uuid"
 )
 
-func newSessionID(start time.Time) string {
-	return start.Format("20060102-150405")
+func newID() string {
+	return uuid.NewString()
 }
+
 func insertSession(ctx context.Context, db *sql.DB, session Session) error {
 	const query = `
 		INSERT INTO sessions (

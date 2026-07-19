@@ -36,6 +36,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("GET /settings", func(w http.ResponseWriter, r *http.Request) {
 		getSettingsHandler(w, r, fs)
 	})
+	mux.HandleFunc("GET /activities", func(w http.ResponseWriter, r *http.Request) {
+		getActivitiesHandler(w, r, db)
+	})
 
 	mux.HandleFunc("POST /sessions/start", func(w http.ResponseWriter, r *http.Request) {
 		startSessionHandler(w, r, db)
@@ -49,15 +52,16 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("POST /sessions/stop", func(w http.ResponseWriter, r *http.Request) {
 		stopSessionHandler(w, r, db, fs)
 	})
+	mux.HandleFunc("POST /activities", func(w http.ResponseWriter, r *http.Request) {
+		createActivityHandler(w, r, db)
+	})
 
 	mux.HandleFunc("PATCH /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
 		updateSessionHandler(w, r, db, fs)
 	})
-
 	mux.HandleFunc("PATCH /goal", func(w http.ResponseWriter, r *http.Request) {
 		updateGoalHandler(w, r, fs, db)
 	})
-
 	mux.HandleFunc("PATCH /settings", func(w http.ResponseWriter, r *http.Request) {
 		updateSettingsHandler(w, r, fs, db)
 	})
@@ -607,4 +611,53 @@ func updateSettingsHandler(w http.ResponseWriter, r *http.Request, fs *FocusServ
 	fs.settings.DayStartHour = dayStartHour
 
 	writeJSON(w, http.StatusOK, toSettingsResponse(fs))
+}
+
+func toActivityResponse(activity Activity) ActivityResponse {
+	return ActivityResponse{
+		ID:         activity.ID,
+		Title:      activity.Title,
+		IsArchived: activity.IsArchived,
+		CreatedAt:  timeFormat(activity.CreatedAt),
+	}
+}
+
+func toActivityResponses(activities []Activity) []ActivityResponse {
+	response := make([]ActivityResponse, 0, len(activities))
+
+	for _, activity := range activities {
+		response = append(response, toActivityResponse(activity))
+	}
+
+	return response
+}
+
+func getActivitiesHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	activities, err := loadActivities(ctx, db)
+	if err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load activities")
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toActivityResponses(activities))
+}
+
+func createActivityHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	var request createActivityRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	activity, err := createActivity(r.Context(), db, request.Title)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toActivityResponse(activity))
 }

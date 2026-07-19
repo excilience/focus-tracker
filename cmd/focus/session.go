@@ -76,7 +76,7 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 	}
 
 	currentSession := Session{
-		ID:              newSessionID(activeSession.Start),
+		ID:              newID(),
 		Start:           activeSession.Start,
 		End:             now,
 		DurationSeconds: totalSeconds,
