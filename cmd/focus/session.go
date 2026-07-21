@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-func startSession(ctx context.Context, db *sql.DB) error {
+func startSession(ctx context.Context, db *sql.DB, activityID *string) error {
 	_, err := loadActiveSession(ctx, db)
 	if err == nil {
 		return ErrSessionAlreadyActive
@@ -25,6 +25,7 @@ func startSession(ctx context.Context, db *sql.DB) error {
 		LastResume:     now,
 		FocusedSeconds: 0,
 		IsPaused:       false,
+		ActivityID:     activityID,
 	}
 
 	if err := createActiveSession(ctx, db, activeSession); err != nil {
@@ -80,6 +81,7 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 		Start:           activeSession.Start,
 		End:             now,
 		DurationSeconds: totalSeconds,
+		ActivityID:      activeSession.ActivityID,
 	}
 
 	saved := totalSeconds >= 60

@@ -22,7 +22,7 @@ migrate-version:
 	migrate -path migrations -database "$(DB_URL)" version
 
 test:
-	TEST_DATABASE_URL="$(DB_URL)" go test -v ./...
+	TEST_DATABASE_URL="$(DB_URL)" go test ./cmd/focus
 
 run-api:
 	DATABASE_URL="$(DB_URL)" go run ./cmd/focus api

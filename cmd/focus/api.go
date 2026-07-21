@@ -6,10 +6,12 @@ import (
 	"encoding/json"
 	"errors"
 	"fmt"
+	"io"
 	"math"
 	"net/http"
 	"os"
 	"os/signal"
+	"strings"
 	"syscall"
 	"time"
 )
@@ -64,6 +66,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	})
 	mux.HandleFunc("PATCH /settings", func(w http.ResponseWriter, r *http.Request) {
 		updateSettingsHandler(w, r, fs, db)
+	})
+	mux.HandleFunc("PATCH /activities/{id}", func(w http.ResponseWriter, r *http.Request) {
+		updateActivityHandler(w, r, db)
 	})
 
 	mux.HandleFunc("DELETE /sessions/{id}", func(w http.ResponseWriter, r *http.Request) {
@@ -166,7 +171,44 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := startSession(ctx, db); err != nil {
+	var request startSessionRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil && !errors.Is(err, io.EOF) {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	activityID := request.ActivityID
+
+	if activityID != nil {
+		normalizedActivityID := strings.TrimSpace(*activityID)
+
+		if normalizedActivityID == "" {
+			activityID = nil
+		} else {
+			activityID = &normalizedActivityID
+		}
+	}
+
+	if activityID != nil {
+		activity, err := getActivityByID(ctx, db, *activityID)
+		if err != nil {
+			if errors.Is(err, ErrActivityNotFound) {
+				writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "activity not found")
+				return
+			}
+
+			writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to validate activity")
+			return
+		}
+
+		if activity.IsArchived {
+			writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "activity is archived")
+			return
+		}
+	}
+
+	if err := startSession(ctx, db, activityID); err != nil {
 		writeDomainError(w, err, "failed to start session")
 		return
 	}
@@ -655,6 +697,44 @@ func createActivityHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	activity, err := createActivity(r.Context(), db, request.Title)
 	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, err.Error())
+		return
+	}
+
+	writeJSON(w, http.StatusOK, toActivityResponse(activity))
+}
+
+func updateActivityHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	id := r.PathValue("id")
+	if strings.TrimSpace(id) == "" {
+		writeAPIError(
+			w,
+			http.StatusBadRequest,
+			ErrorCodeInvalidRequest,
+			"activity id is required",
+		)
+		return
+	}
+
+	var request updateActivityRequest
+
+	if err := json.NewDecoder(r.Body).Decode(&request); err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid JSON body")
+		return
+	}
+
+	if request.Title == nil && request.IsArchived == nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "nothing to update")
+		return
+	}
+
+	activity, err := updateActivity(r.Context(), db, id, request.Title, request.IsArchived)
+	if err != nil {
+		if errors.Is(err, ErrActivityNotFound) {
+			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, "activity not found")
+			return
+		}
+
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, err.Error())
 		return
 	}

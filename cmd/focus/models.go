@@ -40,6 +40,8 @@ type Session struct {
 	Start           time.Time `json:"start"`
 	End             time.Time `json:"end"`
 	DurationSeconds int       `json:"duration_seconds"`
+	ActivityID      *string   `json:"activity_id,omitempty"`
+	ActivityTitle   *string   `json:"activity_title,omitempty"`
 }
 
 type StopSessionResult struct {
@@ -83,14 +85,18 @@ type ActiveSession struct {
 	LastResume     time.Time `json:"last_resume"`
 	FocusedSeconds int       `json:"focused_seconds"`
 	IsPaused       bool      `json:"is_paused"`
+	ActivityID     *string   `json:"activity_id,omitempty"`
+	ActivityTitle  *string   `json:"activity_title,omitempty"`
 }
 
 type ActiveSessionResponse struct {
-	Start          string `json:"start"`
-	LastResume     string `json:"last_resume,omitempty"`
-	FocusedSeconds int    `json:"focused_seconds"`
-	FocusedHuman   string `json:"focused_human"`
-	IsPaused       bool   `json:"is_paused"`
+	Start          string                   `json:"start"`
+	LastResume     string                   `json:"last_resume,omitempty"`
+	FocusedSeconds int                      `json:"focused_seconds"`
+	FocusedHuman   string                   `json:"focused_human"`
+	IsPaused       bool                     `json:"is_paused"`
+	Activity       *ActivitySummaryResponse `json:"activity"`
+	ActivityTitle  *string                  `json:"activity_title,omitempty"`
 }
 
 type updateSessionRequest struct {
@@ -98,12 +104,14 @@ type updateSessionRequest struct {
 }
 
 type SessionResponse struct {
-	ID              string `json:"id"`
-	Start           string `json:"start"`
-	End             string `json:"end"`
-	FocusDay        string `json:"focus_day"`
-	DurationSeconds int    `json:"duration_seconds"`
-	DurationHuman   string `json:"duration_human"`
+	ID              string                   `json:"id"`
+	Start           string                   `json:"start"`
+	End             string                   `json:"end"`
+	FocusDay        string                   `json:"focus_day"`
+	DurationSeconds int                      `json:"duration_seconds"`
+	DurationHuman   string                   `json:"duration_human"`
+	Activity        *ActivitySummaryResponse `json:"activity"`
+	ActivityTitle   *string                  `json:"activity_title,omitempty"`
 }
 
 type statusRecorder struct {
@@ -119,6 +127,15 @@ type SettingsResponse struct {
 	DayStartHour int `json:"day_start_hour"`
 }
 
+type ActivitySummaryResponse struct {
+	ID    string `json:"id"`
+	Title string `json:"title"`
+}
+
 type updateSettingsRequest struct {
 	DayStartHour *int `json:"day_start_hour"`
+}
+
+type startSessionRequest struct {
+	ActivityID *string `json:"activity_id"`
 }

@@ -4,4 +4,4 @@ DROP COLUMN activity_id;
 ALTER TABLE sessions
 DROP COLUMN activity_id;
 
-DROP TABLE activities;
+DROP TABLE activities;s

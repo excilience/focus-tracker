@@ -1116,7 +1116,7 @@ h1 {
 
 .refreshButton:hover .iconRefresh {
   color: #f8fafc;
-  transform: rotate(-90deg);
+  transform: rotate(-179deg);
 }
 
 .stopButton {

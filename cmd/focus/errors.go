@@ -11,6 +11,7 @@ var (
 	ErrSessionAlreadyActive  = errors.New("session already active")
 	ErrSessionAlreadyPaused  = errors.New("session is already paused")
 	ErrSessionAlreadyRunning = errors.New("session is already running")
+	ErrActivityNotFound      = errors.New("activity not found")
 )
 
 const (
@@ -21,6 +22,7 @@ const (
 	ErrorCodeSessionAlreadyPaused  = "session_already_paused"
 	ErrorCodeSessionAlreadyRunning = "session_already_running"
 	ErrorCodeInternalError         = "internal_error"
+	ErrorCodeActivityNotFound      = "activity_not_found"
 )
 
 type APIErrorResponse struct {

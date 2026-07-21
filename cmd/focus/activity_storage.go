@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"errors"
 	"fmt"
 	"strings"
 	"time"
@@ -89,4 +90,83 @@ func loadActivities(ctx context.Context, db *sql.DB) ([]Activity, error) {
 	}
 
 	return activities, nil
+}
+
+func getActivityByID(ctx context.Context, db *sql.DB, id string) (Activity, error) {
+	const query = `
+		SELECT
+			id,
+			title,
+			is_archived,
+			created_at
+		FROM activities
+		WHERE id = $1;
+	`
+
+	var activity Activity
+
+	err := db.QueryRowContext(ctx, query, id).Scan(
+		&activity.ID,
+		&activity.Title,
+		&activity.IsArchived,
+		&activity.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Activity{}, ErrActivityNotFound
+		}
+
+		return Activity{}, fmt.Errorf("get activity by id: %w", err)
+	}
+
+	return activity, nil
+}
+
+func updateActivity(ctx context.Context, db *sql.DB, id string, title *string, isArchived *bool) (Activity, error) {
+	activity, err := getActivityByID(ctx, db, id)
+	if err != nil {
+		return Activity{}, err
+	}
+
+	if title != nil {
+		normalizedTitle := strings.TrimSpace(*title)
+		if normalizedTitle == "" {
+			return Activity{}, fmt.Errorf("activity title is required")
+		}
+
+		activity.Title = normalizedTitle
+	}
+
+	if isArchived != nil {
+		activity.IsArchived = *isArchived
+	}
+
+	const query = `
+		UPDATE activities
+		SET
+			title = $1,
+			is_archived = $2
+		WHERE id = $3
+		RETURNING
+			id,
+			title,
+			is_archived,
+			created_at;
+	`
+
+	err = db.QueryRowContext(ctx, query, activity.Title, activity.IsArchived, id).Scan(
+		&activity.ID,
+		&activity.Title,
+		&activity.IsArchived,
+		&activity.CreatedAt,
+	)
+	if err != nil {
+		if errors.Is(err, sql.ErrNoRows) {
+			return Activity{}, ErrActivityNotFound
+		}
+
+		return Activity{}, fmt.Errorf("update activity: %w", err)
+	}
+
+	return activity, nil
 }

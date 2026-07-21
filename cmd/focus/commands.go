@@ -14,7 +14,7 @@ func handleStart(db *sql.DB) {
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
 	defer cancel()
 
-	err := startSession(ctx, db)
+	err := startSession(ctx, db, nil)
 	if err != nil {
 		fmt.Println("Failed to start", err)
 		return
