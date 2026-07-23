@@ -18,7 +18,9 @@ export type ActiveSession = {
     focused_seconds: number;
     focused_human: string;
     is_paused: boolean;
+    activity: ActivitySummary | null;
 };
+
 
 export type MessageResponse = {
     message: string;
@@ -31,6 +33,7 @@ export type Session = {
     focus_day: string;
     duration_seconds: number;
     duration_human: string;
+    activity: ActivitySummary | null;
 };
 
 export type GoalResponse = {
@@ -132,9 +135,12 @@ export async function getActiveSession(): Promise<ActiveSession | null> {
     }
 }
 
-export function startSession(): Promise<MessageResponse> {
+export function startSession(activityID?: string): Promise<MessageResponse> {
     return request<MessageResponse>("/sessions/start", {
         method: "POST",
+        body: JSON.stringify({
+            activity_id: activityID ?? null,
+        }),
     });
 }
 
@@ -168,5 +174,53 @@ export function updateSessionDuration(sessionID: string, duration: string): Prom
 export function deleteSession(sessionID: string): Promise<DeleteSessionResponse> {
     return request<DeleteSessionResponse>(`/sessions/${sessionID}`, {
         method: "DELETE",
+    });
+}
+
+//activity
+export type ActivitySummary = {
+    id: string;
+    title: string;
+};
+
+export type Activity = {
+    id: string;
+    title: string;
+    is_archived: boolean;
+    created_at: string;
+};
+
+export type ActivityStats = {
+    activity: ActivitySummary | null;
+    duration_seconds: number;
+    duration_human: string;
+};
+
+export function getActivities(): Promise<Activity[]> {
+    return request<Activity[]>("/activities");
+}
+
+export function getActivityStats(): Promise<ActivityStats[]> {
+    return request<ActivityStats[]>("/activities/stats");
+}
+
+export function createActivity(title: string): Promise<Activity> {
+    return request<Activity>("/activities", {
+        method: "POST",
+        body: JSON.stringify({
+            title,
+        }),
+    });
+}
+
+export type UpdateActivityRequest = {
+    title?: string;
+    is_archived?: boolean;
+};
+
+export function updateActivity(activityID: string, updates: UpdateActivityRequest): Promise<Activity> {
+    return request<Activity>(`/activities/${activityID}`, {
+        method: "PATCH",
+        body: JSON.stringify(updates)
     });
 }
