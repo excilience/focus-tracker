@@ -41,6 +41,9 @@ func runApiServer(fs *FocusService, db *sql.DB) error {
 	mux.HandleFunc("GET /activities", func(w http.ResponseWriter, r *http.Request) {
 		getActivitiesHandler(w, r, db)
 	})
+	mux.HandleFunc("GET /activities/stats", func(w http.ResponseWriter, r *http.Request) {
+		getActivityStatsHandler(w, r, db)
+	})
 
 	mux.HandleFunc("POST /sessions/start", func(w http.ResponseWriter, r *http.Request) {
 		startSessionHandler(w, r, db)
@@ -295,6 +298,7 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 		FocusedSeconds: focusedSeconds,
 		FocusedHuman:   formatDuration(focusedSeconds),
 		IsPaused:       activeSession.IsPaused,
+		Activity:       toActivitySummary(activeSession.ActivityID, activeSession.ActivityTitle),
 	}
 
 	if !activeSession.LastResume.IsZero() {
@@ -580,6 +584,7 @@ func toSessionResponse(session Session, fs *FocusService) SessionResponse {
 		FocusDay:        focusDay.Format(dateLayout),
 		DurationSeconds: session.DurationSeconds,
 		DurationHuman:   formatDuration(session.DurationSeconds),
+		Activity:        toActivitySummary(session.ActivityID, session.ActivityTitle),
 	}
 }
 
@@ -591,6 +596,46 @@ func toSessionResponses(sessions []Session, fs *FocusService) []SessionResponse 
 	}
 
 	return response
+}
+
+func toActivitySummary(id *string, title *string) *ActivitySummaryResponse {
+	if id == nil || title == nil {
+		return nil
+	}
+
+	return &ActivitySummaryResponse{
+		ID:    *id,
+		Title: *title,
+	}
+}
+
+func toActivityStatsResponses(stats []ActivityStat) []ActivityStatsResponse {
+	response := make([]ActivityStatsResponse, 0, len(stats))
+
+	for _, stat := range stats {
+		response = append(response, ActivityStatsResponse{
+			Activity:        toActivitySummary(stat.ActivityID, stat.ActivityTitle),
+			DurationSeconds: stat.DurationSeconds,
+			DurationHuman:   formatDuration(stat.DurationSeconds),
+		})
+	}
+
+	return response
+}
+
+func getActivityStatsHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
+	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
+	defer cancel()
+
+	sessions, err := loadSessionsFromDB(ctx, db)
+	if err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to load sessions")
+		return
+	}
+
+	stats := calculateActivityStats(sessions)
+
+	writeJSON(w, http.StatusOK, toActivityStatsResponses(stats))
 }
 
 func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, fs *FocusService) {

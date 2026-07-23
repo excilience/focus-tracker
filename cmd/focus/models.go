@@ -96,7 +96,6 @@ type ActiveSessionResponse struct {
 	FocusedHuman   string                   `json:"focused_human"`
 	IsPaused       bool                     `json:"is_paused"`
 	Activity       *ActivitySummaryResponse `json:"activity"`
-	ActivityTitle  *string                  `json:"activity_title,omitempty"`
 }
 
 type updateSessionRequest struct {
@@ -111,7 +110,6 @@ type SessionResponse struct {
 	DurationSeconds int                      `json:"duration_seconds"`
 	DurationHuman   string                   `json:"duration_human"`
 	Activity        *ActivitySummaryResponse `json:"activity"`
-	ActivityTitle   *string                  `json:"activity_title,omitempty"`
 }
 
 type statusRecorder struct {
@@ -138,4 +136,16 @@ type updateSettingsRequest struct {
 
 type startSessionRequest struct {
 	ActivityID *string `json:"activity_id"`
+}
+
+type ActivityStat struct {
+	ActivityID      *string
+	ActivityTitle   *string
+	DurationSeconds int
+}
+
+type ActivityStatsResponse struct {
+	Activity        *ActivitySummaryResponse `json:"activity"`
+	DurationSeconds int                      `json:"duration_seconds"`
+	DurationHuman   string                   `json:"duration_human"`
 }

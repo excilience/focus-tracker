@@ -82,6 +82,7 @@ func stopSession(ctx context.Context, db *sql.DB) (StopSessionResult, error) {
 		End:             now,
 		DurationSeconds: totalSeconds,
 		ActivityID:      activeSession.ActivityID,
+		ActivityTitle:   activeSession.ActivityTitle,
 	}
 
 	saved := totalSeconds >= 60

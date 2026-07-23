@@ -267,3 +267,36 @@ func (fs *FocusService) DailyProgress(sessions []Session) FocusProgress {
 func (fs *FocusService) TotalFocusToday(sessions []Session) time.Duration {
 	return fs.TotalFocusForDay(sessions, time.Now().In(fs.location))
 }
+
+func calculateActivityStats(sessions []Session) []ActivityStat {
+	stats := make(map[string]*ActivityStat)
+
+	for _, session := range sessions {
+		key := ""
+
+		if session.ActivityID != nil {
+			key = *session.ActivityID
+		}
+
+		stat, exists := stats[key]
+
+		if !exists {
+			stats[key] = &ActivityStat{
+				ActivityID:      session.ActivityID,
+				ActivityTitle:   session.ActivityTitle,
+				DurationSeconds: session.DurationSeconds,
+			}
+			continue
+		}
+
+		stat.DurationSeconds += session.DurationSeconds
+	}
+
+	result := make([]ActivityStat, 0, len(stats))
+
+	for _, stat := range stats {
+		result = append(result, *stat)
+	}
+
+	return result
+}
