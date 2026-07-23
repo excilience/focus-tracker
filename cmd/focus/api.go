@@ -14,6 +14,8 @@ import (
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/google/uuid"
 )
 
 func runApiServer(fs *FocusService, db *sql.DB) error {
@@ -184,12 +186,9 @@ func startSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	activityID := request.ActivityID
 
 	if activityID != nil {
-		normalizedActivityID := strings.TrimSpace(*activityID)
-
-		if normalizedActivityID == "" {
-			activityID = nil
-		} else {
-			activityID = &normalizedActivityID
+		if _, err := uuid.Parse(*activityID); err != nil {
+			writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid activity_id")
+			return
 		}
 	}
 
