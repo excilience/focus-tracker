@@ -741,6 +741,11 @@ func createActivityHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 
 	activity, err := createActivity(r.Context(), db, request.Title)
 	if err != nil {
+		if errors.Is(err, ErrActivityTitleAlreadyExists) {
+			writeAPIError(w, http.StatusConflict, ErrorCodeActivityTitleAlreadyExists, err.Error())
+			return
+		}
+
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, err.Error())
 		return
 	}
@@ -775,7 +780,12 @@ func updateActivityHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	activity, err := updateActivity(r.Context(), db, id, request.Title, request.IsArchived)
 	if err != nil {
 		if errors.Is(err, ErrActivityNotFound) {
-			writeAPIError(w, http.StatusNotFound, ErrorCodeSessionNotFound, "activity not found")
+			writeAPIError(w, http.StatusNotFound, ErrorCodeActivityNotFound, "activity not found")
+			return
+		}
+
+		if errors.Is(err, ErrActivityTitleAlreadyExists) {
+			writeAPIError(w, http.StatusConflict, ErrorCodeActivityTitleAlreadyExists, err.Error())
 			return
 		}
 

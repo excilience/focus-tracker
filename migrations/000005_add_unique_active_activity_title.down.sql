@@ -1,0 +1,1 @@
+DROP INDEX IF EXISTS activities_active_title_unique_idx;

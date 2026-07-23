@@ -7,6 +7,8 @@ import (
 	"fmt"
 	"strings"
 	"time"
+
+	"github.com/jackc/pgx/v5/pgconn"
 )
 
 func createActivity(ctx context.Context, db *sql.DB, title string) (Activity, error) {
@@ -46,6 +48,10 @@ func createActivity(ctx context.Context, db *sql.DB, title string) (Activity, er
 	)
 
 	if err != nil {
+		if isActivityTitleConflict(err) {
+			return Activity{}, ErrActivityTitleAlreadyExists
+		}
+
 		return Activity{}, fmt.Errorf("create activity: %w", err)
 	}
 
@@ -165,8 +171,20 @@ func updateActivity(ctx context.Context, db *sql.DB, id string, title *string, i
 			return Activity{}, ErrActivityNotFound
 		}
 
+		if isActivityTitleConflict(err) {
+			return Activity{}, ErrActivityTitleAlreadyExists
+		}
+
 		return Activity{}, fmt.Errorf("update activity: %w", err)
 	}
 
 	return activity, nil
+}
+
+func isActivityTitleConflict(err error) bool {
+	var pgErr *pgconn.PgError
+
+	return errors.As(err, &pgErr) &&
+		pgErr.Code == "23505" &&
+		pgErr.ConstraintName == "activities_active_title_unique_idx"
 }

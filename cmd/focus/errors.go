@@ -6,23 +6,25 @@ import (
 )
 
 var (
-	ErrSessionNotFound       = errors.New("session not found")
-	ErrNoActiveSession       = errors.New("no active session")
-	ErrSessionAlreadyActive  = errors.New("session already active")
-	ErrSessionAlreadyPaused  = errors.New("session is already paused")
-	ErrSessionAlreadyRunning = errors.New("session is already running")
-	ErrActivityNotFound      = errors.New("activity not found")
+	ErrSessionNotFound            = errors.New("session not found")
+	ErrNoActiveSession            = errors.New("no active session")
+	ErrSessionAlreadyActive       = errors.New("session already active")
+	ErrSessionAlreadyPaused       = errors.New("session is already paused")
+	ErrSessionAlreadyRunning      = errors.New("session is already running")
+	ErrActivityNotFound           = errors.New("activity not found")
+	ErrActivityTitleAlreadyExists = errors.New("activity with this title already exists")
 )
 
 const (
-	ErrorCodeInvalidRequest        = "invalid_request"
-	ErrorCodeSessionNotFound       = "session_not_found"
-	ErrorCodeNoActiveSession       = "no_active_session"
-	ErrorCodeSessionAlreadyActive  = "session_already_active"
-	ErrorCodeSessionAlreadyPaused  = "session_already_paused"
-	ErrorCodeSessionAlreadyRunning = "session_already_running"
-	ErrorCodeInternalError         = "internal_error"
-	ErrorCodeActivityNotFound      = "activity_not_found"
+	ErrorCodeInvalidRequest             = "invalid_request"
+	ErrorCodeSessionNotFound            = "session_not_found"
+	ErrorCodeNoActiveSession            = "no_active_session"
+	ErrorCodeSessionAlreadyActive       = "session_already_active"
+	ErrorCodeSessionAlreadyPaused       = "session_already_paused"
+	ErrorCodeSessionAlreadyRunning      = "session_already_running"
+	ErrorCodeInternalError              = "internal_error"
+	ErrorCodeActivityNotFound           = "activity_not_found"
+	ErrorCodeActivityTitleAlreadyExists = "activity_title_already_exists"
 )
 
 type APIErrorResponse struct {
@@ -65,6 +67,9 @@ func writeDomainError(w http.ResponseWriter, err error, defaultMessage string) {
 
 	case errors.Is(err, ErrSessionAlreadyRunning):
 		writeAPIError(w, http.StatusConflict, ErrorCodeSessionAlreadyRunning, err.Error())
+
+	case errors.Is(err, ErrActivityTitleAlreadyExists):
+		writeAPIError(w, http.StatusConflict, ErrorCodeActivityTitleAlreadyExists, err.Error())
 
 	default:
 		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, defaultMessage)
