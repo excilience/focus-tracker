@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import {
   getActiveSession,
+  getActivities,
   getHealth,
   getSettings,
   pauseSession,
@@ -12,6 +13,7 @@ import {
   updateSettings,
   type GoalResponse,
   type ActiveSession,
+  type Activity,
 } from "./api";
 import "./App.css";
 import { QuickHistoryView } from "./QuickHistoryView";
@@ -67,9 +69,34 @@ function formatGoal(goal: GoalResponse | null): string {
   return `${hours}h ${minutes}m`;
 }
 
+function calculateActivitySelectWidth(text: string): number {
+  const canvas = document.createElement("canvas");
+  const context = canvas.getContext("2d");
+
+  if (!context) {
+    return 140;
+  }
+
+  context.font = "700 15px Inter, sans-serif";
+
+  const textWidth = context.measureText(text).width;
+
+  const horizontalPadding = 52;
+  const minWidth = 160;
+  const maxWidth = 260;
+
+  return Math.min(
+    maxWidth,
+    Math.max(minWidth, Math.ceil(textWidth + horizontalPadding))
+  );
+}
+
 function App() {
   const [apiStatus, setApiStatus] = useState<"checking" | "ok" | "error">("checking");
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
+  const [activities, setActivities] = useState<Activity[]>([]);
+  const [selectedActivityID, setSelectedActivityID] = useState("");
+  const [activitySelectWidth, setActivitySelectWidth] = useState(140);
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
   const [goal, setGoal] = useState<GoalResponse | null>(null);
   const [goalInput, setGoalInput] = useState("");
@@ -106,6 +133,9 @@ function App() {
       return;
     }
 
+    const activitiesResult = await getActivities();
+    setActivities(activitiesResult);
+
     const session = await getActiveSession();
     setActiveSession(session);
     setActiveSessionSyncedAt(session ? Date.now() : null);
@@ -131,6 +161,12 @@ function App() {
     } finally {
       setLoading(false);
     }
+  }
+
+  async function startFocusSession() {
+    const activityID = selectedActivityID || undefined;
+
+    await runAction(() => startSession(activityID));
   }
 
   async function saveSettings() {
@@ -206,8 +242,13 @@ function App() {
     }
 
     const updateLiveSeconds = () => {
-      const secondsSinceSync = Math.floor((Date.now() - activeSessionSyncedAt) / 1000);
-      setLiveFocusedSeconds(activeSession.focused_seconds + Math.max(0, secondsSinceSync));
+      const secondsSinceSync = Math.floor(
+        (Date.now() - activeSessionSyncedAt) / 1000
+      );
+
+      setLiveFocusedSeconds(
+        activeSession.focused_seconds + Math.max(0, secondsSinceSync)
+      );
     };
 
     updateLiveSeconds();
@@ -218,6 +259,19 @@ function App() {
       window.clearInterval(intervalID);
     };
   }, [activeSession, activeSessionSyncedAt]);
+
+  const selectedActivity = activities.find(
+    (activity) => activity.id === selectedActivityID
+  );
+
+  useEffect(() => {
+    const selectedText = selectedActivity?.title ?? "No activity";
+
+    setActivitySelectWidth(
+      calculateActivitySelectWidth(selectedText)
+    );
+  }, [selectedActivity?.title]);
+
 
   const hasActiveSession = activeSession !== null;
   const isPaused = activeSession?.is_paused ?? false;
@@ -236,6 +290,7 @@ function App() {
   const circleRadius = circleCenter - circleStroke / 23;
   const circleLength = 2 * Math.PI * circleRadius;
   const circleOffset = circleLength * (1 - progressRatio);
+
 
   return (
     <main className="page">
@@ -281,6 +336,30 @@ function App() {
             <span aria-hidden="true">✎</span>
           </button>
 
+          {!hasActiveSession && (
+            <label
+              className="activitySelector activitySelectorAboveRing"
+              style={{ width: `${activitySelectWidth}px` }}
+            >
+              <span className="activitySelectorLabel">Activity</span>
+
+              <select
+                className="activitySelectorInput"
+                value={selectedActivityID}
+                onChange={(event) => setSelectedActivityID(event.target.value)}
+                disabled={loading}
+              >
+                <option value="">No activity</option>
+
+                {activities.map((activity) => (
+                  <option key={activity.id} value={activity.id}>
+                    {activity.title}
+                  </option>
+                ))}
+              </select>
+            </label>
+          )}
+
           <div className="focusRingWrap">
             <svg className="focusRing" viewBox={`0 0 ${circleSize} ${circleSize}`}>
               <circle
@@ -307,21 +386,37 @@ function App() {
                 fill="none"
               />
             </svg>
-
             <div className="focusRingContent">
               {hasActiveSession ? (
                 <>
+                  <span
+                    className="activeActivityLabel"
+                    title={activeSession.activity?.title ?? "No activity"}
+                  >
+                    {activeSession.activity?.title ?? "No activity"}
+                  </span>
+
                   <strong className="focusMainValue">
                     {formatTimer(liveFocusedSeconds)}
                   </strong>
-                  <span className="focusSubLabel">
+
+                  <span
+                    className={
+                      isPaused
+                        ? "focusSubLabel focusStatus focusStatusPaused"
+                        : "focusSubLabel focusStatus"
+                    }
+                  >
                     {isPaused ? "Paused" : "Focusing"}
                   </span>
                 </>
               ) : (
                 <>
                   <span className="focusSubLabel">Goal</span>
-                  <strong className="focusGoalValue">{formatGoal(goal)}</strong>
+
+                  <strong className="focusGoalValue">
+                    {formatGoal(goal)}
+                  </strong>
                 </>
               )}
             </div>
@@ -340,7 +435,6 @@ function App() {
           )}
 
           {error && <p className="error focusError">{error}</p>}
-
           <div className="focusControls">
             <div className="controlItem">
               <button
@@ -358,7 +452,7 @@ function App() {
             {!hasActiveSession ? (
               <button
                 className="mainRoundButton"
-                onClick={() => runAction(startSession)}
+                onClick={() => void startFocusSession()}
                 disabled={loading}
                 aria-label="Start"
               >
