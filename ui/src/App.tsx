@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import {
+  createActivity,
   getActiveSession,
   getActivities,
   getHealth,
@@ -96,6 +97,9 @@ function App() {
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivityID, setSelectedActivityID] = useState("");
+  const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
+  const [activityTitleInput, setActivityTitleInput] = useState("");
+  const [activitySaving, setActivitySaving] = useState(false);
   const [activitySelectWidth, setActivitySelectWidth] = useState(140);
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
   const [goal, setGoal] = useState<GoalResponse | null>(null);
@@ -117,6 +121,12 @@ function App() {
 
     setError("");
     setIsGoalModalOpen(true);
+  }
+
+  function openActivityModal() {
+    setActivityTitleInput("");
+    setError("");
+    setIsActivityModalOpen(true);
   }
 
   async function refresh() {
@@ -198,6 +208,39 @@ function App() {
       setError(error instanceof Error ? error.message : "Failed to update goal");
     } finally {
       setGoalSaving(false);
+    }
+  }
+
+  async function saveActivity() {
+    const title = activityTitleInput.trim();
+
+    if (!title) {
+      setError("Activity title is required");
+      return;
+    }
+
+    setActivitySaving(true);
+    setError("");
+
+    try {
+      const createdActivity = await createActivity(title);
+
+      setActivities((currentActivities) => [
+        ...currentActivities,
+        createdActivity,
+      ]);
+
+      setSelectedActivityID(createdActivity.id);
+      setActivityTitleInput("");
+      setIsActivityModalOpen(false);
+    } catch (error) {
+      setError(
+        error instanceof Error
+          ? error.message
+          : "Failed to create activity",
+      );
+    } finally {
+      setActivitySaving(false);
     }
   }
 
@@ -337,27 +380,40 @@ function App() {
           </button>
 
           {!hasActiveSession && (
-            <label
-              className="activitySelector activitySelectorAboveRing"
-              style={{ width: `${activitySelectWidth}px` }}
+            <div
+              className="activityPicker"
+              style={{ width: `${activitySelectWidth + 42}px` }}
             >
-              <span className="activitySelectorLabel">Activity</span>
+              <label className="activitySelector activitySelectorAboveRing">
+                <span className="activitySelectorLabel">Activity</span>
 
-              <select
-                className="activitySelectorInput"
-                value={selectedActivityID}
-                onChange={(event) => setSelectedActivityID(event.target.value)}
-                disabled={loading}
+                <select
+                  className="activitySelectorInput"
+                  value={selectedActivityID}
+                  onChange={(event) => setSelectedActivityID(event.target.value)}
+                  disabled={loading || activitySaving}
+                >
+                  <option value="">No activity</option>
+
+                  {activities.map((activity) => (
+                    <option key={activity.id} value={activity.id}>
+                      {activity.title}
+                    </option>
+                  ))}
+                </select>
+              </label>
+
+              <button
+                type="button"
+                className="activityCreateButton"
+                onClick={openActivityModal}
+                disabled={loading || activitySaving}
+                aria-label="Create activity"
+                title="Create activity"
               >
-                <option value="">No activity</option>
-
-                {activities.map((activity) => (
-                  <option key={activity.id} value={activity.id}>
-                    {activity.title}
-                  </option>
-                ))}
-              </select>
-            </label>
+                +
+              </button>
+            </div>
           )}
 
           <div className="focusRingWrap">
@@ -552,6 +608,51 @@ function App() {
               disabled={goalSaving || !goalInput.trim() || !dayStartHourInput.trim()}
             >
               {goalSaving ? "Saving..." : "Save"}
+            </button>
+          </form>
+        </div>
+      )}
+
+      {isActivityModalOpen && (
+        <div
+          className="modalOverlay"
+          role="presentation"
+          onMouseDown={() => {
+            if (!activitySaving) {
+              setIsActivityModalOpen(false);
+            }
+          }}
+        >
+          <form
+            className="goalModal"
+            onMouseDown={(event) => event.stopPropagation()}
+            onSubmit={(event) => {
+              event.preventDefault();
+              void saveActivity();
+            }}
+          >
+            <h2 className="goalModalTitle">New Activity</h2>
+
+            <label className="goalModalField">
+              <span className="goalModalLabel">Title</span>
+
+              <input
+                className="goalModalInput"
+                value={activityTitleInput}
+                onChange={(event) => setActivityTitleInput(event.target.value)}
+                placeholder="For example: Reading"
+                disabled={activitySaving}
+                aria-label="Activity title"
+                autoFocus
+              />
+            </label>
+
+            <button
+              type="submit"
+              className="goalModalSaveButton"
+              disabled={activitySaving || !activityTitleInput.trim()}
+            >
+              {activitySaving ? "Creating..." : "Create"}
             </button>
           </form>
         </div>
