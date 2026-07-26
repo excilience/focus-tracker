@@ -889,96 +889,113 @@ h1 {
     0 0 14px rgba(59, 130, 246, 0.15);
 }
 
-/* Session Views */
-.sessionsCard {
-  width: min(1000px, 100%);
+/* Sessions */
 
-  border: 1px solid rgba(255, 255, 255, 0.075);
+.sessionsCard {
+  width: min(980px, 100%);
+  padding: 38px;
+
+  border: 1px solid rgba(255, 255, 255, 0.07);
+  border-radius: 30px;
 
   background:
-    radial-gradient(circle 280px at 8% 6%,
-      rgba(29, 78, 216, 0.075),
+    radial-gradient(circle 320px at 8% 4%,
+      rgba(2, 43, 140, 0.085),
       transparent 100%),
-    rgba(6, 9, 17, 0.3);
+    rgba(6, 9, 17, 0.34);
 
   backdrop-filter: blur(24px);
   -webkit-backdrop-filter: blur(24px);
 
   box-shadow:
-    0 24px 60px rgba(0, 0, 0, 0.3),
-    inset 0 1px 0 rgba(255, 255, 255, 0.045);
+    0 26px 68px rgba(0, 0, 0, 0.32),
+    inset 0 1px 0 rgba(255, 255, 255, 0.04);
 }
 
 .sessionsList {
   display: grid;
-  gap: 28px;
+  gap: 34px;
 }
 
 .sessionDayGroup {
   display: grid;
-  gap: 12px;
+  gap: 14px;
 }
+
+/* Day header */
 
 .sessionDayHeader {
   display: flex;
-  align-items: baseline;
+  align-items: center;
   justify-content: space-between;
-  gap: 16px;
+  gap: 18px;
 
-  padding-bottom: 12px;
+  padding: 0 4px 13px;
 
-  border-bottom: 1px solid rgba(148, 163, 184, 0.16);
+  border-bottom: 1px solid rgba(148, 163, 184, 0.13);
 }
 
 .sessionDayHeader h2 {
   margin: 0;
 
-  color: #f8fafc;
-
-  font-size: 24px;
-  font-weight: 900;
+  color: #f1f5f9;
+  font-size: 22px;
+  font-weight: 750;
+  line-height: 1.2;
+  letter-spacing: -0.015em;
 }
 
 .sessionDayCount {
-  color: #94a3b8;
+  flex-shrink: 0;
 
-  font-size: 14px;
+  padding: 5px 10px;
+
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 999px;
+
+  background: rgba(8, 12, 22, 0.38);
+  color: #748196;
+
+  font-size: 12px;
   font-weight: 700;
+  line-height: 1;
 
   white-space: nowrap;
 }
 
+/* Session rows */
+
 .sessionRows {
   display: grid;
-  gap: 10px;
+  gap: 9px;
 }
 
 .sessionItem {
+  min-width: 0;
+  min-height: 64px;
+  padding: 12px 14px 12px 16px;
+
   display: grid;
-  grid-template-columns: 1fr auto auto;
+  grid-template-columns:
+    minmax(140px, 0.8fr) minmax(180px, 1.4fr) minmax(105px, auto) auto;
   align-items: center;
-  gap: 24px;
+  gap: 18px;
 
-  padding: 14px 16px;
-
-  border: 1px solid rgb(148, 163, 184);
+  border: 1px solid rgba(148, 163, 184, 0.075);
   border-radius: 16px;
 
   background:
-    radial-gradient(circle at 8% 10%,
-      rgba(29, 78, 216, 0.055),
-      transparent 36%),
-    rgba(6, 9, 17, 0.3);
-
-  border: 1px solid rgba(255, 255, 255, 0.075);
+    radial-gradient(circle 180px at 5% 0%,
+      rgba(29, 78, 216, 0.045),
+      transparent 100%),
+    rgba(5, 9, 18, 0.34);
 
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.012),
-    0 8px 20px rgba(0, 0, 0, 0.12);
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 8px 18px rgba(0, 0, 0, 0.1);
 
   transition:
     border-color 160ms ease,
@@ -988,201 +1005,314 @@ h1 {
 }
 
 .sessionItem:hover {
-  background:
-    radial-gradient(circle at 8% 10%,
-      rgba(29, 78, 216, 0.075),
-      transparent 38%),
-    rgba(7, 11, 20, 0.38);
+  border-color: rgba(79, 116, 175, 0.16);
 
-  border-color: rgba(255, 255, 255, 0.12);
+  background:
+    radial-gradient(circle 200px at 5% 0%,
+      rgba(29, 78, 216, 0.065),
+      transparent 100%),
+    rgba(7, 12, 24, 0.48);
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 10px 24px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 11px 24px rgba(0, 0, 0, 0.15);
 
   transform: translateY(-1px);
 }
 
-.sessionItem:last-child {
-  border-bottom: 1px solid rgba(148, 163, 184, 0.15);
-}
+/* Session content */
 
 .sessionRange {
-  color: #cbd5e1;
+  color: #7f8a9d;
 
-  font-size: 17px;
-  font-weight: 700;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
 
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
+}
+
+.sessionActivity {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #cfd7e5;
+
+  font-size: 15px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.sessionActivityEmpty {
+  color: #596579;
+  font-weight: 550;
+  font-style: italic;
 }
 
 .sessionDuration {
-  color: #f8fafc;
+  justify-self: end;
 
-  font-size: 17px;
-  font-weight: 850;
+  color: #7795d9;
 
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1;
+
+  font-variant-numeric: tabular-nums;
   white-space: nowrap;
+
+  text-shadow:
+    0 0 10px rgba(59, 130, 246, 0.1);
 }
+
+/* Actions */
 
 .sessionActions {
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 12px;
+  gap: 7px;
 }
 
 .sessionMiniButton {
-  width: auto;
   min-width: 58px;
   height: 34px;
   padding: 0 13px;
 
-  border: 1px solid rgba(65, 117, 194, 0.25);
-  border-radius: 999px;
+  border: 1px solid rgba(96, 165, 250, 0.34);
+  border-radius: 11px;
 
-  background: rgba(9, 72, 209, 0.9);
-  color: #dbeafe;
+  background:
+    radial-gradient(circle at 34% 24%,
+      rgba(255, 255, 255, 0.13),
+      transparent 28%),
+    radial-gradient(circle at 50% 100%,
+      rgba(8, 27, 80, 0.62),
+      transparent 55%),
+    linear-gradient(145deg,
+      #0062dace,
+      #0b4fe2c6 58%,
+      #0740dec7);
+
+  color: #f8fbff;
 
   font-family: inherit;
-  font-size: 13px;
-  font-weight: 850;
+  font-size: 12px;
+  font-weight: 800;
+  line-height: 1;
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.09),
-    0 6px 14px rgba(37, 100, 235, 0.177);
+    inset 0 1px 0 rgba(255, 255, 255, 0.18),
+    inset 0 -1px 0 rgba(0, 20, 80, 0.2),
+    0 7px 16px rgba(0, 69, 210, 0.24);
 
   cursor: pointer;
 
   transition:
     border-color 160ms ease,
-    background 160ms ease,
+    filter 160ms ease,
     box-shadow 160ms ease,
     transform 160ms ease;
 }
 
-.sessionMiniButton:active:not(:disabled) {
-  transform: translateY(0) scale(0.98);
-
-  box-shadow:
-    0 7px 16px rgba(37, 99, 235, 0.25),
-    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+.sessionMiniButton::before {
+  display: none;
 }
 
 .sessionMiniButton:hover:not(:disabled) {
-  transform: translateY(-1px);
+  border-color: rgba(147, 197, 253, 0.48);
+
+  filter: brightness(1.08);
 
   box-shadow:
-    0 2px 24px rgba(37, 99, 235, 0.38),
-    inset 0 1px 0 rgba(255, 255, 255, 0.28);
+    inset 0 1px 0 rgba(255, 255, 255, 0.24),
+    inset 0 -1px 0 rgba(0, 20, 80, 0.18),
+    0 9px 20px rgba(0, 69, 210, 0.32),
+    0 0 16px rgba(37, 99, 235, 0.14);
+
+  transform: translateY(-1px);
 }
 
-.sessionCancelButton {
-  border-color: rgba(148, 163, 184, 0.2);
-
-  background: rgba(71, 85, 105, 0.2);
-  color: #cbd5e1;
+.sessionMiniButton:active:not(:disabled) {
+  filter: brightness(0.96);
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.06),
-    0 6px 14px rgba(0, 0, 0, 0.1);
+    inset 0 2px 4px rgba(0, 20, 70, 0.3),
+    0 4px 10px rgba(0, 69, 210, 0.2);
+
+  transform: translateY(0) scale(0.97);
+}
+
+/* Cancel */
+
+.sessionCancelButton {
+  border-color: rgba(148, 163, 184, 0.12);
+  background: rgba(30, 41, 59, 0.24);
+  color: #8893a6;
 }
 
 .sessionCancelButton:hover:not(:disabled) {
-  border-color: rgba(148, 163, 184, 0.34);
-  background: rgba(71, 85, 105, 0.3);
-
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.08),
-    0 8px 18px rgba(0, 0, 0, 0.14);
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(38, 50, 70, 0.36);
+  color: #c3cad5;
 }
+
+/* Delete */
 
 .sessionDeleteButton {
   width: 34px;
   height: 34px;
+  min-width: 34px;
   padding: 0;
-  border-radius: 999px;
-  border: 1px solid rgba(254, 202, 202, 0.35);
-  background: linear-gradient(135deg, #941427, #dc2626 58%, #6c0d0d), #9b0b0b;
-  color: #ffffff;
-  font-size: 17px;
-  font-weight: 900;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(248, 113, 113, 0.28);
+  border-radius: 11px;
+
+  background:
+    radial-gradient(circle at 34% 24%,
+      rgba(255, 255, 255, 0.12),
+      transparent 28%),
+    radial-gradient(circle at 50% 100%,
+      rgba(177, 4, 4, 0.58),
+      transparent 55%),
+    linear-gradient(145deg,
+      rgba(190, 7, 7, 0.78),
+      rgba(182, 5, 5, 0.62)),
+    rgba(164, 18, 18, 0.34);
+
+  color: #fff5f5;
+
+  font-family: inherit;
+  font-size: 18px;
+  font-weight: 650;
   line-height: 1;
-  box-shadow: 0 8px 18px rgba(220, 38, 38, 0.28), inset 0 1px 0 rgba(255, 255, 255, 0.22);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.16),
+    inset 0 -1px 0 rgba(80, 0, 0, 0.22),
+    0 7px 16px rgba(153, 27, 27, 0.22);
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
 }
 
-.sessionDeleteButton:hover {
-  transform: translateY(-1px);
-  box-shadow: 0 8px 24px rgba(220, 38, 38, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.28);
+.sessionDeleteButton::before {
+  display: none;
 }
+
+.sessionDeleteButton:hover:not(:disabled) {
+  border-color: rgba(252, 165, 165, 0.42);
+
+  filter: brightness(1.08);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.22),
+    inset 0 -1px 0 rgba(80, 0, 0, 0.18),
+    0 9px 20px rgba(153, 27, 27, 0.3),
+    0 0 15px rgba(220, 38, 38, 0.12);
+
+  transform: translateY(-1px);
+}
+
+.sessionDeleteButton:active:not(:disabled) {
+  filter: brightness(0.94);
+
+  box-shadow:
+    inset 0 2px 4px rgba(70, 0, 0, 0.32),
+    0 4px 10px rgba(153, 27, 27, 0.18);
+
+  transform: translateY(0) scale(0.95);
+}
+
+/* Editing state */
 
 .sessionEditRow {
+  justify-self: end;
+
   display: flex;
   align-items: center;
-  gap: 10px;
-  flex-wrap: wrap;
+  gap: 7px;
 }
 
 .durationInput {
-  width: 115px;
-  height: 34px;
+  width: 112px;
+  height: 32px;
   padding: 0 10px;
 
-  border: 1px solid rgba(148, 163, 184, 0.2);
+  border: 1px solid rgba(148, 163, 184, 0.14);
   border-radius: 10px;
 
-  background: rgba(5, 8, 16, 0.58);
-  color: #f8fafc;
+  background: rgba(5, 9, 18, 0.58);
+  color: #e2e8f0;
 
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 700;
+  font-size: 13px;
+  font-weight: 650;
+  text-align: center;
 
   outline: none;
 
   transition:
     border-color 160ms ease,
-    box-shadow 160ms ease,
-    background 160ms ease;
+    background 160ms ease,
+    box-shadow 160ms ease;
 }
 
 .durationInput::placeholder {
-  color: #64748b;
+  color: #596579;
+}
+
+.durationInput:hover:not(:disabled) {
+  border-color: rgba(79, 116, 175, 0.24);
+  background: rgba(6, 11, 23, 0.68);
 }
 
 .durationInput:focus {
-  border-color: rgba(96, 165, 250, 0.48);
-  background: rgba(6, 10, 20, 0.72);
+  border-color: rgba(0, 49, 128, 0.55);
+  background: rgba(6, 11, 23, 0.76);
 
   box-shadow:
-    0 0 0 3px rgba(59, 130, 246, 0.1),
+    0 0 0 3px rgba(59, 130, 246, 0.08),
     inset 0 1px 0 rgba(255, 255, 255, 0.035);
 }
+
+/* Load more */
 
 .loadMoreButton {
   display: block;
 
   margin: 34px auto 0;
-  padding: 12px 22px;
+  padding: 11px 20px;
 
-  border: 1px solid rgba(148, 163, 184, 0.18);
+  border: 1px solid rgba(148, 163, 184, 0.12);
   border-radius: 999px;
 
-  background: rgba(8, 12, 22, 0.42);
-  color: #cbd5e1;
+  background: rgba(7, 11, 21, 0.42);
+  color: #8792a5;
 
   backdrop-filter: blur(14px);
   -webkit-backdrop-filter: blur(14px);
 
   font-family: inherit;
-  font-size: 14px;
-  font-weight: 850;
+  font-size: 13px;
+  font-weight: 750;
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.055),
-    0 8px 20px rgba(0, 0, 0, 0.14);
-
-  cursor: pointer;
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 8px 18px rgba(0, 0, 0, 0.12);
 
   transition:
     border-color 160ms ease,
@@ -1192,32 +1322,20 @@ h1 {
     transform 160ms ease;
 }
 
+.loadMoreButton::before {
+  display: none;
+}
+
 .loadMoreButton:hover:not(:disabled) {
-  border-color: rgba(148, 163, 184, 0.3);
-  background: rgba(12, 17, 30, 0.54);
-  color: #f8fafc;
+  border-color: rgba(79, 116, 175, 0.22);
+  background: rgba(9, 15, 29, 0.58);
+  color: #cbd5e1;
 
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.075),
-    0 10px 24px rgba(0, 0, 0, 0.18);
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 10px 22px rgba(0, 0, 0, 0.15);
 
   transform: translateY(-1px);
-}
-
-.loadMoreButton:active:not(:disabled) {
-  transform: translateY(0) scale(0.985);
-}
-
-.focusStatus {
-  margin-top: 14px;
-
-  color: #6f7b8f;
-  font-size: 14px;
-  font-weight: 500;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-
-  text-shadow: none;
 }
 
 /* Daily Goal */

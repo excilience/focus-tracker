@@ -233,6 +233,16 @@ export function SessionsView() {
                                                 <div className="sessionRange">
                                                     {getTimeText(session.start)} - {getTimeText(session.end)}
                                                 </div>
+                                                <div
+                                                    className={
+                                                        session.activity
+                                                            ? "sessionActivity"
+                                                            : "sessionActivity sessionActivityEmpty"
+                                                    }
+                                                    title={session.activity?.title ?? "No activity"}
+                                                >
+                                                    {session.activity?.title ?? "No activity"}
+                                                </div>
 
                                                 {isEditing ? (
                                                     <div className="sessionEditRow">
@@ -270,24 +280,26 @@ export function SessionsView() {
 
                                                 <div className="sessionActions">
                                                     {!isEditing && (
-                                                        <button
-                                                            className="sessionMiniButton"
-                                                            onClick={() => startEditing(session)}
-                                                            disabled={saving}
-                                                        >
-                                                            Edit
-                                                        </button>
-                                                    )}
+                                                        <>
+                                                            <button
+                                                                className="sessionMiniButton"
+                                                                onClick={() => startEditing(session)}
+                                                                disabled={saving}
+                                                            >
+                                                                Edit
+                                                            </button>
 
-                                                    <button
-                                                        className="sessionDeleteButton"
-                                                        onClick={() => handleDelete(session)}
-                                                        disabled={saving}
-                                                        aria-label="Delete session"
-                                                        title="Delete session"
-                                                    >
-                                                        ×
-                                                    </button>
+                                                            <button
+                                                                className="sessionDeleteButton"
+                                                                onClick={() => handleDelete(session)}
+                                                                disabled={saving}
+                                                                aria-label="Delete session"
+                                                                title="Delete session"
+                                                            >
+                                                                ×
+                                                            </button>
+                                                        </>
+                                                    )}
                                                 </div>
                                             </article>
                                         );
