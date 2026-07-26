@@ -58,8 +58,8 @@ func createActivity(ctx context.Context, db *sql.DB, title string) (Activity, er
 	return activity, nil
 }
 
-func loadActivities(ctx context.Context, db *sql.DB) ([]Activity, error) {
-	rows, err := db.QueryContext(ctx, `
+func loadActivities(ctx context.Context, db *sql.DB, includeArchived bool) ([]Activity, error) {
+	query := `
 		SELECT
 			id,
 			title,
@@ -68,7 +68,21 @@ func loadActivities(ctx context.Context, db *sql.DB) ([]Activity, error) {
 		FROM activities
 		WHERE is_archived = FALSE
 		ORDER BY created_at ASC
-	`)
+	`
+
+	if includeArchived {
+		query = `
+			SELECT
+				id,
+				title,
+				is_archived,
+				created_at
+			FROM activities
+			ORDER BY is_archived ASC, created_at ASC
+		`
+	}
+
+	rows, err := db.QueryContext(ctx, query)
 	if err != nil {
 		return nil, fmt.Errorf("load activities: %w", err)
 	}
