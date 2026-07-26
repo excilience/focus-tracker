@@ -92,7 +92,7 @@ button::before {
 
 button:hover {
   transform: translateY(-1px);
-  box-shadow: 0 14px 30px rgba(79, 70, 229, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  box-shadow: 0 14px 30px rgba(14, 3, 217, 0.38), inset 0 1px 0 rgba(255, 255, 255, 0.2);
 }
 
 button:hover::before {
@@ -414,6 +414,479 @@ h1 {
   font-size: 17px;
   font-weight: 900;
   white-space: nowrap;
+}
+
+/* Selected day details */
+
+.quickDayDetails {
+  width: fit-content;
+  min-width: 380px;
+  max-width: min(620px, 100%);
+
+  margin: 20px auto 0;
+  padding: 18px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 18px;
+
+  background:
+    radial-gradient(circle 220px at 8% 0%,
+      rgba(2, 48, 150, 0.08),
+      transparent 100%),
+    rgba(6, 9, 17, 0.42);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 14px 30px rgba(0, 0, 0, 0.18);
+}
+
+.quickDayDetailsHeader {
+  width: 100%;
+
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) max-content;
+  align-items: center;
+  gap: 24px;
+
+  padding: 0 4px 14px;
+  margin-bottom: 10px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.quickDayDetailsHeader span {
+  min-width: 62px;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.quickDayActivityList {
+  width: max-content;
+  min-width: 100%;
+  max-width: 584px;
+
+  display: grid;
+  gap: 8px;
+}
+
+.quickDayActivityRow {
+  width: 100%;
+  min-width: 340px;
+  min-height: 44px;
+  padding: 0 14px;
+
+  display: grid;
+  grid-template-columns: minmax(180px, 1fr) max-content;
+  align-items: center;
+  gap: 24px;
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 13px;
+
+  background: rgba(5, 9, 18, 0.34);
+}
+
+.quickDayActivityTitle {
+  min-width: 0;
+  max-width: 440px;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 650;
+}
+
+.quickDayActivityDuration {
+  min-width: 62px;
+
+  color: #6f91df;
+  font-size: 14px;
+  font-weight: 750;
+
+  text-align: right;
+  white-space: nowrap;
+}
+
+
+
+@keyframes quickDayDetailsAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quickDayCellSelected {
+  border-color: rgba(37, 99, 235, 0.32);
+
+  background:
+    radial-gradient(circle at 50% 0%,
+      rgba(37, 99, 235, 0.12),
+      transparent 72%),
+    rgba(8, 13, 26, 0.5);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 26px rgba(0, 0, 0, 0.18),
+    0 0 18px rgba(37, 99, 235, 0.08);
+
+  transform: translateY(-2px);
+}
+
+.quickDayCellSelected .quickDayDate {
+  color: #dbeafe;
+}
+
+.quickDayCellSelected .quickDayTotal {
+  color: #7ea2ef;
+}
+
+/* Week header */
+
+.quickWeekHeader {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+
+  margin-bottom: 28px;
+}
+
+.quickWeekHeader h2 {
+  margin: 0;
+
+  color: #f8fafc;
+  font-size: 30px;
+  font-weight: 800;
+  text-align: center;
+}
+
+/* Week statistics button */
+
+.weekStatsButton {
+  width: 38px;
+  height: 38px;
+  min-width: 38px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 12px;
+
+  background: rgba(6, 10, 20, 0.42);
+  color: #748196;
+
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 8px 18px rgba(0, 0, 0, 0.12);
+
+  font-size: 18px;
+  font-weight: 500;
+  line-height: 1;
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.weekStatsButton::before {
+  display: none;
+}
+
+.weekStatsButton:hover:not(:disabled) {
+  transform: translateY(-1px);
+
+  border-color: rgba(54, 99, 178, 0.28);
+  background: rgba(8, 14, 28, 0.62);
+  color: #a7b7d4;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 10px 22px rgba(0, 0, 0, 0.16),
+    0 0 14px rgba(37, 99, 235, 0.05);
+}
+
+.weekStatsButtonActive {
+  border-color: rgba(37, 100, 235, 0.108);
+
+  background:
+    radial-gradient(circle at 50% 15%,
+      rgba(23, 23, 220, 0.164),
+      transparent 72%),
+    rgba(8, 14, 30, 0.68);
+
+  color: #84a7ef;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 10px 22px rgba(0, 0, 0, 0.18),
+    0 0 16px rgba(37, 99, 235, 0.08);
+}
+
+/* Week details */
+
+.quickWeekDetails {
+  width: min(680px, 100%);
+  margin: 22px auto 0;
+  padding: 20px;
+
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+
+  background:
+    radial-gradient(circle 260px at 8% 0%,
+      rgba(2, 44, 140, 0.09),
+      transparent 100%),
+    rgba(6, 9, 17, 0.42);
+
+  backdrop-filter: blur(18px);
+  -webkit-backdrop-filter: blur(18px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 16px 34px rgba(0, 0, 0, 0.18);
+
+  animation: quickWeekDetailsAppear 180ms ease-out;
+}
+
+@keyframes quickWeekDetailsAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-6px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.quickWeekDetailsHeader {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 24px;
+
+  padding-bottom: 16px;
+  margin-bottom: 14px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.quickWeekDetailsTitle {
+  min-width: 0;
+
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.quickWeekDetailsTitle strong {
+  color: #f1f5f9;
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.quickWeekRange {
+  color: #748196;
+  font-size: 12px;
+  font-weight: 650;
+  line-height: 1.3;
+}
+
+.quickWeekDetailsHeader>strong {
+  color: #8eabea;
+  font-size: 14px;
+  font-weight: 750;
+  white-space: nowrap;
+
+  text-shadow:
+    0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+.quickWeekMetrics {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+
+  margin-bottom: 14px;
+}
+
+.quickWeekMetric {
+  min-width: 0;
+  padding: 13px 12px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 14px;
+
+  background: rgba(5, 9, 18, 0.34);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 7px 16px rgba(0, 0, 0, 0.08);
+}
+
+.quickWeekMetric span {
+  color: #6f7b8f;
+
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: 0.045em;
+  text-align: center;
+  text-transform: uppercase;
+}
+
+.quickWeekMetric strong {
+  color: #dce5f5;
+
+  font-size: 17px;
+  font-weight: 750;
+  line-height: 1;
+  text-align: center;
+}
+
+.quickWeekActivityList {
+  display: grid;
+  gap: 8px;
+}
+
+.quickWeekActivityRow {
+  min-width: 0;
+  min-height: 44px;
+  padding: 0 14px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 52px 78px;
+  align-items: center;
+  gap: 16px;
+
+  border: 1px solid rgba(148, 163, 184, 0.08);
+  border-radius: 13px;
+
+  background: rgba(5, 9, 18, 0.34);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 6px 14px rgba(0, 0, 0, 0.08);
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    transform 160ms ease;
+}
+
+.quickWeekActivityRow:hover {
+  border-color: rgba(54, 99, 178, 0.16);
+  background: rgba(7, 12, 24, 0.48);
+  transform: translateY(-1px);
+}
+
+.quickWeekActivityTitle {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #cbd5e1;
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.2;
+}
+
+.quickWeekActivityPercent {
+  color: #6f7f99;
+  font-size: 13px;
+  font-weight: 700;
+  text-align: right;
+  white-space: nowrap;
+}
+
+.quickWeekActivityRow>strong {
+  color: #7594d8;
+  font-size: 14px;
+  font-weight: 750;
+  text-align: right;
+  white-space: nowrap;
+
+  text-shadow:
+    0 0 10px rgba(59, 130, 246, 0.1);
+}
+
+.quickWeekTotal {
+  margin-bottom: 14px;
+  padding: 18px 20px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+
+  border: 1px solid rgba(197, 200, 234, 0.048);
+  border-radius: 16px;
+
+  background:
+    radial-gradient(circle at 12% 20%,
+      rgba(2, 20, 183, 0.092),
+      transparent 58%),
+    rgba(6, 11, 23, 0.48);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 10px 24px rgba(0, 0, 0, 0.13),
+    0 0 18px rgba(37, 99, 235, 0.045);
+}
+
+.quickWeekTotal span {
+  color: #74839b;
+
+  font-size: 12px;
+  font-weight: 750;
+  line-height: 1;
+  letter-spacing: 0.075em;
+  text-transform: uppercase;
+}
+
+.quickWeekTotal strong {
+  color: #91ace8;
+
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: -0.025em;
+  white-space: nowrap;
+
+  font-variant-numeric: tabular-nums;
+
+  text-shadow:
+    0 0 14px rgba(59, 130, 246, 0.15);
 }
 
 /* Session Views */
@@ -2255,6 +2728,45 @@ h1 {
   box-shadow: none;
 }
 
+.activityModalError {
+  width: 100%;
+  margin: 14px 0 0;
+  padding: 10px 12px;
+
+  border: 2px solid rgba(248, 113, 113, 0.173);
+  border-radius: 12px;
+
+  background:
+    linear-gradient(180deg,
+      rgba(127, 29, 29, 0.12),
+      rgba(69, 10, 10, 0.08));
+
+  color: #f3a6a6;
+
+  font-size: 13px;
+  font-weight: 600;
+  line-height: 1.35;
+  text-align: center;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025),
+    0 8px 18px rgba(0, 0, 0, 0.1);
+
+  animation: activityErrorAppear 160ms ease-out;
+}
+
+@keyframes activityErrorAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-4px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
 /* Media Queries */
 @media (max-width: 1200px) {
   .quickDaysGrid {
@@ -2512,6 +3024,71 @@ h1 {
   .tab:active {
     transform: scale(0.97);
   }
+
+  .quickDayDetails {
+    width: 100%;
+    min-width: 0;
+  }
+
+  .quickDayActivityList {
+    width: 100%;
+    max-width: 100%;
+  }
+
+  .quickDayActivityRow {
+    min-width: 0;
+    grid-template-columns: minmax(0, 1fr) max-content;
+  }
+
+  .quickWeekHeader {
+    margin-bottom: 22px;
+  }
+
+  .quickWeekHeader h2 {
+    font-size: 25px;
+  }
+
+  .quickWeekDetails {
+    width: 100%;
+    padding: 15px;
+  }
+
+  .quickWeekDetailsHeader {
+    grid-template-columns: 1fr;
+    gap: 8px;
+  }
+
+  .quickWeekDetailsHeader>strong {
+    justify-self: start;
+  }
+
+  .quickWeekMetrics {
+    grid-template-columns: 1fr;
+  }
+
+  .quickWeekMetric {
+    align-items: flex-start;
+  }
+
+  .quickWeekMetric span,
+  .quickWeekMetric strong {
+    text-align: left;
+  }
+
+  .quickWeekActivityRow {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 12px;
+  }
+
+  .quickWeekActivityPercent {
+    display: none;
+  }
+
+  .quickWeekActivityRow>strong {
+    min-width: 64px;
+  }
+
+
 }
 
 .goalHeader,

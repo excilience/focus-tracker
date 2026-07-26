@@ -101,6 +101,7 @@ function App() {
   const [activityTitleInput, setActivityTitleInput] = useState("");
   const [activitySaving, setActivitySaving] = useState(false);
   const [activitySelectWidth, setActivitySelectWidth] = useState(140);
+  const [activityError, setActivityError] = useState("");
   const [activeSessionSyncedAt, setActiveSessionSyncedAt] = useState<number | null>(null);
   const [goal, setGoal] = useState<GoalResponse | null>(null);
   const [goalInput, setGoalInput] = useState("");
@@ -125,7 +126,7 @@ function App() {
 
   function openActivityModal() {
     setActivityTitleInput("");
-    setError("");
+    setActivityError("");
     setIsActivityModalOpen(true);
   }
 
@@ -215,12 +216,12 @@ function App() {
     const title = activityTitleInput.trim();
 
     if (!title) {
-      setError("Activity title is required");
+      setActivityError("Activity title is required");
       return;
     }
 
     setActivitySaving(true);
-    setError("");
+    setActivityError("");
 
     try {
       const createdActivity = await createActivity(title);
@@ -234,7 +235,7 @@ function App() {
       setActivityTitleInput("");
       setIsActivityModalOpen(false);
     } catch (error) {
-      setError(
+      setActivityError(
         error instanceof Error
           ? error.message
           : "Failed to create activity",
@@ -639,13 +640,25 @@ function App() {
               <input
                 className="goalModalInput"
                 value={activityTitleInput}
-                onChange={(event) => setActivityTitleInput(event.target.value)}
-                placeholder="For example: Reading"
+                onChange={(event) => {
+                  setActivityTitleInput(event.target.value);
+
+                  if (activityError) {
+                    setActivityError("");
+                  }
+                }}
+                placeholder="For example: Programming"
                 disabled={activitySaving}
                 aria-label="Activity title"
                 autoFocus
               />
             </label>
+
+            {activityError && (
+              <p className="error activityModalError">
+                {activityError}
+              </p>
+            )}
 
             <button
               type="submit"

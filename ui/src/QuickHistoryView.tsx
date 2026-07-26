@@ -5,9 +5,17 @@ type DaySummary = {
     date: Date;
     dateKey: string;
     totalSeconds: number;
+    activities: ActivityDaySummary[];
+};
+
+type ActivityDaySummary = {
+    activityID: string | null;
+    title: string;
+    totalSeconds: number;
 };
 
 type WeekGroup = {
+    weekKey: string;
     weekNumber: number;
     days: DaySummary[];
     totalSeconds: number;
@@ -80,10 +88,38 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
     }
 
     const totalsByDate = new Map<string, number>();
+    const activitiesByDate = new Map<
+        string,
+        Map<string, ActivityDaySummary>
+    >();
 
     for (const session of sessions) {
         const currentTotal = totalsByDate.get(session.focus_day) ?? 0;
-        totalsByDate.set(session.focus_day, currentTotal + session.duration_seconds);
+
+        totalsByDate.set(
+            session.focus_day,
+            currentTotal + session.duration_seconds,
+        );
+
+        let dayActivities = activitiesByDate.get(session.focus_day);
+
+        if (!dayActivities) {
+            dayActivities = new Map();
+            activitiesByDate.set(session.focus_day, dayActivities);
+        }
+
+        const activityKey = session.activity?.id ?? "no-activity";
+        const currentActivity = dayActivities.get(activityKey);
+
+        if (currentActivity) {
+            currentActivity.totalSeconds += session.duration_seconds;
+        } else {
+            dayActivities.set(activityKey, {
+                activityID: session.activity?.id ?? null,
+                title: session.activity?.title ?? "No activity",
+                totalSeconds: session.duration_seconds,
+            });
+        }
     }
 
     const sortedFocusDays = Array.from(totalsByDate.keys()).sort();
@@ -103,11 +139,15 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
         for (let dayIndex = 0; dayIndex < 7; dayIndex++) {
             const date = addDays(currentMonday, dayIndex);
             const dateKey = formatDateKey(date);
+            const activities = Array.from(
+                activitiesByDate.get(dateKey)?.values() ?? [],
+            );
 
             days.push({
                 date,
                 dateKey,
                 totalSeconds: totalsByDate.get(dateKey) ?? 0,
+                activities,
             });
         }
 
@@ -116,6 +156,7 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
         }, 0);
 
         weeks.push({
+            weekKey: formatDateKey(currentMonday),
             weekNumber: weeks.length + 1,
             days,
             totalSeconds,
@@ -130,11 +171,63 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
     }));
 }
 
+function getWeekActivitySummary(
+    week: WeekGroup,
+): ActivityDaySummary[] {
+    const totals = new Map<string, ActivityDaySummary>();
+
+    for (const day of week.days) {
+        for (const activity of day.activities) {
+            const activityKey =
+                activity.activityID ?? "no-activity";
+
+            const currentActivity = totals.get(activityKey);
+
+            if (currentActivity) {
+                currentActivity.totalSeconds += activity.totalSeconds;
+                continue;
+            }
+
+            totals.set(activityKey, {
+                activityID: activity.activityID,
+                title: activity.title,
+                totalSeconds: activity.totalSeconds,
+            });
+        }
+    }
+
+    return Array.from(totals.values()).sort(
+        (a, b) => b.totalSeconds - a.totalSeconds,
+    );
+}
+
+function formatWeekRange(week: WeekGroup): string {
+    const firstDay = week.days[0];
+    const lastDay = week.days[week.days.length - 1];
+
+    if (!firstDay || !lastDay) {
+        return "";
+    }
+
+    const formatDate = (date: Date): string => {
+        return date.toLocaleDateString("en-GB", {
+            day: "2-digit",
+            month: "short",
+            year: "numeric",
+        });
+    };
+
+    return `${formatDate(firstDay.date)} — ${formatDate(lastDay.date)}`;
+}
+
 export function QuickHistoryView() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [weekSort, setWeekSort] = useState<WeekSort>("newest");
+    const [selectedDayKey, setSelectedDayKey] = useState<string | null>(null);
+    const [selectedWeekKey, setSelectedWeekKey] =
+        useState<string | null>(null);
 
     const weeks = useMemo(() => {
         return groupSessionsByCalendarWeeks(sessions);
@@ -206,32 +299,198 @@ export function QuickHistoryView() {
                 <div className="quickWeeks">
                     {getSortedWeeks(
                         weeks.filter((week) => week.totalSeconds > 0),
-                    ).map((week) => (
-                        <section className="quickWeek" key={week.weekNumber}>
-                            <h2>
-                                Week {week.weekNumber}{" "}
-                                <span className="weekTotal">
-                                    ({formatDuration(week.totalSeconds)})
-                                </span>
-                            </h2>
+                    ).map((week) => {
+                        const selectedDay = week.days.find(
+                            (day) => day.dateKey === selectedDayKey,
+                        );
 
-                            <div className="quickDaysGrid">
-                                {week.days
-                                    .filter((day) => day.totalSeconds > 0)
-                                    .map((day) => (
-                                        <article className="quickDayCell" key={day.dateKey}>
-                                            <span className="quickDayDate">
-                                                {formatDayTitle(day.date)}
-                                            </span>
+                        const isWeekStatsOpen = selectedWeekKey === week.weekKey;
 
-                                            <strong className="quickDayTotal">
-                                                ⏱ {formatDuration(day.totalSeconds)}
+                        const activeDays = week.days.filter(
+                            (day) => day.totalSeconds > 0,
+                        ).length;
+
+                        const averagePerDay = Math.round(
+                            week.totalSeconds / 7,
+                        );
+
+                        const averagePerActiveDay =
+                            activeDays > 0
+                                ? Math.round(week.totalSeconds / activeDays)
+                                : 0;
+
+                        const weekActivities = getWeekActivitySummary(week);
+
+                        return (
+                            <section className="quickWeek" key={week.weekKey}>
+                                <div className="quickWeekHeader">
+                                    <h2>Week {week.weekNumber}</h2>
+
+                                    <button
+                                        type="button"
+                                        className={
+                                            selectedWeekKey === week.weekKey
+                                                ? "weekStatsButton weekStatsButtonActive"
+                                                : "weekStatsButton"
+                                        }
+                                        onClick={() => {
+                                            setSelectedDayKey(null);
+
+                                            setSelectedWeekKey((currentWeekKey) =>
+                                                currentWeekKey === week.weekKey
+                                                    ? null
+                                                    : week.weekKey,
+                                            );
+                                        }}
+                                        aria-expanded={selectedWeekKey === week.weekKey}
+                                        aria-label={`Toggle statistics for week ${week.weekNumber}`}
+                                        title="Week statistics"
+                                    >
+                                        ≡
+                                    </button>
+                                </div>
+
+                                <div className="quickDaysGrid">
+                                    {week.days
+                                        .filter((day) => day.totalSeconds > 0)
+                                        .map((day) => (
+                                            <button
+                                                type="button"
+                                                className={
+                                                    selectedDayKey === day.dateKey
+                                                        ? "quickDayCell quickDayCellSelected"
+                                                        : "quickDayCell"
+                                                }
+                                                key={day.dateKey}
+                                                onClick={() => {
+                                                    setSelectedWeekKey(null);
+
+                                                    setSelectedDayKey((currentDayKey) =>
+                                                        currentDayKey === day.dateKey
+                                                            ? null
+                                                            : day.dateKey,
+                                                    );
+                                                }}
+                                            >
+                                                <span className="quickDayDate">
+                                                    {formatDayTitle(day.date)}
+                                                </span>
+
+                                                <strong className="quickDayTotal">
+                                                    ⏱ {formatDuration(day.totalSeconds)}
+                                                </strong>
+                                            </button>
+                                        ))}
+                                </div>
+                                {isWeekStatsOpen && (
+                                    <div className="quickWeekDetails">
+                                        <div className="quickWeekDetailsHeader">
+                                            <div className="quickWeekDetailsTitle">
+                                                <strong>Week {week.weekNumber}</strong>
+                                                <span className="quickWeekRange">
+                                                    {formatWeekRange(week)}
+                                                </span>
+                                            </div>
+                                        </div>
+
+                                        <div className="quickWeekTotal">
+                                            <span>Total focused</span>
+
+                                            <strong>
+                                                {formatDuration(week.totalSeconds)}
                                             </strong>
-                                        </article>
-                                    ))}
-                            </div>
-                        </section>
-                    ))}
+                                        </div>
+
+                                        <div className="quickWeekMetrics">
+                                            <div className="quickWeekMetric">
+                                                <span>Active days</span>
+                                                <strong>{activeDays}</strong>
+                                            </div>
+
+                                            <div className="quickWeekMetric">
+                                                <span>Daily average</span>
+                                                <strong>{formatDuration(averagePerDay)}</strong>
+                                            </div>
+
+                                            <div className="quickWeekMetric">
+                                                <span>Average active day</span>
+                                                <strong>
+                                                    {formatDuration(averagePerActiveDay)}
+                                                </strong>
+                                            </div>
+                                        </div>
+
+                                        <div className="quickWeekActivityList">
+                                            {weekActivities.map((activity) => {
+                                                const percentage =
+                                                    week.totalSeconds > 0
+                                                        ? Math.round(
+                                                            (activity.totalSeconds / week.totalSeconds) * 100,
+                                                        )
+                                                        : 0;
+
+                                                return (
+                                                    <div
+                                                        className="quickWeekActivityRow"
+                                                        key={activity.activityID ?? "no-activity"}
+                                                    >
+                                                        <span
+                                                            className="quickWeekActivityTitle"
+                                                            title={activity.title}
+                                                        >
+                                                            {activity.title}
+                                                        </span>
+
+                                                        <span className="quickWeekActivityPercent">
+                                                            {percentage}%
+                                                        </span>
+
+                                                        <strong>
+                                                            {formatDuration(activity.totalSeconds)}
+                                                        </strong>
+                                                    </div>
+                                                );
+                                            })}
+                                        </div>
+                                    </div>
+                                )}
+
+                                {selectedDay && (
+                                    <div className="quickDayDetails">
+                                        <div className="quickDayDetailsHeader">
+                                            <strong>{formatDayTitle(selectedDay.date)}</strong>
+
+                                            <span>
+                                                Total: {formatDuration(selectedDay.totalSeconds)}
+                                            </span>
+                                        </div>
+
+                                        <div className="quickDayActivityList">
+                                            {[...selectedDay.activities]
+                                                .sort((a, b) => b.totalSeconds - a.totalSeconds)
+                                                .map((activity) => (
+                                                    <div
+                                                        className="quickDayActivityRow"
+                                                        key={activity.activityID ?? "no-activity"}
+                                                    >
+                                                        <span
+                                                            className="quickDayActivityTitle"
+                                                            title={activity.title}
+                                                        >
+                                                            {activity.title}
+                                                        </span>
+
+                                                        <strong className="quickDayActivityDuration">
+                                                            {formatDuration(activity.totalSeconds)}
+                                                        </strong>
+                                                    </div>
+                                                ))}
+                                        </div>
+                                    </div>
+                                )}
+                            </section>
+                        );
+                    })}
                 </div>
             )}
         </section>
