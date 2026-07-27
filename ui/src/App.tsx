@@ -12,6 +12,7 @@ import {
   getGoal,
   updateGoal,
   updateSettings,
+  updateActivity,
   type GoalResponse,
   type ActiveSession,
   type Activity,
@@ -97,6 +98,11 @@ function App() {
   const [activeSession, setActiveSession] = useState<ActiveSession | null>(null);
   const [activities, setActivities] = useState<Activity[]>([]);
   const [selectedActivityID, setSelectedActivityID] = useState("");
+  const [managedActivities, setManagedActivities] = useState<Activity[]>([]);
+  const [isActivityManagerOpen, setIsActivityManagerOpen] = useState(false);
+  const [activityManagerLoading, setActivityManagerLoading] = useState(false);
+  const [activityManagerError, setActivityManagerError] = useState("");
+  const [isArchiveOpen, setIsArchiveOpen] = useState(false);
   const [isActivityModalOpen, setIsActivityModalOpen] = useState(false);
   const [activityTitleInput, setActivityTitleInput] = useState("");
   const [activitySaving, setActivitySaving] = useState(false);
@@ -114,6 +120,18 @@ function App() {
   const [liveFocusedSeconds, setLiveFocusedSeconds] = useState(0);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const activeManagedActivities = managedActivities.filter(
+    (activity) => !activity.is_archived,
+  );
+  const archivedManagedActivities = managedActivities.filter(
+    (activity) => activity.is_archived,
+  );
+  const [activityManagerSavingID, setActivityManagerSavingID] =
+    useState<string | null>(null);
+  const [editingActivityID, setEditingActivityID] =
+    useState<string | null>(null);
+  const [editingActivityTitle, setEditingActivityTitle] =
+    useState("");
 
   function openGoalModal() {
     if (goal) {
@@ -128,6 +146,129 @@ function App() {
     setActivityTitleInput("");
     setActivityError("");
     setIsActivityModalOpen(true);
+  }
+
+  function startEditingActivity(activity: Activity) {
+    setEditingActivityID(activity.id);
+    setEditingActivityTitle(activity.title);
+    setActivityManagerError("");
+  }
+
+  function cancelEditingActivity() {
+    setEditingActivityID(null);
+    setEditingActivityTitle("");
+  }
+
+  async function openActivityManager() {
+    setIsActivityManagerOpen(true);
+    setActivityManagerLoading(true);
+    setActivityManagerError("");
+
+    try {
+      await refreshManagedActivities();
+    } catch (error) {
+      setActivityManagerError(
+        error instanceof Error
+          ? error.message
+          : "Failed to load activities",
+      );
+    } finally {
+      setActivityManagerLoading(false);
+    }
+  }
+
+  function closeActivityManager() {
+    if (
+      activityManagerLoading ||
+      activityManagerSavingID !== null
+    ) {
+      return;
+    }
+
+    setIsActivityManagerOpen(false);
+    setIsArchiveOpen(false);
+
+    cancelEditingActivity();
+    setActivityManagerError("");
+  }
+
+  async function refreshManagedActivities() {
+    const result = await getActivities(true);
+    setManagedActivities(result);
+  }
+
+  async function setActivityArchived(
+    activity: Activity,
+    isArchived: boolean,
+  ) {
+    setActivityManagerSavingID(activity.id);
+    setActivityManagerError("");
+
+    try {
+      await updateActivity(activity.id, {
+        is_archived: isArchived,
+      });
+
+      await refreshManagedActivities();
+
+      const activeActivities = await getActivities();
+      setActivities(activeActivities);
+
+      if (
+        isArchived &&
+        selectedActivityID === activity.id
+      ) {
+        setSelectedActivityID("");
+      }
+    } catch (error) {
+      setActivityManagerError(
+        error instanceof Error
+          ? error.message
+          : isArchived
+            ? "Failed to archive activity"
+            : "Failed to restore activity",
+      );
+    } finally {
+      setActivityManagerSavingID(null);
+    }
+  }
+
+  async function saveActivityTitle(activity: Activity) {
+    const title = editingActivityTitle.trim();
+
+    if (!title) {
+      setActivityManagerError("Activity title is required");
+      return;
+    }
+
+    if (title === activity.title) {
+      cancelEditingActivity();
+      return;
+    }
+
+    setActivityManagerSavingID(activity.id);
+    setActivityManagerError("");
+
+    try {
+      await updateActivity(activity.id, {
+        title,
+      });
+
+      await refreshManagedActivities();
+
+      const activeActivities = await getActivities();
+      setActivities(activeActivities);
+
+      cancelEditingActivity();
+    } catch (error) {
+      setActivityManagerError(
+        error instanceof Error
+          ? error.message
+          : "Failed to rename activity",
+      );
+    } finally {
+      setActivityManagerSavingID(null);
+    }
   }
 
   async function refresh() {
@@ -383,15 +524,30 @@ function App() {
           {!hasActiveSession && (
             <div
               className="activityPicker"
-              style={{ width: `${activitySelectWidth + 42}px` }}
+              style={{ width: `${activitySelectWidth}px` }}
             >
+              <button
+                type="button"
+                className="activityManageButton"
+                onClick={() => void openActivityManager()}
+                disabled={loading || activitySaving}
+                aria-label="Manage activities"
+                title="Manage activities"
+              >
+                <span className="activityManageIcon" aria-hidden="true">
+                  ⚙
+                </span>
+              </button>
+
               <label className="activitySelector activitySelectorAboveRing">
                 <span className="activitySelectorLabel">Activity</span>
 
                 <select
                   className="activitySelectorInput"
                   value={selectedActivityID}
-                  onChange={(event) => setSelectedActivityID(event.target.value)}
+                  onChange={(event) =>
+                    setSelectedActivityID(event.target.value)
+                  }
                   disabled={loading || activitySaving}
                 >
                   <option value="">No activity</option>
@@ -412,10 +568,13 @@ function App() {
                 aria-label="Create activity"
                 title="Create activity"
               >
-                +
+                <span className="activityCreateIcon" aria-hidden="true">
+                  +
+                </span>
               </button>
             </div>
           )}
+
 
           <div className="focusRingWrap">
             <svg className="focusRing" viewBox={`0 0 ${circleSize} ${circleSize}`}>
@@ -550,9 +709,370 @@ function App() {
           </div>
         </section>
       )}
+
+      {isActivityManagerOpen && (
+        <div
+          className="activityManagerOverlay"
+          role="presentation"
+          onMouseDown={closeActivityManager}
+        >
+          <div
+            className="activityManagerModal"
+            role="dialog"
+            aria-modal="true"
+            aria-labelledby="activity-manager-title"
+            onMouseDown={(event) => event.stopPropagation()}
+          >
+            <div className="activityManagerHeader">
+              <div>
+                <span className="activityManagerEyebrow">
+                  Management
+                </span>
+
+                <h2 id="activity-manager-title">
+                  Activities
+                </h2>
+              </div>
+
+              <button
+                type="button"
+                className="activityManagerCloseButton"
+                onClick={closeActivityManager}
+                disabled={
+                  activityManagerLoading ||
+                  activityManagerSavingID !== null
+                }
+                aria-label="Close activity manager"
+              >
+                ×
+              </button>
+            </div>
+
+            {activityManagerLoading && (
+              <p className="emptyState">
+                Loading activities...
+              </p>
+            )}
+
+            {activityManagerError && (
+              <p className="error">
+                {activityManagerError}
+              </p>
+            )}
+
+            {!activityManagerLoading &&
+              !activityManagerError && (
+                <div className="activityManagerColumns">
+                  <section className="activityManagerSection">
+                    <div className="activityManagerSectionHeader">
+                      <h3>Active</h3>
+
+                      <span>
+                        {activeManagedActivities.length}
+                      </span>
+                    </div>
+
+                    {activeManagedActivities.length === 0 ? (
+                      <p className="emptyState">
+                        No active activities.
+                      </p>
+                    ) : (
+                      <div className="activityManagerList">
+                        {activeManagedActivities.map(
+                          (activity) => (
+                            <div
+                              className="activityManagerItem"
+                              key={activity.id}
+                            >
+                              {editingActivityID ===
+                                activity.id ? (
+                                <>
+                                  <input
+                                    type="text"
+                                    value={editingActivityTitle}
+                                    onChange={(event) =>
+                                      setEditingActivityTitle(
+                                        event.target.value,
+                                      )
+                                    }
+                                    onKeyDown={(event) => {
+                                      if (event.key === "Enter") {
+                                        void saveActivityTitle(
+                                          activity,
+                                        );
+                                      }
+
+                                      if (event.key === "Escape") {
+                                        cancelEditingActivity();
+                                      }
+                                    }}
+                                    disabled={
+                                      activityManagerSavingID !==
+                                      null
+                                    }
+                                    autoFocus
+                                  />
+
+                                  <div className="activityManagerActions">
+                                    <button
+                                      type="button"
+                                      className="activityManagerActionButton activityManagerCancelButton"
+                                      onClick={
+                                        cancelEditingActivity
+                                      }
+                                      disabled={
+                                        activityManagerSavingID !==
+                                        null
+                                      }
+                                    >
+                                      Cancel
+                                    </button>
+
+
+                                    <button
+                                      type="button"
+                                      className="activityManagerActionButton activityManagerSaveButton"
+                                      onClick={() =>
+                                        void saveActivityTitle(
+                                          activity,
+                                        )
+                                      }
+                                      disabled={
+                                        activityManagerSavingID !==
+                                        null ||
+                                        editingActivityTitle.trim()
+                                          .length === 0
+                                      }
+                                    >
+                                      {activityManagerSavingID ===
+                                        activity.id
+                                        ? "Saving..."
+                                        : "Save"}
+                                    </button>
+                                  </div>
+                                </>
+                              ) : (
+                                <>
+                                  <span
+                                    className="activityManagerTitle"
+                                    title={activity.title}
+                                  >
+                                    {activity.title}
+                                  </span>
+
+                                  <div className="activityManagerActions">
+                                    <button
+                                      type="button"
+                                      className="activityManagerActionButton"
+                                      onClick={() =>
+                                        startEditingActivity(
+                                          activity,
+                                        )
+                                      }
+                                      disabled={
+                                        activityManagerSavingID !==
+                                        null
+                                      }
+                                    >
+                                      Rename
+                                    </button>
+
+                                    <button
+                                      type="button"
+                                      className="activityManagerActionButton activityManagerArchiveButton"
+                                      onClick={() =>
+                                        void setActivityArchived(
+                                          activity,
+                                          true,
+                                        )
+                                      }
+                                      disabled={
+                                        activityManagerSavingID !==
+                                        null
+                                      }
+                                    >
+                                      {activityManagerSavingID ===
+                                        activity.id
+                                        ? "Archiving..."
+                                        : "Archive"}
+                                    </button>
+                                  </div>
+                                </>
+                              )}
+                            </div>
+                          ),
+                        )}
+                      </div>
+                    )}
+                  </section>
+
+                  <section
+                    className={
+                      isArchiveOpen
+                        ? "activityManagerSection activityManagerArchivedSection activityManagerArchivedSectionOpen"
+                        : "activityManagerSection activityManagerArchivedSection"
+                    }
+                  >
+                    <button
+                      type="button"
+                      className="activityManagerArchiveToggle"
+                      onClick={() =>
+                        setIsArchiveOpen((currentValue) => !currentValue)
+                      }
+                      aria-expanded={isArchiveOpen}
+                      aria-controls="archived-activities-list"
+                    >
+                      <span className="activityManagerArchiveToggleTitle">
+                        <span
+                          className={
+                            isArchiveOpen
+                              ? "activityManagerArchiveChevron activityManagerArchiveChevronOpen"
+                              : "activityManagerArchiveChevron"
+                          }
+                          aria-hidden="true"
+                        >
+                          ›
+                        </span>
+
+                        Archived
+                      </span>
+
+                      <span className="activityManagerArchiveCount">
+                        {archivedManagedActivities.length}
+                      </span>
+                    </button>
+
+                    {isArchiveOpen && (
+                      <div
+                        className="activityManagerArchiveContent"
+                        id="archived-activities-list"
+                      >
+                        {archivedManagedActivities.length === 0 ? (
+                          <p className="emptyState">
+                            No archived activities.
+                          </p>
+                        ) : (
+                          <div className="activityManagerList">
+                            {archivedManagedActivities.map((activity) => (
+                              <div
+                                className="activityManagerItem"
+                                key={activity.id}
+                              >
+                                {editingActivityID === activity.id ? (
+                                  <>
+                                    <input
+                                      type="text"
+                                      value={editingActivityTitle}
+                                      onChange={(event) =>
+                                        setEditingActivityTitle(
+                                          event.target.value,
+                                        )
+                                      }
+                                      onKeyDown={(event) => {
+                                        if (event.key === "Enter") {
+                                          void saveActivityTitle(activity);
+                                        }
+
+                                        if (event.key === "Escape") {
+                                          cancelEditingActivity();
+                                        }
+                                      }}
+                                      disabled={
+                                        activityManagerSavingID !== null
+                                      }
+                                      autoFocus
+                                    />
+
+                                    <div className="activityManagerActions">
+                                      <button
+                                        type="button"
+                                        className="activityManagerActionButton activityManagerCancelButton"
+                                        onClick={cancelEditingActivity}
+                                        disabled={
+                                          activityManagerSavingID !== null
+                                        }
+                                      >
+                                        Cancel
+                                      </button>
+
+
+                                      <button
+                                        type="button"
+                                        className="activityManagerActionButton activityManagerSaveButton"
+                                        onClick={() =>
+                                          void saveActivityTitle(activity)
+                                        }
+                                        disabled={
+                                          activityManagerSavingID !== null ||
+                                          editingActivityTitle.trim().length === 0
+                                        }
+                                      >
+                                        {activityManagerSavingID === activity.id
+                                          ? "Saving..."
+                                          : "Save"}
+                                      </button>
+
+                                    </div>
+                                  </>
+                                ) : (
+                                  <>
+                                    <span
+                                      className="activityManagerTitle"
+                                      title={activity.title}
+                                    >
+                                      {activity.title}
+                                    </span>
+
+                                    <div className="activityManagerActions">
+                                      <button
+                                        type="button"
+                                        className="activityManagerActionButton"
+                                        onClick={() =>
+                                          startEditingActivity(activity)
+                                        }
+                                        disabled={
+                                          activityManagerSavingID !== null
+                                        }
+                                      >
+                                        Rename
+                                      </button>
+
+                                      <button
+                                        type="button"
+                                        className="activityManagerActionButton activityManagerRestoreButton"
+                                        onClick={() =>
+                                          void setActivityArchived(
+                                            activity,
+                                            false,
+                                          )
+                                        }
+                                        disabled={
+                                          activityManagerSavingID !== null
+                                        }
+                                      >
+                                        {activityManagerSavingID === activity.id
+                                          ? "Restoring..."
+                                          : "Restore"}
+                                      </button>
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </div>
+                    )}
+                  </section>
+                </div>
+              )}
+          </div>
+        </div>
+      )}
+
       {isGoalModalOpen && (
         <div
-          className="modalOverlay"
+          className="activityManagerOverlay"
           role="presentation"
           onMouseDown={() => setIsGoalModalOpen(false)}
         >
@@ -616,7 +1136,7 @@ function App() {
 
       {isActivityModalOpen && (
         <div
-          className="modalOverlay"
+          className="activityManagerOverlay"
           role="presentation"
           onMouseDown={() => {
             if (!activitySaving) {

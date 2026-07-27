@@ -196,8 +196,14 @@ export type ActivityStats = {
     duration_human: string;
 };
 
-export function getActivities(): Promise<Activity[]> {
-    return request<Activity[]>("/activities");
+export function getActivities(
+    includeArchived = false,
+): Promise<Activity[]> {
+    const query = includeArchived
+        ? "?include_archived=true"
+        : "";
+
+    return request<Activity[]>(`/activities${query}`);
 }
 
 export function getActivityStats(): Promise<ActivityStats[]> {

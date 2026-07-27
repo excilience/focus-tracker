@@ -722,7 +722,7 @@ func getActivitiesHandler(w http.ResponseWriter, r *http.Request, db *sql.DB) {
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	includeArchived := r.URL.Query().Get("include.archived") == "true"
+	includeArchived := r.URL.Query().Get("include_archived") == "true"
 
 	activities, err := loadActivities(ctx, db, includeArchived)
 	if err != nil {

@@ -1083,7 +1083,7 @@ h1 {
   height: 34px;
   padding: 0 13px;
 
-  border: 1px solid rgba(96, 165, 250, 0.34);
+  border: 1px solid rgba(5, 39, 227, 0.34);
   border-radius: 11px;
 
   background:
@@ -1091,10 +1091,10 @@ h1 {
       rgba(255, 255, 255, 0.13),
       transparent 28%),
     radial-gradient(circle at 50% 100%,
-      rgba(8, 27, 80, 0.62),
+      rgba(11, 53, 168, 0.62),
       transparent 55%),
     linear-gradient(145deg,
-      #0062dace,
+      #004cdace,
       #0b4fe2c6 58%,
       #0740dec7);
 
@@ -1124,7 +1124,7 @@ h1 {
 }
 
 .sessionMiniButton:hover:not(:disabled) {
-  border-color: rgba(147, 197, 253, 0.48);
+  border-color: rgba(13, 54, 239, 0.48);
 
   filter: brightness(1.08);
 
@@ -1214,7 +1214,7 @@ h1 {
 }
 
 .sessionDeleteButton:hover:not(:disabled) {
-  border-color: rgba(252, 165, 165, 0.42);
+  border-color: rgba(237, 41, 41, 0.42);
 
   filter: brightness(1.08);
 
@@ -2871,6 +2871,805 @@ h1 {
     0 8px 18px rgba(0, 0, 0, 0.1);
 
   animation: activityErrorAppear 160ms ease-out;
+}
+
+/* Activity manager trigger */
+
+.activityManageButton {
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  padding: 0;
+
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(63, 92, 187, 0.143);
+  border-radius: 11px;
+
+  background: rgba(5, 9, 19, 0.56);
+  color: #8e9bb0;
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 8px 18px rgba(0, 0, 0, 0.14);
+
+  font-family: inherit;
+  font-size: 17px;
+  font-weight: 400;
+  line-height: 1;
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    background-color 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.activityManagerOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 5000;
+
+  padding: 24px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background:
+    radial-gradient(circle at 50% 18%,
+      rgba(8, 34, 100, 0.12),
+      transparent 48%),
+    rgba(1, 4, 11, 0.78);
+
+  backdrop-filter: blur(11px);
+  -webkit-backdrop-filter: blur(11px);
+
+  animation: activityManagerOverlayAppear 160ms ease-out;
+}
+
+@keyframes activityManagerOverlayAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+
+
+.activityManageButton::before {
+  display: none;
+}
+
+.activityManageButton:hover:not(:disabled) {
+  border-color: rgba(0, 25, 135, 0.55);
+  background: rgba(7, 12, 25, 0.72);
+  color: #c5cede;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(0, 0, 0, 0.16);
+
+  transform: none;
+}
+
+.activityManageButton:focus-visible {
+  border-color: rgba(0, 49, 128, 0.651);
+  outline: none;
+
+  box-shadow:
+    0 0 0 3px rgba(59, 130, 246, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.06),
+    0 8px 18px rgba(0, 0, 0, 0.16);
+}
+
+.activityManageButton:active:not(:disabled) {
+  transform: scale(0.96);
+}
+
+.activityManageButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.modalOverlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1000;
+
+  padding: 28px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  background: rgba(1, 4, 11, 0.7);
+
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+
+  animation: modalOverlayAppear 160ms ease-out;
+}
+
+@keyframes modalOverlayAppear {
+  from {
+    opacity: 0;
+  }
+
+  to {
+    opacity: 1;
+  }
+}
+
+.activityManager {
+  width: min(680px, 100%);
+  max-height: min(760px, calc(100vh - 56px));
+  padding: 22px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  border: 1px solid rgba(255, 255, 255, 0.085);
+  border-radius: 24px;
+
+  background:
+    radial-gradient(circle 300px at 8% 0%,
+      rgba(3, 47, 151, 0.11),
+      transparent 100%),
+    rgba(5, 8, 16, 0.91);
+
+  backdrop-filter: blur(28px);
+  -webkit-backdrop-filter: blur(28px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 30px 80px rgba(0, 0, 0, 0.46);
+
+  animation: activityManagerAppear 190ms ease-out;
+}
+
+@keyframes activityManagerAppear {
+  from {
+    opacity: 0;
+    transform: translateY(10px) scale(0.985);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.activityManagerHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 20px;
+
+  padding-bottom: 18px;
+  margin-bottom: 20px;
+
+  border-bottom: 1px solid rgba(148, 163, 184, 0.12);
+}
+
+.activityManagerEyebrow {
+  display: block;
+  margin-bottom: 6px;
+
+  color: #62718a;
+
+  font-size: 10px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+}
+
+.activityManagerHeader h2 {
+  margin: 0;
+
+  color: #f1f5f9;
+
+  font-size: 25px;
+  font-weight: 780;
+  line-height: 1.1;
+  letter-spacing: -0.025em;
+}
+
+.activityManagerCloseButton {
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  padding: 0;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 11px;
+
+  background: rgba(8, 12, 22, 0.42);
+  color: #7c8798;
+
+  font-family: inherit;
+  font-size: 21px;
+  font-weight: 400;
+  line-height: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 6px 14px rgba(0, 0, 0, 0.1);
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    transform 160ms ease;
+}
+
+.activityManagerCloseButton::before {
+  display: none;
+}
+
+.activityManagerCloseButton:hover:not(:disabled) {
+  border-color: rgba(148, 163, 184, 0.22);
+  background: rgba(18, 25, 40, 0.58);
+  color: #e2e8f0;
+
+  transform: translateY(-1px);
+}
+
+.activityManagerSection {
+  display: grid;
+  gap: 11px;
+}
+
+.activityManagerSection+.activityManagerSection {
+  margin-top: 0;
+  padding-top: 14px;
+  border-top: 1px solid rgba(148, 163, 184, 0.075);
+}
+
+.activityManagerList {
+  min-width: 0;
+  min-height: 0;
+  padding-right: 5px;
+  padding-bottom: 2px;
+
+  display: grid;
+  grid-template-columns: repeat(auto-fill,
+      minmax(min(290px, 100%), 1fr));
+  align-content: start;
+  gap: 9px;
+
+  overflow-y: auto;
+  overscroll-behavior: contain;
+
+  scrollbar-width: thin;
+  scrollbar-color:
+    rgba(77, 100, 142, 0.38) transparent;
+}
+
+.activityManagerItem {
+  width: 100%;
+  min-width: 0;
+  min-height: 56px;
+  padding: 10px 10px 10px 13px;
+
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.activityManagerColumns {
+  gap: 0;
+}
+
+.activityManagerSection+.activityManagerSection {
+  margin-top: 28px;
+  padding-top: 22px;
+
+  border-top: 1px solid rgba(148, 163, 184, 0.1);
+}
+
+.activityManagerArchiveToggle {
+  width: 100%;
+  min-height: 44px;
+  padding: 0 4px;
+
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  border: 0;
+  border-radius: 11px;
+
+  background: transparent;
+  color: inherit;
+
+  font-family: inherit;
+  text-align: left;
+
+  box-shadow: none;
+
+  cursor: pointer;
+
+  transition:
+    background 160ms ease,
+    color 160ms ease;
+}
+
+.activityManagerArchiveToggle::before {
+  display: none;
+}
+
+.activityManagerArchiveToggle:hover:not(:disabled) {
+  background: rgba(15, 23, 42, 0.28);
+  box-shadow: none;
+  transform: none;
+}
+
+.activityManagerArchiveToggleTitle {
+  min-width: 0;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 9px;
+
+  color: #9aa5b5;
+
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.activityManagerArchiveChevron {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  color: #68758a;
+  font-size: 22px;
+  font-weight: 400;
+  line-height: 1;
+
+  transform: rotate(0deg);
+
+  transition:
+    transform 180ms ease,
+    color 180ms ease;
+}
+
+.activityManagerArchiveChevronOpen {
+  color: #9bb0d4;
+  transform: rotate(90deg);
+}
+
+.activityManagerArchiveCount {
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 999px;
+
+  background: rgba(8, 13, 24, 0.42);
+  color: #77849a;
+
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+.activityManagerArchiveContent {
+  min-width: 0;
+  min-height: 0;
+  max-height: 280px;
+
+  margin-top: 10px;
+
+  overflow: hidden;
+
+  animation: activityManagerArchiveAppear 180ms ease-out;
+}
+
+.activityManagerArchiveContent .activityManagerList {
+  max-height: 280px;
+  overflow-y: auto;
+}
+
+@keyframes activityManagerArchiveAppear {
+  from {
+    opacity: 0;
+    transform: translateY(-5px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.activityManagerSection:first-child {
+  min-height: 0;
+  flex: 1 1 auto;
+}
+
+.activityManagerArchivedSection {
+  flex: 0 0 auto;
+  min-height: 0;
+}
+
+
+
+.activityManagerActions {
+  flex-shrink: 0;
+  gap: 5px;
+}
+
+.activityManagerActionButton {
+  min-width: 58px;
+  height: 30px;
+  padding: 0 9px;
+
+  font-size: 10px;
+}
+
+.activityManagerItem:has(> input) {
+  grid-template-columns: minmax(0, 1fr);
+}
+
+.activityManagerItem:has(> input) .activityManagerActions {
+  justify-content: flex-end;
+}
+
+.activityManagerSectionHeader {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 14px;
+
+  padding: 0 3px;
+}
+
+.activityManagerSectionHeader h3 {
+  margin: 0;
+
+  color: #d8e0ed;
+
+  font-size: 15px;
+  font-weight: 750;
+  line-height: 1.2;
+}
+
+.activityManagerSectionHeader>span {
+  min-width: 28px;
+  height: 24px;
+  padding: 0 8px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(148, 163, 184, 0.1);
+  border-radius: 999px;
+
+  background: rgba(8, 13, 24, 0.42);
+  color: #77849a;
+
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+}
+
+
+.activityManagerArchivedSection .activityManagerItem {
+  background: rgba(5, 8, 15, 0.25);
+}
+
+.activityManagerArchivedSection .activityManagerTitle {
+  color: #7d899b;
+}
+
+
+.activityManagerList {
+  display: grid;
+  gap: 8px;
+}
+
+.activityManagerItem {
+  min-width: 0;
+  min-height: 58px;
+  padding: 11px 12px 11px 15px;
+
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: 16px;
+
+  border: 1px solid rgba(148, 163, 184, 0.075);
+  border-radius: 15px;
+
+  background:
+    radial-gradient(circle 180px at 4% 0%,
+      rgba(29, 78, 216, 0.045),
+      transparent 100%),
+    rgba(5, 9, 18, 0.34);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.035),
+    0 7px 16px rgba(0, 0, 0, 0.09);
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.activityManagerItem:hover {
+  border-color: rgba(66, 103, 166, 0.16);
+
+  background:
+    radial-gradient(circle 190px at 4% 0%,
+      rgba(29, 78, 216, 0.065),
+      transparent 100%),
+    rgba(7, 12, 24, 0.48);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.045),
+    0 9px 20px rgba(0, 0, 0, 0.13);
+
+  transform: translateY(-1px);
+}
+
+.activityManagerTitle {
+  min-width: 0;
+
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  color: #cdd6e4;
+
+  font-size: 14px;
+  font-weight: 650;
+  line-height: 1.25;
+}
+
+.activityManagerSection:last-child .activityManagerTitle {
+  color: #7d899b;
+}
+
+.activityManagerItem>input {
+  width: 100%;
+  min-width: 0;
+  height: 36px;
+  padding: 0 11px;
+
+  border: 1px solid rgba(64, 105, 179, 0.25);
+  border-radius: 11px;
+
+  background: rgba(4, 9, 20, 0.68);
+  color: #edf3fc;
+
+  font-family: inherit;
+  font-size: 14px;
+  font-weight: 650;
+
+  outline: none;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.025);
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    box-shadow 160ms ease;
+}
+
+.activityManagerItem>input:hover:not(:disabled) {
+  border-color: rgba(73, 119, 202, 0.34);
+  background: rgba(5, 11, 24, 0.76);
+}
+
+.activityManagerItem>input:focus {
+  border-color: rgba(58, 112, 211, 0.52);
+
+  background: rgba(5, 11, 25, 0.84);
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.09),
+    inset 0 1px 0 rgba(255, 255, 255, 0.035);
+}
+
+.activityManagerActions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 7px;
+}
+
+.activityManagerActionButton {
+  min-width: 64px;
+  height: 32px;
+  padding: 0 11px;
+
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 10px;
+
+  background: rgba(15, 23, 39, 0.42);
+  color: #96a3b7;
+
+  font-family: inherit;
+  font-size: 11px;
+  font-weight: 750;
+  line-height: 1;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 5px 12px rgba(0, 0, 0, 0.09);
+
+  transition:
+    border-color 160ms ease,
+    background 160ms ease,
+    color 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.activityManagerActionButton::before {
+  display: none;
+}
+
+.activityManagerActionButton:hover:not(:disabled) {
+  border-color: rgba(65, 105, 179, 0.24);
+  background: rgba(11, 20, 39, 0.62);
+  color: #d2dceb;
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.055),
+    0 7px 15px rgba(0, 0, 0, 0.12);
+
+  transform: translateY(-1px);
+}
+
+.activityManagerActionButton:active:not(:disabled) {
+  transform: scale(0.97);
+}
+
+.activityManagerActionButton:disabled {
+  opacity: 0.45;
+  cursor: default;
+}
+
+.activityManager {
+  width: min(920px, calc(100vw - 48px));
+  max-height: calc(100vh - 48px);
+}
+
+.activityManager,
+.activityManagerModal {
+  width: min(1180px, calc(100vw - 48px));
+  height: min(780px, calc(100vh - 48px));
+  max-height: calc(100vh - 48px);
+
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr);
+
+  overflow: hidden;
+}
+
+.activityPicker {
+  position: relative;
+
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+
+  width: auto;
+  min-width: 160px;
+
+  overflow: visible;
+}
+
+.activityPicker .activitySelector {
+  width: 100%;
+  min-width: 0;
+
+  margin: 0;
+}
+
+.activityPicker .activityManageButton {
+  position: absolute;
+  right: calc(100% + 8px);
+  bottom: 0;
+  margin: 0;
+}
+
+.activityPicker .activityCreateButton {
+  position: absolute;
+  left: calc(100% + 8px);
+  right: auto;
+  bottom: 0;
+  margin: 0;
+}
+
+.activityManageIcon,
+.activityCreateIcon {
+  display: block;
+  line-height: 1;
+  transform-origin: center;
+}
+
+.activityManageIcon {
+  font-size: 16px;
+  transform: translateY(-0.5px) scale(0.92);
+}
+
+.activityCreateIcon {
+  font-size: 21px;
+  transform: translateY(-1px);
+}
+
+.activityPicker .activityManageButton,
+.activityPicker .activityCreateButton {
+  box-sizing: border-box;
+
+  width: 34px;
+  height: 34px;
+  min-width: 34px;
+  max-width: 34px;
+  min-height: 34px;
+  max-height: 34px;
+
+  padding: 0;
+  margin: 0;
+
+  flex: 0 0 34px;
+
+  border-radius: 11px;
+}
+
+.activityManageIcon,
+.activityCreateIcon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  line-height: 1;
+  transform-origin: center;
+}
+
+.activityManageIcon {
+  font-size: 20px;
+  transform: translateY(-0.25px);
+}
+
+.activityCreateIcon {
+  font-size: 24px;
+  transform: translateY(-1px);
+}
+
+.activityPicker {
+  transform: translateY(-35px);
 }
 
 @keyframes activityErrorAppear {
