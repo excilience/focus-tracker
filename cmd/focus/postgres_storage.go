@@ -62,7 +62,7 @@ func loadSessionsFromDB(ctx context.Context, db *sql.DB) ([]Session, error) {
 			a.title
 		FROM sessions s
 		LEFT JOIN activities a ON a.id = s.activity_id
-		ORDER BY s.start_time;
+		ORDER BY s.end_time DESC, s.start_time DESC;
 	`
 
 	rows, err := db.QueryContext(ctx, query)
