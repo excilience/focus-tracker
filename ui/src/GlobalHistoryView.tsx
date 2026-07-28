@@ -36,6 +36,30 @@ type YearSummary = {
     months: MonthSummary[];
 };
 
+type AllTimeStats = {
+    startDate: Date | null;
+    endDate: Date;
+    totalSeconds: number;
+    sessionsCount: number;
+    activeDays: number;
+    calendarDays: number;
+    dailyAverageSeconds: number;
+    averageActiveDaySeconds: number;
+    activitiesCount: number;
+};
+
+function getCalendarDaysCount(startDate: Date, endDate: Date): number {
+    const start = new Date(startDate);
+    const end = new Date(endDate);
+
+    start.setHours(0, 0, 0, 0);
+    end.setHours(0, 0, 0, 0);
+
+    const differenceMilliseconds = end.getTime() - start.getTime();
+
+    return Math.floor(differenceMilliseconds / 86400000) + 1;
+}
+
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -200,6 +224,75 @@ function buildGlobalHistory(sessions: Session[]): YearSummary[] {
     return years.sort((a, b) => b.year - a.year);
 }
 
+function formatStatsDate(date: Date): string {
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "long",
+        year: "numeric",
+    });
+}
+
+function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
+    const endDate = new Date();
+
+    if (sessions.length === 0) {
+        return {
+            startDate: null,
+            endDate,
+            totalSeconds: 0,
+            sessionsCount: 0,
+            activeDays: 0,
+            calendarDays: 0,
+            dailyAverageSeconds: 0,
+            averageActiveDaySeconds: 0,
+            activitiesCount: 0,
+        };
+    }
+
+    const activeDateKeys = new Set<string>();
+    const activityIDs = new Set<string>();
+
+    let totalSeconds = 0;
+    let earliestDate = parseDateKey(sessions[0].focus_day);
+
+    for (const session of sessions) {
+        const sessionDate = parseDateKey(session.focus_day);
+
+        totalSeconds += session.duration_seconds;
+        activeDateKeys.add(session.focus_day);
+
+        if (session.activity) {
+            activityIDs.add(session.activity.id);
+        }
+
+        if (sessionDate.getTime() < earliestDate.getTime()) {
+            earliestDate = sessionDate;
+        }
+    }
+
+    const activeDays = activeDateKeys.size;
+    const calendarDays = getCalendarDaysCount(earliestDate, endDate);
+
+    return {
+        startDate: earliestDate,
+        endDate,
+        totalSeconds,
+        sessionsCount: sessions.length,
+        activeDays,
+        calendarDays,
+        dailyAverageSeconds:
+            calendarDays > 0
+                ? Math.round(totalSeconds / calendarDays)
+                : 0,
+        averageActiveDaySeconds:
+            activeDays > 0
+                ? Math.round(totalSeconds / activeDays)
+                : 0,
+        activitiesCount: activityIDs.size,
+    };
+}
+
+
 export function GlobalHistoryView() {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [monthSort, setMonthSort] = useState<MonthSort>("newest");
@@ -211,10 +304,8 @@ export function GlobalHistoryView() {
         return buildGlobalHistory(sessions);
     }, [sessions]);
 
-    const totalSeconds = useMemo(() => {
-        return sessions.reduce((total, session) => {
-            return total + session.duration_seconds;
-        }, 0);
+    const allTimeStats = useMemo(() => {
+        return calculateAllTimeStats(sessions);
     }, [sessions]);
 
     useEffect(() => {
@@ -267,11 +358,60 @@ export function GlobalHistoryView() {
         <section className="card globalHistoryCard">
             <p className="eyebrow">Global History</p>
 
-            <h1 className="globalTotal">
-                Time spent total:
-                <br />
-                {formatDuration(totalSeconds)}
-            </h1>
+            <div className="allTimeStats">
+                <div className="allTimeStatsHeader">
+                    <div>
+                        <p className="eyebrow">All-time stats</p>
+                        <h1>Focus overview</h1>
+                    </div>
+
+                    {allTimeStats.startDate && (
+                        <p className="allTimeStatsRange">
+                            {formatStatsDate(allTimeStats.startDate)}
+                            {" — "}
+                            {formatStatsDate(allTimeStats.endDate)}
+                        </p>
+                    )}
+                </div>
+
+                <div className="allTimeStatsGrid">
+                    <div>
+                        <span>Total focus</span>
+                        <strong>{formatDuration(allTimeStats.totalSeconds)}</strong>
+                    </div>
+
+                    <div>
+                        <span>Active days</span>
+                        <strong>{allTimeStats.activeDays}</strong>
+                    </div>
+
+                    <div>
+                        <span>Daily average</span>
+                        <strong>
+                            {formatDuration(allTimeStats.dailyAverageSeconds)}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Average active day</span>
+                        <strong>
+                            {formatDuration(
+                                allTimeStats.averageActiveDaySeconds,
+                            )}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Sessions</span>
+                        <strong>{allTimeStats.sessionsCount}</strong>
+                    </div>
+
+                    <div>
+                        <span>Activities used</span>
+                        <strong>{allTimeStats.activitiesCount}</strong>
+                    </div>
+                </div>
+            </div>
             <div className="historyToolbar">
                 <div className="historySort">
                     <span>Sort months</span>
