@@ -48,6 +48,25 @@ type AllTimeStats = {
     activitiesCount: number;
 };
 
+type ActivityPeriodSummary = {
+    activityID: string | null;
+    title: string;
+    totalSeconds: number;
+    percentage: number;
+};
+
+type PeriodStats = {
+    startDate: Date;
+    endDate: Date;
+    totalSeconds: number;
+    sessionsCount: number;
+    activeDays: number;
+    calendarDays: number;
+    dailyAverageSeconds: number;
+    averageActiveDaySeconds: number;
+    activities: ActivityPeriodSummary[];
+};
+
 function getCalendarDaysCount(startDate: Date, endDate: Date): number {
     const start = new Date(startDate);
     const end = new Date(endDate);
@@ -73,6 +92,31 @@ function formatDuration(totalSeconds: number): string {
 function parseDateKey(dateKey: string): Date {
     const [year, month, day] = dateKey.split("-").map(Number);
     return new Date(year, month - 1, day);
+}
+
+function isDateInRange(
+    date: Date,
+    startDate: Date,
+    endDate: Date,
+): boolean {
+    const time = date.getTime();
+
+    return (
+        time >= startDate.getTime() &&
+        time <= endDate.getTime()
+    );
+}
+
+function startOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(0, 0, 0, 0);
+    return result;
+}
+
+function endOfDay(date: Date): Date {
+    const result = new Date(date);
+    result.setHours(23, 59, 59, 999);
+    return result;
 }
 
 function getMonthKey(date: Date): string {
@@ -292,6 +336,106 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
     };
 }
 
+function calculatePeriodStats(
+    sessions: Session[],
+    rangeStartDate: Date,
+    rangeEndDate: Date,
+): PeriodStats {
+    const startDate = startOfDay(rangeStartDate);
+    const endDate = endOfDay(rangeEndDate);
+
+    const activeDateKeys = new Set<string>();
+
+    const activitiesByID = new Map<
+        string,
+        {
+            activityID: string | null;
+            title: string;
+            totalSeconds: number;
+        }
+    >();
+
+    let totalSeconds = 0;
+    let sessionsCount = 0;
+
+    for (const session of sessions) {
+        const sessionDate = parseDateKey(session.focus_day);
+
+        if (!isDateInRange(sessionDate, startDate, endDate)) {
+            continue;
+        }
+
+        totalSeconds += session.duration_seconds;
+        sessionsCount += 1;
+        activeDateKeys.add(session.focus_day);
+
+        const activityKey =
+            session.activity?.id ?? "no-activity";
+
+        const currentActivity =
+            activitiesByID.get(activityKey);
+
+        if (currentActivity) {
+            currentActivity.totalSeconds +=
+                session.duration_seconds;
+        } else {
+            activitiesByID.set(activityKey, {
+                activityID: session.activity?.id ?? null,
+                title:
+                    session.activity?.title ?? "No activity",
+                totalSeconds: session.duration_seconds,
+            });
+        }
+    }
+
+    const activeDays = activeDateKeys.size;
+    const calendarDays = getCalendarDaysCount(
+        startDate,
+        endDate,
+    );
+
+    const activities = Array.from(
+        activitiesByID.values(),
+    )
+        .map((activity) => ({
+            ...activity,
+            percentage:
+                totalSeconds > 0
+                    ? Math.round(
+                        (activity.totalSeconds /
+                            totalSeconds) *
+                        100,
+                    )
+                    : 0,
+        }))
+        .sort(
+            (a, b) =>
+                b.totalSeconds - a.totalSeconds,
+        );
+
+    return {
+        startDate,
+        endDate,
+        totalSeconds,
+        sessionsCount,
+        activeDays,
+        calendarDays,
+        dailyAverageSeconds:
+            calendarDays > 0
+                ? Math.round(
+                    totalSeconds / calendarDays,
+                )
+                : 0,
+        averageActiveDaySeconds:
+            activeDays > 0
+                ? Math.round(
+                    totalSeconds / activeDays,
+                )
+                : 0,
+        activities,
+    };
+}
+
 
 export function GlobalHistoryView() {
     const [sessions, setSessions] = useState<Session[]>([]);
@@ -306,6 +450,19 @@ export function GlobalHistoryView() {
 
     const allTimeStats = useMemo(() => {
         return calculateAllTimeStats(sessions);
+    }, [sessions]);
+
+    const lastSevenDaysStats = useMemo(() => {
+        const endDate = new Date();
+        const startDate = new Date(endDate);
+
+        startDate.setDate(startDate.getDate() - 6);
+
+        return calculatePeriodStats(
+            sessions,
+            startDate,
+            endDate,
+        );
     }, [sessions]);
 
     useEffect(() => {
