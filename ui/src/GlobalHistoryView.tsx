@@ -66,6 +66,18 @@ type PeriodStats = {
     averageActiveDaySeconds: number;
     activities: ActivityPeriodSummary[];
 };
+type StatsPeriod =
+    | "week"
+    | "month"
+    | "quarter"
+    | "half-year"
+    | "year"
+    | "all-time";
+
+type DateRange = {
+    startDate: Date;
+    endDate: Date;
+};
 
 function getCalendarDaysCount(startDate: Date, endDate: Date): number {
     const start = new Date(startDate);
@@ -268,6 +280,73 @@ function buildGlobalHistory(sessions: Session[]): YearSummary[] {
     return years.sort((a, b) => b.year - a.year);
 }
 
+function getStatsDateRange(
+    period: StatsPeriod,
+    sessions: Session[],
+): DateRange {
+    const endDate = startOfDay(new Date());
+    const startDate = new Date(endDate);
+
+    if (period === "week") {
+        startDate.setDate(startDate.getDate() - 6);
+    }
+
+    if (period === "month") {
+        startDate.setDate(startDate.getDate() - 29);
+    }
+
+    if (period === "quarter") {
+        startDate.setMonth(startDate.getMonth() - 3);
+        startDate.setDate(startDate.getDate() + 1);
+    }
+
+    if (period === "half-year") {
+        startDate.setMonth(startDate.getMonth() - 6);
+        startDate.setDate(startDate.getDate() + 1);
+    }
+
+    if (period === "year") {
+        startDate.setFullYear(startDate.getFullYear() - 1);
+        startDate.setDate(startDate.getDate() + 1);
+    }
+
+    if (period === "all-time") {
+        if (sessions.length === 0) {
+            return {
+                startDate: endDate,
+                endDate,
+            };
+        }
+
+        let earliestDate = parseDateKey(
+            sessions[0].focus_day,
+        );
+
+        for (const session of sessions) {
+            const sessionDate = parseDateKey(
+                session.focus_day,
+            );
+
+            if (
+                sessionDate.getTime() <
+                earliestDate.getTime()
+            ) {
+                earliestDate = sessionDate;
+            }
+        }
+
+        return {
+            startDate: earliestDate,
+            endDate,
+        };
+    }
+
+    return {
+        startDate,
+        endDate,
+    };
+}
+
 function formatStatsDate(date: Date): string {
     return date.toLocaleDateString("en-GB", {
         day: "numeric",
@@ -443,6 +522,8 @@ export function GlobalHistoryView() {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
     const [openedMonths, setOpenedMonths] = useState<Set<string>>(new Set());
+    const [statsPeriod, setStatsPeriod] =
+        useState<StatsPeriod>("week");
 
     const years = useMemo(() => {
         return buildGlobalHistory(sessions);
@@ -452,18 +533,20 @@ export function GlobalHistoryView() {
         return calculateAllTimeStats(sessions);
     }, [sessions]);
 
-    const lastSevenDaysStats = useMemo(() => {
-        const endDate = new Date();
-        const startDate = new Date(endDate);
+    const selectedDateRange = useMemo(() => {
+        return getStatsDateRange(
+            statsPeriod,
+            sessions,
+        );
+    }, [statsPeriod, sessions]);
 
-        startDate.setDate(startDate.getDate() - 6);
-
+    const selectedPeriodStats = useMemo(() => {
         return calculatePeriodStats(
             sessions,
-            startDate,
-            endDate,
+            selectedDateRange.startDate,
+            selectedDateRange.endDate,
         );
-    }, [sessions]);
+    }, [sessions, selectedDateRange]);
 
     useEffect(() => {
         async function loadSessions() {
@@ -569,6 +652,179 @@ export function GlobalHistoryView() {
                     </div>
                 </div>
             </div>
+
+            <section className="periodAnalytics">
+                <div className="periodActivities">
+                    <div className="periodActivitiesHeader">
+                        <h3>Activities</h3>
+
+                        <span>
+                            {selectedPeriodStats.activities.length}
+                        </span>
+                    </div>
+
+                    {selectedPeriodStats.activities.length === 0 ? (
+                        <p className="emptyState">
+                            No activity data for this period.
+                        </p>
+                    ) : (
+                        <div className="periodActivitiesList">
+                            {selectedPeriodStats.activities.map(
+                                (activity) => (
+                                    <div
+                                        className="periodActivityItem"
+                                        key={
+                                            activity.activityID ??
+                                            "no-activity"
+                                        }
+                                    >
+                                        <div className="periodActivityInfo">
+                                            <span
+                                                className="periodActivityTitle"
+                                                title={activity.title}
+                                            >
+                                                {activity.title}
+                                            </span>
+
+                                            <span className="periodActivityPercentage">
+                                                {activity.percentage}%
+                                            </span>
+                                        </div>
+
+                                        <strong>
+                                            {formatDuration(
+                                                activity.totalSeconds,
+                                            )}
+                                        </strong>
+                                    </div>
+                                ),
+                            )}
+                        </div>
+                    )}
+                </div>
+
+                <div className="periodSelector">
+                    <button
+                        type="button"
+                        onClick={() => setStatsPeriod("week")}
+                        className={
+                            statsPeriod === "week"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        7 days
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setStatsPeriod("month")}
+                        className={
+                            statsPeriod === "month"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        30 days
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setStatsPeriod("quarter")}
+                        className={
+                            statsPeriod === "quarter"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        3 months
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setStatsPeriod("half-year")
+                        }
+                        className={
+                            statsPeriod === "half-year"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        6 months
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() => setStatsPeriod("year")}
+                        className={
+                            statsPeriod === "year"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        1 year
+                    </button>
+
+                    <button
+                        type="button"
+                        onClick={() =>
+                            setStatsPeriod("all-time")
+                        }
+                        className={
+                            statsPeriod === "all-time"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
+                        }
+                    >
+                        All time
+                    </button>
+                </div>
+
+                <div className="periodStatsGrid">
+                    <div>
+                        <span>Total focus</span>
+                        <strong>
+                            {formatDuration(
+                                selectedPeriodStats.totalSeconds,
+                            )}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Active days</span>
+                        <strong>
+                            {selectedPeriodStats.activeDays}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Daily average</span>
+                        <strong>
+                            {formatDuration(
+                                selectedPeriodStats.dailyAverageSeconds,
+                            )}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Average active day</span>
+                        <strong>
+                            {formatDuration(
+                                selectedPeriodStats.averageActiveDaySeconds,
+                            )}
+                        </strong>
+                    </div>
+
+                    <div>
+                        <span>Sessions</span>
+                        <strong>
+                            {selectedPeriodStats.sessionsCount}
+                        </strong>
+                    </div>
+                </div>
+            </section>
+
             <div className="historyToolbar">
                 <div className="historySort">
                     <span>Sort months</span>
