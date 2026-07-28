@@ -1853,10 +1853,10 @@ h1 {
 
   width: 48px;
   height: 48px;
-  min-width: 48px;
-  max-width: 48px;
-  min-height: 48px;
-  max-height: 48px;
+  min-width: 46px;
+  max-width: 46px;
+  min-height: 46px;
+  max-height: 46px;
 
   padding: 0;
 
@@ -1873,7 +1873,7 @@ h1 {
   background: rgba(7, 67, 156, 0);
   color: #dbe1fe;
 
-  font-size: 22px;
+  font-size: 20px;
   line-height: 1;
 
   box-shadow:
@@ -1918,9 +1918,9 @@ h1 {
 
 .goalEditButton:hover:not(:disabled) {
   color: #dbeafe;
-  background: rgba(59, 87, 246, 0.09);
+  background: rgba(59, 87, 246, 0.043);
 
-  border-color: rgba(147, 197, 253, 0.42);
+  border-color: rgba(4, 42, 168, 0.209);
 
   box-shadow:
     0 12px 28px rgba(0, 0, 0, 0.2),
@@ -3070,7 +3070,7 @@ h1 {
 
   color: #62718a;
 
-  font-size: 10px;
+  font-size: 11px;
   font-weight: 800;
   line-height: 1;
   letter-spacing: 0.14em;
@@ -3082,7 +3082,7 @@ h1 {
 
   color: #f1f5f9;
 
-  font-size: 25px;
+  font-size: 28px;
   font-weight: 780;
   line-height: 1.1;
   letter-spacing: -0.025em;
@@ -3354,7 +3354,7 @@ h1 {
 
   color: #d8e0ed;
 
-  font-size: 15px;
+  font-size: 23px;
   font-weight: 750;
   line-height: 1.2;
 }
@@ -3560,10 +3560,6 @@ h1 {
   cursor: default;
 }
 
-.activityManager {
-  width: min(920px, calc(100vw - 48px));
-  max-height: calc(100vh - 48px);
-}
 
 .activityManager,
 .activityManagerModal {
@@ -3572,10 +3568,13 @@ h1 {
   max-height: calc(100vh - 48px);
 
   display: grid;
-  grid-template-rows: auto minmax(0, 1fr);
+  grid-template-rows:
+    auto auto minmax(0, 1fr);
 
   overflow: hidden;
 }
+
+
 
 .activityPicker {
   position: relative;
@@ -3670,6 +3669,249 @@ h1 {
 
 .activityPicker {
   transform: translateY(-35px);
+}
+
+.activityManagerQuickSettings {
+  margin: 0 0 16px;
+  padding: 10px 12px;
+
+  display: flex;
+  align-items: flex-end;
+  gap: 10px;
+
+  border: 1px solid rgba(148, 163, 184, 0.075);
+  border-radius: 14px;
+
+  background: rgba(5, 9, 18, 0.26);
+}
+
+.activityManagerQuickField {
+  flex: 0 0 auto;
+
+  display: grid;
+  gap: 5px;
+}
+
+.activityManagerQuickField:first-child {
+  width: 112px;
+}
+
+.activityManagerQuickField:nth-child(2) {
+  width: 92px;
+}
+
+.activityManagerQuickField input {
+  box-sizing: border-box;
+
+  width: 100%;
+  height: 34px;
+  padding: 0 10px;
+
+  border: 1px solid rgba(64, 105, 179, 0.18);
+  border-radius: 10px;
+
+  background: rgba(4, 9, 20, 0.52);
+  color: #dce6f5;
+
+  font: inherit;
+  font-size: 13px;
+  font-weight: 650;
+
+  outline: none;
+}
+
+.activityManagerQuickHour {
+  width: 92px;
+  height: 34px;
+
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+
+  padding-right: 9px;
+
+  border: 1px solid rgba(64, 105, 179, 0.18);
+  border-radius: 10px;
+
+  background: rgba(4, 9, 20, 0.52);
+}
+
+.activityManagerQuickHour input {
+  width: 100%;
+  height: 32px;
+  padding: 0 8px;
+
+  border: 0;
+  background: transparent;
+}
+
+.activityManagerQuickSave {
+  box-sizing: border-box;
+
+  flex: 0 0 auto;
+
+  min-width: 78px;
+  height: 34px;
+  padding: 0 16px;
+
+  border: 1px solid rgba(59, 130, 246, 0.42);
+  border-radius: 10px;
+
+  background:
+    linear-gradient(180deg,
+      rgba(10, 88, 214, 0.8),
+      rgba(25, 82, 220, 0.76));
+
+  color: #ffffff;
+
+  font-family: inherit;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1;
+
+  box-shadow:
+    0 14px 30px rgba(37, 99, 235, 0.26),
+    0 0 18px rgba(59, 130, 246, 0.1);
+
+  cursor: pointer;
+
+  transition:
+    border-color 160ms ease,
+    filter 160ms ease,
+    box-shadow 160ms ease,
+    transform 160ms ease;
+}
+
+.activityManagerQuickField>span {
+  color: #6f7d92;
+
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.activityManagerQuickHour>span {
+  color: #718096;
+
+  font-size: 13px;
+  font-weight: 700;
+  line-height: 1;
+}
+
+.activityManagerQuickHour:focus-within {
+  border-color: rgba(58, 112, 211, 0.42);
+
+  box-shadow:
+    0 0 0 3px rgba(37, 99, 235, 0.08),
+    inset 0 1px 0 rgba(255, 255, 255, 0.03);
+}
+
+.activityManagerQuickSettings {
+  margin-bottom: 50px;
+}
+
+.activityManagerQuickLabel {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+
+  color: #6f7d92;
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.activityManagerInfo {
+  position: relative;
+
+  width: 14px;
+  height: 14px;
+
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+
+  border: 1px solid rgba(148, 163, 184, 0.2);
+  border-radius: 50%;
+
+  color: #718096;
+
+  font-size: 9px;
+  font-weight: 800;
+  line-height: 1;
+  letter-spacing: 0;
+  text-transform: none;
+
+  cursor: help;
+
+  transition:
+    border-color 160ms ease,
+    color 160ms ease,
+    background 160ms ease;
+}
+
+.activityManagerInfo:hover,
+.activityManagerInfo:focus-visible {
+  border-color: rgba(96, 165, 250, 0.4);
+  background: rgba(37, 99, 235, 0.1);
+  color: #b9d2fb;
+
+  outline: none;
+}
+
+.activityManagerInfoTooltip {
+  position: absolute;
+  left: 50%;
+  bottom: calc(100% + 9px);
+  z-index: 20;
+
+  width: max-content;
+  max-width: 230px;
+  padding: 8px 10px;
+
+  border: 1px solid rgba(148, 163, 184, 0.14);
+  border-radius: 10px;
+
+  background: rgba(5, 9, 18, 0.96);
+  color: #aebbd0;
+
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.04),
+    0 12px 30px rgba(0, 0, 0, 0.35);
+
+  font-size: 11px;
+  font-weight: 600;
+  line-height: 1.4;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+
+  transform: translate(-50%, 4px);
+
+  transition:
+    opacity 150ms ease,
+    visibility 150ms ease,
+    transform 150ms ease;
+}
+
+.activityManagerInfo:hover .activityManagerInfoTooltip,
+.activityManagerInfo:focus-visible .activityManagerInfoTooltip {
+  opacity: 1;
+  visibility: visible;
+
+  transform: translate(-50%, 0);
 }
 
 @keyframes activityErrorAppear {

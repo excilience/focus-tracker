@@ -133,15 +133,6 @@ function App() {
   const [editingActivityTitle, setEditingActivityTitle] =
     useState("");
 
-  function openGoalModal() {
-    if (goal) {
-      setGoalInput(goal.goal_human.replaceAll(" ", ""));
-    }
-
-    setError("");
-    setIsGoalModalOpen(true);
-  }
-
   function openActivityModal() {
     setActivityTitleInput("");
     setActivityError("");
@@ -513,12 +504,15 @@ function App() {
         <section className="focusCard">
           <button
             type="button"
-            className="goalEditButton"
-            onClick={openGoalModal}
-            disabled={goalSaving}
-            aria-label="Edit daily goal"
+            className="goalEditButton dashboardSettingsButton"
+            onClick={() => void openActivityManager()}
+            disabled={loading || activitySaving}
+            aria-label="Open settings and activity manager"
+            title="Settings"
           >
-            <span aria-hidden="true">✎</span>
+            <span className="dashboardSettingsIcon" aria-hidden="true">
+              ✎
+            </span>
           </button>
 
           {!hasActiveSession && (
@@ -526,19 +520,6 @@ function App() {
               className="activityPicker"
               style={{ width: `${activitySelectWidth}px` }}
             >
-              <button
-                type="button"
-                className="activityManageButton"
-                onClick={() => void openActivityManager()}
-                disabled={loading || activitySaving}
-                aria-label="Manage activities"
-                title="Manage activities"
-              >
-                <span className="activityManageIcon" aria-hidden="true">
-                  ⚙
-                </span>
-              </button>
-
               <label className="activitySelector activitySelectorAboveRing">
                 <span className="activitySelectorLabel">Activity</span>
 
@@ -550,7 +531,7 @@ function App() {
                   }
                   disabled={loading || activitySaving}
                 >
-                  <option value="">No activity</option>
+                  <option value="">-</option>
 
                   {activities.map((activity) => (
                     <option key={activity.id} value={activity.id}>
@@ -759,6 +740,79 @@ function App() {
                 {activityManagerError}
               </p>
             )}
+
+            <div className="activityManagerQuickSettings">
+              <label className="activityManagerQuickField">
+                <span>Daily goal</span>
+
+                <input
+                  type="text"
+                  value={goalInput}
+                  onChange={(event) =>
+                    setGoalInput(event.target.value.slice(0, 5))
+                  }
+                  maxLength={5}
+                  placeholder="2h"
+                  disabled={goalSaving}
+                  aria-label="Daily goal"
+                />
+              </label>
+
+              <label className="activityManagerQuickField">
+                <span className="activityManagerQuickLabel">
+                  Day start
+
+                  <span
+                    className="activityManagerInfo"
+                    tabIndex={0}
+                    aria-label="Sessions before this hour count toward the previous day"
+                  >
+                    i
+
+                    <span
+                      className="activityManagerInfoTooltip"
+                      role="tooltip"
+                    >
+                      Choose the hour when a new day begins. Enter a value from 0 to 23; the default is 0 (midnight).
+                    </span>
+                  </span>
+                </span>
+                <div className="activityManagerQuickHour">
+                  <input
+                    type="text"
+                    inputMode="numeric"
+                    pattern="[0-9]*"
+                    value={dayStartHourInput}
+                    onChange={(event) => {
+                      const nextValue = event.target.value
+                        .replace(/\D/g, "")
+                        .slice(0, 2);
+
+                      setDayStartHourInput(nextValue);
+                    }}
+                    maxLength={2}
+                    placeholder="0"
+                    disabled={goalSaving}
+                    aria-label="Day start hour"
+                  />
+
+                  <span>:00</span>
+                </div>
+              </label>
+
+              <button
+                type="button"
+                className="activityManagerQuickSave"
+                onClick={() => void saveSettings()}
+                disabled={
+                  goalSaving ||
+                  !goalInput.trim() ||
+                  !dayStartHourInput.trim()
+                }
+              >
+                {goalSaving ? "Saving..." : "Save"}
+              </button>
+            </div>
 
             {!activityManagerLoading &&
               !activityManagerError && (
