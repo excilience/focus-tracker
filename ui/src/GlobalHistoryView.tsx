@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllSessions, type Session } from "./api";
 import { FocusHeatmap } from "./components/worklog/FocusHeatmap";
+import { FocusTimeChart } from "./components/worklog/FocusTimeChart";
 
 
 type MonthSort = "newest" | "least-time" | "most-time";
@@ -535,6 +536,12 @@ export function GlobalHistoryView() {
     const [openedMonths, setOpenedMonths] =
         useState<Set<string>>(new Set());
 
+    const currentYear = new Date().getFullYear();
+
+    const [openedYears, setOpenedYears] = useState<Set<number>>(
+        () => new Set([currentYear]),
+    );
+
     const [statsPeriod, setStatsPeriod] =
         useState<StatsPeriod>("week");
 
@@ -644,6 +651,20 @@ export function GlobalHistoryView() {
             }
 
             return b.monthIndex - a.monthIndex;
+        });
+    }
+
+    function toggleYear(year: number) {
+        setOpenedYears((previous) => {
+            const next = new Set(previous);
+
+            if (next.has(year)) {
+                next.delete(year);
+            } else {
+                next.add(year);
+            }
+
+            return next;
         });
     }
 
@@ -961,6 +982,8 @@ export function GlobalHistoryView() {
 
             <FocusHeatmap sessions={sessions} />
 
+            <FocusTimeChart sessions={sessions} />
+
             {loading && <p className="emptyState">Loading global history...</p>}
 
             {error && <p className="error">{error}</p>}
@@ -971,121 +994,228 @@ export function GlobalHistoryView() {
 
             {!loading && !error && years.length > 0 && (
                 <div className="globalYears">
-                    {years.map((year) => (
-                        <section className="globalYear" key={year.year}>
-                            <div className="globalYearHeader">
-                                <h2>{year.year}</h2>
+                    {years.map((year) => {
+                        const isYearOpen = openedYears.has(year.year);
 
-                                <div className="historySort">
-                                    <span>Sort months</span>
-
-                                    <select
-                                        value={monthSort}
-                                        onChange={(event) =>
-                                            setMonthSort(
-                                                event.target.value as MonthSort,
-                                            )
-                                        }
+                        return (
+                            <section
+                                className={
+                                    isYearOpen
+                                        ? "globalYear globalYearOpen"
+                                        : "globalYear"
+                                }
+                                key={year.year}
+                            >
+                                <div className="globalYearHeader">
+                                    <button
+                                        type="button"
+                                        className="globalYearToggle"
+                                        onClick={() => toggleYear(year.year)}
+                                        aria-expanded={isYearOpen}
                                     >
-                                        <option value="newest">
-                                            Newest first
-                                        </option>
+                                        <h2>{year.year}</h2>
 
-                                        <option value="most-time">
-                                            Most focused time
-                                        </option>
-
-                                        <option value="least-time">
-                                            Least focused time
-                                        </option>
-                                    </select>
-                                </div>
-                            </div>
-
-                            <div className="globalYearStats">
-                                <p>Months worked: {year.monthsWorked}</p>
-                                <p>Days worked: {year.daysWorked}</p>
-                                <p>Time spent total: {formatDuration(year.totalSeconds)}</p>
-                            </div>
-
-                            <div className="globalMonths">
-                                {getSortedMonths(year.months).map((month) => {
-                                    const isOpen = openedMonths.has(month.monthKey);
-
-                                    return (
-                                        <section
+                                        <span
                                             className={
-                                                isOpen
-                                                    ? "globalMonth globalMonthOpen"
-                                                    : "globalMonth"
+                                                isYearOpen
+                                                    ? "globalYearChevron globalYearChevronOpen"
+                                                    : "globalYearChevron"
                                             }
-                                            key={month.monthKey}
+                                            aria-hidden="true"
                                         >
-                                            <button
-                                                type="button"
-                                                className="monthHeader"
-                                                onClick={() => toggleMonth(month.monthKey)}
-                                            >
-                                                <span className="monthName">
-                                                    {month.monthName}
-                                                </span>
+                                            ›
+                                        </span>
+                                    </button>
 
-                                                <span className="monthSummary">
-                                                    <span>
-                                                        {month.daysWorked} days
-                                                    </span>
+                                    <div className="historySort">
+                                        <span>Sort months</span>
 
-                                                    <strong>
-                                                        {formatDuration(month.totalSeconds)}
-                                                    </strong>
-                                                </span>
+                                        <select
+                                            value={monthSort}
+                                            onChange={(event) =>
+                                                setMonthSort(
+                                                    event.target.value as MonthSort,
+                                                )
+                                            }
+                                        >
+                                            <option value="newest">
+                                                Newest first
+                                            </option>
 
-                                                <span
-                                                    className={
-                                                        isOpen
-                                                            ? "monthChevron monthChevronOpen"
-                                                            : "monthChevron"
-                                                    }
-                                                    aria-hidden="true"
-                                                >
-                                                    ›
-                                                </span>
-                                            </button>
+                                            <option value="most-time">
+                                                Most focused time
+                                            </option>
 
-                                            {isOpen && (
-                                                <div className="monthWeeks">
-                                                    {month.weeks.map((week) => (
-                                                        <section className="monthWeek" key={week.weekKey}>
-                                                            <h3>
-                                                                Week {week.weekNumber}
-                                                                <span>{formatDuration(week.totalSeconds)}</span>
-                                                            </h3>
+                                            <option value="least-time">
+                                                Least focused time
+                                            </option>
+                                        </select>
+                                    </div>
+                                </div>
 
-                                                            <div className="weekDays">
-                                                                <div className="weekDaysHeader">
-                                                                    <span>Day</span>
-                                                                    <span>Sessions</span>
-                                                                    <span>Worked</span>
+                                {isYearOpen && (
+                                    <>
+                                        <div className="globalYearStats">
+                                            <p>
+                                                Months worked: {year.monthsWorked}
+                                            </p>
+
+                                            <p>
+                                                Days worked: {year.daysWorked}
+                                            </p>
+
+                                            <p>
+                                                Time spent total:{" "}
+                                                {formatDuration(year.totalSeconds)}
+                                            </p>
+                                        </div>
+
+                                        <div className="globalMonths">
+                                            {getSortedMonths(year.months).map(
+                                                (month) => {
+                                                    const isOpen =
+                                                        openedMonths.has(
+                                                            month.monthKey,
+                                                        );
+
+                                                    return (
+                                                        <section
+                                                            className={
+                                                                isOpen
+                                                                    ? "globalMonth globalMonthOpen"
+                                                                    : "globalMonth"
+                                                            }
+                                                            key={month.monthKey}
+                                                        >
+                                                            <button
+                                                                type="button"
+                                                                className="monthHeader"
+                                                                onClick={() =>
+                                                                    toggleMonth(
+                                                                        month.monthKey,
+                                                                    )
+                                                                }
+                                                                aria-expanded={
+                                                                    isOpen
+                                                                }
+                                                            >
+                                                                <span className="monthName">
+                                                                    {
+                                                                        month.monthName
+                                                                    }
+                                                                </span>
+
+                                                                <span className="monthSummary">
+                                                                    <span>
+                                                                        {
+                                                                            month.daysWorked
+                                                                        }{" "}
+                                                                        days
+                                                                    </span>
+
+                                                                    <strong>
+                                                                        {formatDuration(
+                                                                            month.totalSeconds,
+                                                                        )}
+                                                                    </strong>
+                                                                </span>
+
+                                                                <span
+                                                                    className={
+                                                                        isOpen
+                                                                            ? "monthChevron monthChevronOpen"
+                                                                            : "monthChevron"
+                                                                    }
+                                                                    aria-hidden="true"
+                                                                >
+                                                                    ›
+                                                                </span>
+                                                            </button>
+
+                                                            {isOpen && (
+                                                                <div className="monthWeeks">
+                                                                    {month.weeks.map(
+                                                                        (week) => (
+                                                                            <section
+                                                                                className="monthWeek"
+                                                                                key={
+                                                                                    week.weekKey
+                                                                                }
+                                                                            >
+                                                                                <h3>
+                                                                                    Week{" "}
+                                                                                    {
+                                                                                        week.weekNumber
+                                                                                    }
+
+                                                                                    <span>
+                                                                                        {formatDuration(
+                                                                                            week.totalSeconds,
+                                                                                        )}
+                                                                                    </span>
+                                                                                </h3>
+
+                                                                                <div className="weekDays">
+                                                                                    <div className="weekDaysHeader">
+                                                                                        <span>
+                                                                                            Day
+                                                                                        </span>
+
+                                                                                        <span>
+                                                                                            Sessions
+                                                                                        </span>
+
+                                                                                        <span>
+                                                                                            Worked
+                                                                                        </span>
+                                                                                    </div>
+
+                                                                                    {week.days.map(
+                                                                                        (
+                                                                                            day,
+                                                                                        ) => (
+                                                                                            <div
+                                                                                                className="weekDayRow"
+                                                                                                key={
+                                                                                                    day.dateKey
+                                                                                                }
+                                                                                            >
+                                                                                                <span>
+                                                                                                    {formatDayLabel(
+                                                                                                        day.date,
+                                                                                                    )}
+                                                                                                </span>
+
+                                                                                                <span>
+                                                                                                    {
+                                                                                                        day.sessionsCount
+                                                                                                    }
+                                                                                                </span>
+
+                                                                                                <span>
+                                                                                                    {formatDuration(
+                                                                                                        day.totalSeconds,
+                                                                                                    )}
+                                                                                                </span>
+                                                                                            </div>
+                                                                                        ),
+                                                                                    )}
+                                                                                </div>
+                                                                            </section>
+                                                                        ),
+                                                                    )}
                                                                 </div>
-
-                                                                {week.days.map((day) => (
-                                                                    <div className="weekDayRow" key={day.dateKey}>
-                                                                        <span>{formatDayLabel(day.date)}</span>
-                                                                        <span>{day.sessionsCount}</span>
-                                                                        <span>{formatDuration(day.totalSeconds)}</span>
-                                                                    </div>
-                                                                ))}
-                                                            </div>
+                                                            )}
                                                         </section>
-                                                    ))}
-                                                </div>
+                                                    );
+                                                },
                                             )}
-                                        </section>
-                                    );
-                                })}
-                            </div>
-                        </section>
-                    ))}
+                                        </div>
+                                    </>
+                                )}
+                            </section>
+                        );
+                    })}
                 </div>
             )}
         </section>
