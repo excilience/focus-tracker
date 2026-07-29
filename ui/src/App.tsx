@@ -1221,7 +1221,7 @@ function App() {
                     setActivityError("");
                   }
                 }}
-                placeholder="For example: Programming"
+                placeholder="For example: Reading"
                 disabled={activitySaving}
                 aria-label="Activity title"
                 autoFocus

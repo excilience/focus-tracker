@@ -72,7 +72,8 @@ type StatsPeriod =
     | "quarter"
     | "half-year"
     | "year"
-    | "all-time";
+    | "all-time"
+    | "custom";
 
 type DateRange = {
     startDate: Date;
@@ -347,6 +348,14 @@ function getStatsDateRange(
     };
 }
 
+function formatDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
 function formatStatsDate(date: Date): string {
     return date.toLocaleDateString("en-GB", {
         day: "numeric",
@@ -518,12 +527,33 @@ function calculatePeriodStats(
 
 export function GlobalHistoryView() {
     const [sessions, setSessions] = useState<Session[]>([]);
-    const [monthSort, setMonthSort] = useState<MonthSort>("newest");
+    const [monthSort, setMonthSort] =
+        useState<MonthSort>("newest");
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState("");
-    const [openedMonths, setOpenedMonths] = useState<Set<string>>(new Set());
+    const [openedMonths, setOpenedMonths] =
+        useState<Set<string>>(new Set());
+
     const [statsPeriod, setStatsPeriod] =
         useState<StatsPeriod>("week");
+
+    const todayDateValue =
+        formatDateInputValue(new Date());
+
+    const defaultCustomStartDate = new Date();
+    defaultCustomStartDate.setDate(
+        defaultCustomStartDate.getDate() - 6,
+    );
+
+    const [customStartDate, setCustomStartDate] =
+        useState(
+            formatDateInputValue(
+                defaultCustomStartDate,
+            ),
+        );
+
+    const [customEndDate, setCustomEndDate] =
+        useState(todayDateValue);
 
     const years = useMemo(() => {
         return buildGlobalHistory(sessions);
@@ -534,11 +564,30 @@ export function GlobalHistoryView() {
     }, [sessions]);
 
     const selectedDateRange = useMemo(() => {
+        if (statsPeriod === "custom") {
+            return {
+                startDate:
+                    parseDateKey(customStartDate),
+                endDate:
+                    parseDateKey(customEndDate),
+            };
+        }
+
         return getStatsDateRange(
             statsPeriod,
             sessions,
         );
-    }, [statsPeriod, sessions]);
+    }, [
+        statsPeriod,
+        sessions,
+        customStartDate,
+        customEndDate,
+    ]);
+
+    const customRangeIsValid =
+        statsPeriod !== "custom" ||
+        selectedDateRange.startDate.getTime() <=
+        selectedDateRange.endDate.getTime();
 
     const selectedPeriodStats = useMemo(() => {
         return calculatePeriodStats(
@@ -546,7 +595,10 @@ export function GlobalHistoryView() {
             selectedDateRange.startDate,
             selectedDateRange.endDate,
         );
-    }, [sessions, selectedDateRange]);
+    }, [
+        sessions,
+        selectedDateRange,
+    ]);
 
     useEffect(() => {
         async function loadSessions() {
@@ -654,53 +706,12 @@ export function GlobalHistoryView() {
             </div>
 
             <section className="periodAnalytics">
-                <div className="periodActivities">
-                    <div className="periodActivitiesHeader">
-                        <h3>Activities</h3>
 
-                        <span>
-                            {selectedPeriodStats.activities.length}
-                        </span>
+                <div className="periodAnalyticsHeader">
+                    <div>
+                        <p className="eyebrow">Period analytics</p>
+                        <h2>Selected period</h2>
                     </div>
-
-                    {selectedPeriodStats.activities.length === 0 ? (
-                        <p className="emptyState">
-                            No activity data for this period.
-                        </p>
-                    ) : (
-                        <div className="periodActivitiesList">
-                            {selectedPeriodStats.activities.map(
-                                (activity) => (
-                                    <div
-                                        className="periodActivityItem"
-                                        key={
-                                            activity.activityID ??
-                                            "no-activity"
-                                        }
-                                    >
-                                        <div className="periodActivityInfo">
-                                            <span
-                                                className="periodActivityTitle"
-                                                title={activity.title}
-                                            >
-                                                {activity.title}
-                                            </span>
-
-                                            <span className="periodActivityPercentage">
-                                                {activity.percentage}%
-                                            </span>
-                                        </div>
-
-                                        <strong>
-                                            {formatDuration(
-                                                activity.totalSeconds,
-                                            )}
-                                        </strong>
-                                    </div>
-                                ),
-                            )}
-                        </div>
-                    )}
                 </div>
 
                 <div className="periodSelector">
@@ -779,68 +790,173 @@ export function GlobalHistoryView() {
                     >
                         All time
                     </button>
-                </div>
-
-                <div className="periodStatsGrid">
-                    <div>
-                        <span>Total focus</span>
-                        <strong>
-                            {formatDuration(
-                                selectedPeriodStats.totalSeconds,
-                            )}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Active days</span>
-                        <strong>
-                            {selectedPeriodStats.activeDays}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Daily average</span>
-                        <strong>
-                            {formatDuration(
-                                selectedPeriodStats.dailyAverageSeconds,
-                            )}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Average active day</span>
-                        <strong>
-                            {formatDuration(
-                                selectedPeriodStats.averageActiveDaySeconds,
-                            )}
-                        </strong>
-                    </div>
-
-                    <div>
-                        <span>Sessions</span>
-                        <strong>
-                            {selectedPeriodStats.sessionsCount}
-                        </strong>
-                    </div>
-                </div>
-            </section>
-
-            <div className="historyToolbar">
-                <div className="historySort">
-                    <span>Sort months</span>
-
-                    <select
-                        value={monthSort}
-                        onChange={(event) =>
-                            setMonthSort(event.target.value as MonthSort)
+                    <button
+                        type="button"
+                        onClick={() => setStatsPeriod("custom")}
+                        className={
+                            statsPeriod === "custom"
+                                ? "periodButton periodButtonActive"
+                                : "periodButton"
                         }
                     >
-                        <option value="newest">Newest first</option>
-                        <option value="most-time">Most focused time</option>
-                        <option value="least-time">Least focused time</option>
-                    </select>
+                        Custom
+                    </button>
                 </div>
-            </div>
+
+                {statsPeriod === "custom" && (
+                    <div className="customDateRange">
+                        <label>
+                            <span>From</span>
+
+                            <input
+                                type="date"
+                                value={customStartDate}
+                                max={customEndDate}
+                                onChange={(event) =>
+                                    setCustomStartDate(event.target.value)
+                                }
+                            />
+                        </label>
+
+                        <label>
+                            <span>To</span>
+
+                            <input
+                                type="date"
+                                value={customEndDate}
+                                min={customStartDate}
+                                max={todayDateValue}
+                                onChange={(event) =>
+                                    setCustomEndDate(event.target.value)
+                                }
+                            />
+                        </label>
+                    </div>
+                )}
+
+                {!customRangeIsValid && (
+                    <p className="error">
+                        Start date must not be later than end date.
+                    </p>
+                )}
+
+                {customRangeIsValid && (
+                    <>
+                        <p className="periodDateRange">
+                            {formatStatsDate(
+                                selectedPeriodStats.startDate,
+                            )}
+                            {" — "}
+                            {formatStatsDate(
+                                selectedPeriodStats.endDate,
+                            )}
+                        </p>
+
+                        <div className="periodStatsGrid">
+                            <div>
+                                <span>Total focus</span>
+                                <strong>
+                                    {formatDuration(
+                                        selectedPeriodStats.totalSeconds,
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Active days</span>
+                                <strong>
+                                    {selectedPeriodStats.activeDays}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Daily average</span>
+                                <strong>
+                                    {formatDuration(
+                                        selectedPeriodStats.dailyAverageSeconds,
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Average active day</span>
+                                <strong>
+                                    {formatDuration(
+                                        selectedPeriodStats.averageActiveDaySeconds,
+                                    )}
+                                </strong>
+                            </div>
+
+                            <div>
+                                <span>Sessions</span>
+                                <strong>
+                                    {selectedPeriodStats.sessionsCount}
+                                </strong>
+                            </div>
+                        </div>
+
+                        <div className="periodActivities">
+                            <div className="periodActivitiesHeader">
+                                <h3>Activities</h3>
+
+                                <span>
+                                    {selectedPeriodStats.activities.length}
+                                </span>
+                            </div>
+
+                            {selectedPeriodStats.activities.length > 0 && (
+                                <div className="periodActivitiesColumns">
+                                    <span>#</span>
+                                    <span>Activity</span>
+                                    <span>Share</span>
+                                    <span>Focused</span>
+                                </div>
+                            )}
+
+                            {selectedPeriodStats.activities.length === 0 ? (
+                                <p className="emptyState">
+                                    No activity data for this period.
+                                </p>
+                            ) : (
+                                <div className="periodActivitiesList">
+                                    {selectedPeriodStats.activities.map(
+                                        (activity, index) => (
+                                            <div
+                                                className="periodActivityItem"
+                                                key={
+                                                    activity.activityID ??
+                                                    `no-activity-${index}`
+                                                }
+                                            >
+                                                <span className="periodActivityIndex">
+                                                    {String(index + 1).padStart(2, "0")}
+                                                </span>
+
+                                                <span
+                                                    className="periodActivityTitle"
+                                                    title={activity.title}
+                                                >
+                                                    {activity.title}
+                                                </span>
+
+                                                <span className="periodActivityPercentage">
+                                                    {activity.percentage}%
+                                                </span>
+
+                                                <strong className="periodActivityDuration">
+                                                    {formatDuration(
+                                                        activity.totalSeconds,
+                                                    )}
+                                                </strong>
+                                            </div>
+                                        ),
+                                    )}
+                                </div>
+                            )}
+                        </div>
+                    </>
+                )}
+            </section>
 
             {loading && <p className="emptyState">Loading global history...</p>}
 
@@ -854,7 +970,34 @@ export function GlobalHistoryView() {
                 <div className="globalYears">
                     {years.map((year) => (
                         <section className="globalYear" key={year.year}>
-                            <h2>{year.year}</h2>
+                            <div className="globalYearHeader">
+                                <h2>{year.year}</h2>
+
+                                <div className="historySort">
+                                    <span>Sort months</span>
+
+                                    <select
+                                        value={monthSort}
+                                        onChange={(event) =>
+                                            setMonthSort(
+                                                event.target.value as MonthSort,
+                                            )
+                                        }
+                                    >
+                                        <option value="newest">
+                                            Newest first
+                                        </option>
+
+                                        <option value="most-time">
+                                            Most focused time
+                                        </option>
+
+                                        <option value="least-time">
+                                            Least focused time
+                                        </option>
+                                    </select>
+                                </div>
+                            </div>
 
                             <div className="globalYearStats">
                                 <p>Months worked: {year.monthsWorked}</p>
@@ -867,26 +1010,44 @@ export function GlobalHistoryView() {
                                     const isOpen = openedMonths.has(month.monthKey);
 
                                     return (
-                                        <section className="globalMonth" key={month.monthKey}>
+                                        <section
+                                            className={
+                                                isOpen
+                                                    ? "globalMonth globalMonthOpen"
+                                                    : "globalMonth"
+                                            }
+                                            key={month.monthKey}
+                                        >
                                             <button
+                                                type="button"
                                                 className="monthHeader"
                                                 onClick={() => toggleMonth(month.monthKey)}
                                             >
-                                                <span>{month.monthName}</span>
-
-                                                <span className={isOpen ? "monthChevron monthChevronOpen" : "monthChevron"}>
-                                                    ⌄
+                                                <span className="monthName">
+                                                    {month.monthName}
                                                 </span>
 
-                                                <span className="openIcon">↗</span>
-                                            </button>
+                                                <span className="monthSummary">
+                                                    <span>
+                                                        {month.daysWorked} days
+                                                    </span>
 
-                                            <div className="monthStats">
-                                                <p>Days worked: {month.daysWorked}</p>
-                                                <p>
-                                                    Time spent total: {formatDuration(month.totalSeconds)}
-                                                </p>
-                                            </div>
+                                                    <strong>
+                                                        {formatDuration(month.totalSeconds)}
+                                                    </strong>
+                                                </span>
+
+                                                <span
+                                                    className={
+                                                        isOpen
+                                                            ? "monthChevron monthChevronOpen"
+                                                            : "monthChevron"
+                                                    }
+                                                    aria-hidden="true"
+                                                >
+                                                    ›
+                                                </span>
+                                            </button>
 
                                             {isOpen && (
                                                 <div className="monthWeeks">
@@ -899,8 +1060,8 @@ export function GlobalHistoryView() {
 
                                                             <div className="weekDays">
                                                                 <div className="weekDaysHeader">
-                                                                    <span></span>
-                                                                    <span>Tasks</span>
+                                                                    <span>Day</span>
+                                                                    <span>Sessions</span>
                                                                     <span>Worked</span>
                                                                 </div>
 

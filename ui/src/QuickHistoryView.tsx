@@ -270,7 +270,7 @@ export function QuickHistoryView() {
             <p className="eyebrow">History</p>
             <h1>Quick History</h1>
 
-            <div className="historyToolbar">
+            <div className="quickHistoryToolbar">
                 <div className="historySort">
                     <span>Sort weeks</span>
 
