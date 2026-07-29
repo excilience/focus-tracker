@@ -486,17 +486,17 @@ function App() {
         </button>
 
         <button
-          className={activeTab === "sessions" ? "tab activeTab" : "tab"}
-          onClick={() => setActiveTab("sessions")}
-        >
-          Sessions
-        </button>
-
-        <button
           className={activeTab === "globalHistory" ? "tab activeTab" : "tab"}
           onClick={() => setActiveTab("globalHistory")}
         >
           Worklog
+        </button>
+
+        <button
+          className={activeTab === "sessions" ? "tab activeTab" : "tab"}
+          onClick={() => setActiveTab("sessions")}
+        >
+          Sessions
         </button>
       </div>
 
@@ -511,7 +511,7 @@ function App() {
             title="Settings"
           >
             <span className="dashboardSettingsIcon" aria-hidden="true">
-              ✎
+              ⚙
             </span>
           </button>
 
@@ -1221,7 +1221,7 @@ function App() {
                     setActivityError("");
                   }
                 }}
-                placeholder="For example: Programming"
+                placeholder="For example: Reading"
                 disabled={activitySaving}
                 aria-label="Activity title"
                 autoFocus
