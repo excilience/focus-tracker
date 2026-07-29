@@ -281,10 +281,17 @@ func getActiveSessionHandler(w http.ResponseWriter, r *http.Request, db *sql.DB)
 	defer cancel()
 
 	activeSession, err := loadActiveSession(ctx, db)
+
+	if errors.Is(err, ErrNoActiveSession) {
+		writeJSON(w, http.StatusOK, nil)
+		return
+	}
+
 	if err != nil {
 		writeDomainError(w, err, "failed to load active session")
 		return
 	}
+
 	focusedSeconds := activeSession.FocusedSeconds
 
 	if !activeSession.IsPaused && !activeSession.LastResume.IsZero() {
