@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllSessions, type Session } from "./api";
+import { FocusHeatmap } from "./components/worklog/FocusHeatmap";
 
 
 type MonthSort = "newest" | "least-time" | "most-time";
@@ -957,6 +958,8 @@ export function GlobalHistoryView() {
                     </>
                 )}
             </section>
+
+            <FocusHeatmap sessions={sessions} />
 
             {loading && <p className="emptyState">Loading global history...</p>}
 
