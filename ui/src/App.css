@@ -1986,23 +1986,48 @@ h1 {
     inset 0 1px 0 rgba(255, 255, 255, 0.05);
 }
 
+.goalModalField {
+  width: 100%;
+
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 7px;
+}
+
+.goalModalLabel {
+  color: #5e6673;
+  font-size: 11px;
+  font-weight: 700;
+  line-height: 1;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
 .goalModalInput {
   width: 100%;
-  height: 56px;
-  padding: 0 18px;
+  min-width: 0;
+  height: 44px;
+  padding: 0 13px;
 
-  border: 1px solid rgba(148, 163, 184, 0.3);
-  border-radius: 16px;
+  border: 1px solid rgba(148, 163, 184, 0.12);
+  border-radius: 11px;
 
-  background: #080b14;
-  color: #f8fafc;
+  background: rgba(5, 9, 18, 0.58);
+  color: #e7ecf4;
 
   font-family: inherit;
-  font-size: 19px;
-  font-weight: 700;
-  text-align: center;
+  font-size: 13px;
+  font-weight: 600;
 
   outline: none;
+}
+
+.goalModalInput::placeholder {
+  color: #5f6b80;
+  font-size: 12px;
+  font-weight: 500;
+  opacity: 1;
 }
 
 .goalModalInput::placeholder {
@@ -3509,7 +3534,7 @@ h1 {
 .activitySelectorInput {
   width: 100%;
   height: 34px;
-  padding: 0 28px 0 12px;
+  padding: 0 28px;
 
   border: 1px solid rgba(30, 64, 175, 0.143);
   border-radius: 11px;
@@ -3541,6 +3566,11 @@ h1 {
     box-shadow 160ms ease;
 }
 
+.activitySelectorInput option {
+  background: #080b14;
+  color: #e2e8f0;
+}
+
 .activitySelectorInput:hover:not(:disabled) {
   border-color: rgba(0, 49, 128, 0.55);
   background: rgba(7, 12, 25, 0.72);
@@ -3558,11 +3588,6 @@ h1 {
 .activitySelectorInput:disabled {
   cursor: not-allowed;
   opacity: 0.45;
-}
-
-.activitySelectorInput option {
-  background: #080b14;
-  color: #e2e8f0;
 }
 
 .activeActivityLabel {
@@ -3583,6 +3608,38 @@ h1 {
 
   text-shadow:
     0 0 12px rgba(59, 130, 246, 0.22);
+}
+
+.activitySelectWrapper {
+  position: relative;
+  width: 100%;
+}
+
+.activitySelectorInput {
+  width: 100%;
+  height: 34px;
+  padding: 0 34px;
+
+  appearance: none;
+  -webkit-appearance: none;
+  -moz-appearance: none;
+
+  box-sizing: border-box;
+  text-align: center;
+  text-align-last: center;
+}
+
+.activitySelectArrow {
+  position: absolute;
+  top: 50%;
+  right: 12px;
+
+  transform: translateY(-50%);
+  pointer-events: none;
+
+  color: #d6d9e0;
+  font-size: 13px;
+  line-height: 1;
 }
 
 .activitySelectorAboveRing {
