@@ -347,16 +347,6 @@ function buildMonthlyChartData(
 ): FocusChartPoint[] {
     const secondsByDate = buildSecondsByDate(sessions);
 
-    for (const session of sessions) {
-        const currentSeconds =
-            secondsByDate.get(session.focus_day) ?? 0;
-
-        secondsByDate.set(
-            session.focus_day,
-            currentSeconds + session.duration_seconds,
-        );
-    }
-
     const points: FocusChartPoint[] = [];
 
     const endDate = new Date();
@@ -382,6 +372,7 @@ function buildMonthlyChartData(
 
     return points;
 }
+
 export function FocusTimeChart({
     sessions,
 }: FocusTimeChartProps) {
