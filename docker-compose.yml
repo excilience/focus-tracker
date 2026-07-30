@@ -1,15 +1,84 @@
 services:
   postgres:
-    image: postgres:17
+    image: postgres:17-alpine
     container_name: focus-postgres
+    restart: unless-stopped
+
     environment:
       POSTGRES_USER: focus
       POSTGRES_PASSWORD: focus
       POSTGRES_DB: focus_tracker
-    ports:
-      - "5433:5432"
+
     volumes:
       - focus_postgres_data:/var/lib/postgresql/data
 
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U focus -d focus_tracker" ]
+      interval: 5s
+      timeout: 5s
+      retries: 15
+      start_period: 5s
+
+  migrations:
+    image: migrate/migrate:v4.18.3
+    container_name: focus-migrations
+    restart: "no"
+
+    volumes:
+      - ./migrations:/migrations:ro
+
+    command: [ "-path=/migrations", "-database=postgres://focus:focus@postgres:5432/focus_tracker?sslmode=disable", "up" ]
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+
+  api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+
+    container_name: focus-api
+    restart: unless-stopped
+
+    environment:
+      DATABASE_URL: postgres://focus:focus@postgres:5432/focus_tracker?sslmode=disable
+
+    depends_on:
+      postgres:
+        condition: service_healthy
+      migrations:
+        condition: service_completed_successfully
+
+    healthcheck:
+      test: [ "CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/health" ]
+      interval: 5s
+      timeout: 3s
+      retries: 15
+      start_period: 5s
+
+  ui:
+    build:
+      context: ./ui
+      dockerfile: Dockerfile
+
+    container_name: focus-ui
+    restart: unless-stopped
+
+    ports:
+      - "1337:80"
+
+    depends_on:
+      api:
+        condition: service_healthy
+
+    healthcheck:
+      test: [ "CMD-SHELL", "wget -qO- http://127.0.0.1/health >/dev/null 2>&1 || exit 1" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 5s
+
 volumes:
   focus_postgres_data:
+    name: focus-postgres-data
