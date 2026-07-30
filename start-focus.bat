@@ -106,10 +106,9 @@ if errorlevel 1 (
 
 echo.
 echo Focus Tracker is ready.
-echo Opening http://localhost:1337
+echo Open in your browser:
+echo http://localhost:1337
 echo.
-
-start "" "http://localhost:1337"
 
 timeout /t 3 /nobreak >nul
 exit /b 0
