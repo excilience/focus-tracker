@@ -4,6 +4,7 @@ import type { Session } from "../../api";
 
 type FocusHeatmapProps = {
     sessions: Session[];
+    dayStartHour: number;
 };
 
 type HeatmapDay = {
@@ -38,6 +39,11 @@ function formatDateKey(date: Date): string {
     return `${year}-${month}-${day}`;
 }
 
+function formatDisplayDate(dateKey: string): string {
+    const [year, month, day] = dateKey.split("-");
+    return `${day}-${month}-${year}`;
+}
+
 function formatDuration(totalSeconds: number): string {
     const hours = Math.floor(totalSeconds / 3600);
     const minutes = Math.floor((totalSeconds % 3600) / 60);
@@ -51,9 +57,10 @@ function formatDuration(totalSeconds: number): string {
 function buildHeatmapDays(
     sessions: Session[],
     year: number,
+    dayStartHour: number,
 ): HeatmapDay[] {
     const secondsByDate = new Map<string, number>();
-    const todayDateKey = formatDateKey(new Date());
+    const todayDateKey = getCurrentFocusDateKey(dayStartHour);
 
 
     for (const session of sessions) {
@@ -222,8 +229,19 @@ function getAvailableYears(
     );
 }
 
+function getCurrentFocusDateKey(dayStartHour: number): string {
+    const date = new Date();
+    date.setHours(date.getHours() - dayStartHour);
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
+}
+
 export function FocusHeatmap({
-    sessions,
+    sessions, dayStartHour,
 }: FocusHeatmapProps) {
     const availableYears = useMemo(() => {
         return getAvailableYears(sessions);
@@ -236,8 +254,9 @@ export function FocusHeatmap({
         return buildHeatmapDays(
             sessions,
             selectedYear,
+            dayStartHour,
         );
-    }, [sessions, selectedYear]);
+    }, [sessions, selectedYear, dayStartHour]);
 
     const monthLabels = useMemo(() => {
         return buildHeatmapMonthLabels(heatmapDays);
@@ -361,10 +380,8 @@ export function FocusHeatmap({
                                         .join(" ")}
                                     title={
                                         cell.day.isFuture
-                                            ? `${cell.day.date}: Future date`
-                                            : `${cell.day.date}: ${formatDuration(
-                                                cell.day.totalSeconds,
-                                            )}`
+                                            ? undefined
+                                            : `${formatDisplayDate(cell.day.date)}: ${formatDuration(cell.day.totalSeconds)}`
                                     }
                                 />
                             );

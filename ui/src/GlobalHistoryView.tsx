@@ -76,6 +76,11 @@ type PeriodStats = {
     peakDay: PeakDay | null;
 };
 
+type GlobalHistoryViewProps = {
+    dayStartHour: number;
+};
+
+
 
 type StatsPeriod =
     | "week"
@@ -607,7 +612,9 @@ function calculatePeriodStats(
 }
 
 
-export function GlobalHistoryView() {
+export function GlobalHistoryView({
+    dayStartHour,
+}: GlobalHistoryViewProps) {
     const [sessions, setSessions] = useState<Session[]>([]);
     const [monthSort, setMonthSort] =
         useState<MonthSort>("newest");
@@ -1062,9 +1069,15 @@ export function GlobalHistoryView() {
                 )}
             </section>
 
-            <FocusHeatmap sessions={sessions} />
+            <FocusHeatmap
+                sessions={sessions}
+                dayStartHour={dayStartHour}
+            />
 
-            <FocusTimeChart sessions={sessions} />
+            <FocusTimeChart
+                sessions={sessions}
+                dayStartHour={dayStartHour}
+            />
 
             {loading && <p className="emptyState">Loading global history...</p>}
 

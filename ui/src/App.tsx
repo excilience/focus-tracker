@@ -1265,7 +1265,8 @@ function App() {
 
       {activeTab === "history" && <QuickHistoryView />}
       {activeTab === "sessions" && <SessionsView />}
-      {activeTab === "globalHistory" && <GlobalHistoryView />}
+      {activeTab === "globalHistory" && <GlobalHistoryView
+        dayStartHour={Number(dayStartHourInput) || 0} />}
     </main>
   );
 }

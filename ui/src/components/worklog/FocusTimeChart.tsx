@@ -82,6 +82,7 @@ type FocusChartTooltipProps = {
 
 type FocusTimeChartProps = {
     sessions: Session[];
+    dayStartHour: number;
 };
 
 type FocusChartPeriod =
@@ -373,14 +374,23 @@ function formatTimestampLabel(
     });
 }
 
+function getCurrentFocusDate(dayStartHour: number): Date {
+    const date = new Date();
+    date.setHours(date.getHours() - dayStartHour);
+    date.setHours(0, 0, 0, 0);
+
+    return date;
+}
+
 function buildMonthlyChartData(
     sessions: Session[],
+    dayStartHour: number,
 ): FocusChartPoint[] {
     const secondsByDate = buildSecondsByDate(sessions);
 
     const points: FocusChartPoint[] = [];
 
-    const endDate = new Date();
+    const endDate = getCurrentFocusDate(dayStartHour);
     const currentDate = new Date();
 
     currentDate.setDate(
@@ -405,7 +415,7 @@ function buildMonthlyChartData(
 }
 
 export function FocusTimeChart({
-    sessions,
+    sessions, dayStartHour,
 }: FocusTimeChartProps) {
     const [period, setPeriod] =
         useState<FocusChartPeriod>("month");
@@ -419,8 +429,8 @@ export function FocusTimeChart({
             return buildMaxChartData(sessions);
         }
 
-        return buildMonthlyChartData(sessions);
-    }, [sessions, period]);
+        return buildMonthlyChartData(sessions, dayStartHour);
+    }, [sessions, period, dayStartHour]);
 
     const renderedChartData = useMemo(() => {
         return chartData.map((point) => {
