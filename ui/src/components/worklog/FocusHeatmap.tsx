@@ -2,6 +2,8 @@ import { useMemo, useState } from "react";
 
 import type { Session } from "../../api";
 
+import { getLocalDateKey } from "../../utils/dateTime";
+
 type FocusHeatmapProps = {
     sessions: Session[];
 };
@@ -57,12 +59,21 @@ function buildHeatmapDays(
 
 
     for (const session of sessions) {
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
         const currentSeconds =
-            secondsByDate.get(session.focus_day) ?? 0;
+            secondsByDate.get(dateKey) ?? 0;
 
         secondsByDate.set(
-            session.focus_day,
-            currentSeconds + session.duration_seconds,
+            dateKey,
+            currentSeconds +
+            session.duration_seconds,
         );
     }
 
@@ -190,12 +201,22 @@ function buildHeatmapCells(
     return cells;
 }
 
-function getAvailableYears(sessions: Session[]): number[] {
+function getAvailableYears(
+    sessions: Session[],
+): number[] {
     const years = new Set<number>();
 
     for (const session of sessions) {
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
         const year = Number(
-            session.focus_day.slice(0, 4),
+            dateKey.slice(0, 4),
         );
 
         if (!Number.isNaN(year)) {
@@ -203,11 +224,8 @@ function getAvailableYears(sessions: Session[]): number[] {
         }
     }
 
-
-    years.add(new Date().getFullYear());
-
     return Array.from(years).sort(
-        (first, second) => second - first,
+        (a, b) => b - a,
     );
 }
 

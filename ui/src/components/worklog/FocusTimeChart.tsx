@@ -4,6 +4,8 @@ import type { Session } from "../../api";
 
 import type { ReactNode } from "react";
 
+import { getLocalDateKey } from "../../utils/dateTime";
+
 import {
     CartesianGrid,
     Line,
@@ -126,15 +128,25 @@ function FocusChartTooltip({
 function buildSecondsByDate(
     sessions: Session[],
 ): Map<string, number> {
-    const secondsByDate = new Map<string, number>();
+    const secondsByDate =
+        new Map<string, number>();
 
     for (const session of sessions) {
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
         const currentSeconds =
-            secondsByDate.get(session.focus_day) ?? 0;
+            secondsByDate.get(dateKey) ?? 0;
 
         secondsByDate.set(
-            session.focus_day,
-            currentSeconds + session.duration_seconds,
+            dateKey,
+            currentSeconds +
+            session.duration_seconds,
         );
     }
 
@@ -202,11 +214,20 @@ function formatMonthKey(date: Date): string {
 function buildYearlyChartData(
     sessions: Session[],
 ): FocusChartPoint[] {
-    const secondsByWeek = new Map<string, number>();
+    const secondsByWeek =
+        new Map<string, number>();
 
     for (const session of sessions) {
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
         const weekKey = getWeekKey(
-            session.focus_day,
+            dateKey,
         );
 
         const currentSeconds =
@@ -219,23 +240,32 @@ function buildYearlyChartData(
         );
     }
 
-    const endWeek = getWeekStart(new Date());
+    const endWeek =
+        getWeekStart(new Date());
 
-    const currentWeek = new Date(endWeek);
+    const currentWeek =
+        new Date(endWeek);
+
     currentWeek.setDate(
         currentWeek.getDate() - 51 * 7,
     );
 
     const points: FocusChartPoint[] = [];
 
-    for (let index = 0; index < 52; index += 1) {
+    for (
+        let index = 0;
+        index < 52;
+        index += 1
+    ) {
         const weekKey =
             formatDateKey(currentWeek);
 
         points.push({
             date: weekKey,
             totalSeconds:
-                secondsByWeek.get(weekKey) ?? 0,
+                secondsByWeek.get(
+                    weekKey,
+                ) ?? 0,
         });
 
         currentWeek.setDate(
@@ -246,9 +276,7 @@ function buildYearlyChartData(
     return points;
 }
 
-function buildMaxChartData(
-    sessions: Session[],
-): FocusChartPoint[] {
+function buildMaxChartData(sessions: Session[]): FocusChartPoint[] {
     if (sessions.length === 0) {
         return [];
     }
@@ -256,15 +284,26 @@ function buildMaxChartData(
     const secondsByMonth = new Map<string, number>();
 
     for (const session of sessions) {
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
         const monthKey =
-            session.focus_day.slice(0, 7);
+            dateKey.slice(0, 7);
 
         const currentSeconds =
-            secondsByMonth.get(monthKey) ?? 0;
+            secondsByMonth.get(
+                monthKey,
+            ) ?? 0;
 
         secondsByMonth.set(
             monthKey,
-            currentSeconds + session.duration_seconds,
+            currentSeconds +
+            session.duration_seconds,
         );
     }
 

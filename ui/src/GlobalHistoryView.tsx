@@ -126,10 +126,18 @@ function getLocalDateKey(dateText: string): string {
     }
 
     const year = date.getFullYear();
-    const month = String(date.getMonth() + 1).padStart(2, "0");
-    const day = String(date.getDate()).padStart(2, "0");
+    const month = String(
+        date.getMonth() + 1,
+    ).padStart(2, "0");
+    const day = String(
+        date.getDate(),
+    ).padStart(2, "0");
 
     return `${year}-${month}-${day}`;
+}
+
+function getSessionDateKey(session: Session): string {
+    return getLocalDateKey(session.start) || session.focus_day;
 }
 
 function isDateInRange(
@@ -196,15 +204,16 @@ function formatDayLabel(date: Date): string {
     return `${weekday} ${date.getDate()}.`;
 }
 
-function getSessionDateKey(session: Session): string {
-    return getLocalDateKey(session.start) || session.focus_day;
-}
-
 function buildGlobalHistory(sessions: Session[]): YearSummary[] {
     const daysByDate = new Map<string, DaySummary>();
 
     for (const session of sessions) {
-        const dateKey = session.focus_day;
+        const dateKey = getSessionDateKey(session);
+
+        if (!dateKey) {
+            continue;
+        }
+
         const date = parseDateKey(dateKey);
 
         const currentDay = daysByDate.get(dateKey);
@@ -348,13 +357,25 @@ function getStatsDateRange(
             };
         }
 
-        let earliestDate = parseDateKey(
-            sessions[0].focus_day,
+        const firstDateKey = getLocalDateKey(
+            sessions[0].start,
         );
 
+        let earliestDate = firstDateKey
+            ? parseDateKey(firstDateKey)
+            : endDate;
+
         for (const session of sessions) {
+            const dateKey = getLocalDateKey(
+                session.start,
+            );
+
+            if (!dateKey) {
+                continue;
+            }
+
             const sessionDate = parseDateKey(
-                session.focus_day,
+                dateKey,
             );
 
             if (
@@ -421,11 +442,26 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
     const activityIDs = new Set<string>();
 
     let totalSeconds = 0;
-    let earliestDate = endDate;
+    const firstDateKey = getLocalDateKey(
+        sessions[0].start,
+    );
+
+    let earliestDate = firstDateKey
+        ? parseDateKey(firstDateKey)
+        : endDate;
 
     for (const session of sessions) {
-        const dateKey = getSessionDateKey(session);
-        const sessionDate = parseDateKey(dateKey);
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
+
+        if (!dateKey) {
+            continue;
+        }
+
+        const sessionDate = parseDateKey(
+            dateKey,
+        );
 
         totalSeconds += session.duration_seconds;
         activeDateKeys.add(dateKey);
@@ -434,7 +470,10 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
             activityIDs.add(session.activity.id);
         }
 
-        if (sessionDate.getTime() < earliestDate.getTime()) {
+        if (
+            sessionDate.getTime() <
+            earliestDate.getTime()
+        ) {
             earliestDate = sessionDate;
         }
     }
@@ -481,11 +520,25 @@ function calculatePeriodStats(
     let sessionsCount = 0;
 
     for (const session of sessions) {
-        const dateKey = getSessionDateKey(session);
+        const dateKey = getLocalDateKey(
+            session.start,
+        );
 
-        const sessionDate = parseDateKey(dateKey);
+        if (!dateKey) {
+            continue;
+        }
 
-        if (!isDateInRange(sessionDate, startDate, endDate)) {
+        const sessionDate = parseDateKey(
+            dateKey,
+        );
+
+        if (
+            !isDateInRange(
+                sessionDate,
+                startDate,
+                endDate,
+            )
+        ) {
             continue;
         }
 
@@ -503,9 +556,14 @@ function calculatePeriodStats(
             currentActivity.totalSeconds += session.duration_seconds;
         } else {
             activitiesByID.set(activityKey, {
-                activityID: session.activity?.id ?? null,
-                title: session.activity?.title ?? "No activity",
-                totalSeconds: session.duration_seconds,
+                activityID:
+                    session.activity?.id ?? null,
+                title:
+                    session.activity?.title ??
+                    "No activity",
+                totalSeconds:
+                    session.duration_seconds,
+
             });
         }
     }
