@@ -6,8 +6,6 @@ import {
     type Session,
 } from "./api";
 
-import { getLocalDateKey } from "./utils/dateTime"
-
 const DAYS_PER_PAGE = 7;
 
 function formatDate(dateText: string): string {
@@ -28,9 +26,6 @@ function formatDate(dateText: string): string {
     return `${weekday} ${day}.${month}.${year}`;
 }
 
-function getSessionDateKey(session: Session): string {
-    return getLocalDateKey(session.start) || session.focus_day;
-}
 
 function formatTime(dateText: string): string {
     const date = new Date(dateText);
@@ -102,7 +97,7 @@ export function SessionsView() {
         const groups = new Map<string, Session[]>();
 
         for (const session of sortedSessions) {
-            const day = getSessionDateKey(session);
+            const day = session.focus_day;
 
             if (!groups.has(day)) {
                 groups.set(day, []);

@@ -118,28 +118,6 @@ function parseDateKey(dateKey: string): Date {
     return new Date(year, month - 1, day);
 }
 
-function getLocalDateKey(dateText: string): string {
-    const date = new Date(dateText);
-
-    if (Number.isNaN(date.getTime())) {
-        return "";
-    }
-
-    const year = date.getFullYear();
-    const month = String(
-        date.getMonth() + 1,
-    ).padStart(2, "0");
-    const day = String(
-        date.getDate(),
-    ).padStart(2, "0");
-
-    return `${year}-${month}-${day}`;
-}
-
-function getSessionDateKey(session: Session): string {
-    return getLocalDateKey(session.start) || session.focus_day;
-}
-
 function isDateInRange(
     date: Date,
     startDate: Date,
@@ -208,7 +186,7 @@ function buildGlobalHistory(sessions: Session[]): YearSummary[] {
     const daysByDate = new Map<string, DaySummary>();
 
     for (const session of sessions) {
-        const dateKey = getSessionDateKey(session);
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;
@@ -357,18 +335,14 @@ function getStatsDateRange(
             };
         }
 
-        const firstDateKey = getLocalDateKey(
-            sessions[0].start,
-        );
+        const firstDateKey = sessions[0].focus_day;
 
         let earliestDate = firstDateKey
             ? parseDateKey(firstDateKey)
             : endDate;
 
         for (const session of sessions) {
-            const dateKey = getLocalDateKey(
-                session.start,
-            );
+            const dateKey = session.focus_day;
 
             if (!dateKey) {
                 continue;
@@ -442,26 +416,21 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
     const activityIDs = new Set<string>();
 
     let totalSeconds = 0;
-    const firstDateKey = getLocalDateKey(
-        sessions[0].start,
-    );
+
+    const firstDateKey = sessions[0].focus_day;
 
     let earliestDate = firstDateKey
         ? parseDateKey(firstDateKey)
         : endDate;
 
     for (const session of sessions) {
-        const dateKey = getLocalDateKey(
-            session.start,
-        );
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;
         }
 
-        const sessionDate = parseDateKey(
-            dateKey,
-        );
+        const sessionDate = parseDateKey(dateKey);
 
         totalSeconds += session.duration_seconds;
         activeDateKeys.add(dateKey);
@@ -520,9 +489,7 @@ function calculatePeriodStats(
     let sessionsCount = 0;
 
     for (const session of sessions) {
-        const dateKey = getLocalDateKey(
-            session.start,
-        );
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;

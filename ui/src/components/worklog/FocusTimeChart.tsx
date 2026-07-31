@@ -4,8 +4,6 @@ import type { Session } from "../../api";
 
 import type { ReactNode } from "react";
 
-import { getLocalDateKey } from "../../utils/dateTime";
-
 import {
     CartesianGrid,
     Line,
@@ -132,9 +130,7 @@ function buildSecondsByDate(
         new Map<string, number>();
 
     for (const session of sessions) {
-        const dateKey = getLocalDateKey(
-            session.start,
-        );
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;
@@ -218,9 +214,7 @@ function buildYearlyChartData(
         new Map<string, number>();
 
     for (const session of sessions) {
-        const dateKey = getLocalDateKey(
-            session.start,
-        );
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;
@@ -284,9 +278,7 @@ function buildMaxChartData(sessions: Session[]): FocusChartPoint[] {
     const secondsByMonth = new Map<string, number>();
 
     for (const session of sessions) {
-        const dateKey = getLocalDateKey(
-            session.start,
-        );
+        const dateKey = session.focus_day;
 
         if (!dateKey) {
             continue;
