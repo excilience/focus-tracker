@@ -121,8 +121,9 @@ type updateGoalRequest struct {
 	DailyGoal string `json:"daily_goal"`
 }
 
-type SettingsResponse struct {
-	DayStartHour int `json:"day_start_hour"`
+type settingsResponse struct {
+	DayStartHour int    `json:"day_start_hour"`
+	Timezone     string `json:"timezone"`
 }
 
 type ActivitySummaryResponse struct {
@@ -131,7 +132,8 @@ type ActivitySummaryResponse struct {
 }
 
 type updateSettingsRequest struct {
-	DayStartHour *int `json:"day_start_hour"`
+	DayStartHour *int    `json:"day_start_hour"`
+	Timezone     *string `json:"timezone"`
 }
 
 type startSessionRequest struct {

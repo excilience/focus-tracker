@@ -663,9 +663,10 @@ func getSessionByIDHandler(w http.ResponseWriter, r *http.Request, db *sql.DB, f
 	writeJSON(w, http.StatusOK, toSessionResponse(session, fs))
 }
 
-func toSettingsResponse(fs *FocusService) SettingsResponse {
-	return SettingsResponse{
+func toSettingsResponse(fs *FocusService) settingsResponse {
+	return settingsResponse{
 		DayStartHour: fs.settings.DayStartHour,
+		Timezone:     fs.settings.Timezone,
 	}
 }
 
@@ -686,22 +687,36 @@ func updateSettingsHandler(w http.ResponseWriter, r *http.Request, fs *FocusServ
 		return
 	}
 
+	if request.Timezone == nil || *request.Timezone == "" {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "timezone is required")
+		return
+	}
+
 	dayStartHour := *request.DayStartHour
+	timezone := *request.Timezone
 
 	if dayStartHour < 0 || dayStartHour > 23 {
 		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "day_start_hour must be between 0 and 23")
 		return
 	}
 
+	location, err := time.LoadLocation(timezone)
+	if err != nil {
+		writeAPIError(w, http.StatusBadRequest, ErrorCodeInvalidRequest, "invalid timezone")
+		return
+	}
+
 	ctx, cancel := context.WithTimeout(r.Context(), 5*time.Second)
 	defer cancel()
 
-	if err := updateDayStartHour(ctx, db, dayStartHour); err != nil {
-		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to update day start hour")
+	if err := updateSettings(ctx, db, dayStartHour, timezone); err != nil {
+		writeAPIError(w, http.StatusInternalServerError, ErrorCodeInternalError, "failed to update settings")
 		return
 	}
 
 	fs.settings.DayStartHour = dayStartHour
+	fs.settings.Timezone = timezone
+	fs.location = location
 
 	writeJSON(w, http.StatusOK, toSettingsResponse(fs))
 }

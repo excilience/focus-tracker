@@ -325,7 +325,8 @@ function App() {
 
     try {
       const updatedGoal = await updateGoal(goalInput);
-      const updatedSettings = await updateSettings(parsedDayStartHour);
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const updatedSettings = await updateSettings(parsedDayStartHour, timezone);
 
 
       setGoal(updatedGoal);
