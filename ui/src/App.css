@@ -2233,7 +2233,7 @@ h1 {
 .allTimeStatsRange {
   margin: 0;
 
-  color: #748196;
+  color: #7f8a9d;
 
   font-size: 13px;
   font-weight: 750;
@@ -2244,6 +2244,8 @@ h1 {
 
   text-shadow:
     0 0 10px rgba(59, 130, 246, 0.1);
+
+  transform: translateY(-6px);
 }
 
 .allTimeStatsGrid {
@@ -2643,11 +2645,15 @@ h1 {
 
   color: #7f8a9d;
 
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 650;
   line-height: 1.2;
 
   font-variant-numeric: tabular-nums;
+}
+
+.periodDateRange {
+  transform: translateY(4px);
 }
 
 .periodStatsGrid {
@@ -5298,10 +5304,7 @@ h1 {
   border: 1px solid rgba(148, 163, 184, 0.075);
   border-radius: 15px;
 
-  background:
-    linear-gradient(145deg,
-      rgba(9, 15, 28, 0.54),
-      rgba(5, 10, 20, 0.44));
+  background: rgba(5, 9, 18, 0.34);
 
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.025),
