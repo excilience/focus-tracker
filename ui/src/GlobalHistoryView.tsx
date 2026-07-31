@@ -57,6 +57,12 @@ type ActivityPeriodSummary = {
     percentage: number;
 };
 
+type PeakDay = {
+    dateKey: string;
+    date: Date;
+    totalSeconds: number;
+};
+
 type PeriodStats = {
     startDate: Date;
     endDate: Date;
@@ -67,7 +73,10 @@ type PeriodStats = {
     dailyAverageSeconds: number;
     averageActiveDaySeconds: number;
     activities: ActivityPeriodSummary[];
+    peakDay: PeakDay | null;
 };
+
+
 type StatsPeriod =
     | "week"
     | "month"
@@ -107,6 +116,20 @@ function formatDuration(totalSeconds: number): string {
 function parseDateKey(dateKey: string): Date {
     const [year, month, day] = dateKey.split("-").map(Number);
     return new Date(year, month - 1, day);
+}
+
+function getLocalDateKey(dateText: string): string {
+    const date = new Date(dateText);
+
+    if (Number.isNaN(date.getTime())) {
+        return "";
+    }
+
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+
+    return `${year}-${month}-${day}`;
 }
 
 function isDateInRange(
@@ -171,6 +194,10 @@ function formatDayLabel(date: Date): string {
     });
 
     return `${weekday} ${date.getDate()}.`;
+}
+
+function getSessionDateKey(session: Session): string {
+    return getLocalDateKey(session.start) || session.focus_day;
 }
 
 function buildGlobalHistory(sessions: Session[]): YearSummary[] {
@@ -366,6 +393,13 @@ function formatStatsDate(date: Date): string {
     });
 }
 
+function formatPeakDayDate(date: Date): string {
+    return date.toLocaleDateString("en-GB", {
+        day: "numeric",
+        month: "short",
+    });
+}
+
 function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
     const endDate = new Date();
 
@@ -387,13 +421,14 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
     const activityIDs = new Set<string>();
 
     let totalSeconds = 0;
-    let earliestDate = parseDateKey(sessions[0].focus_day);
+    let earliestDate = endDate;
 
     for (const session of sessions) {
-        const sessionDate = parseDateKey(session.focus_day);
+        const dateKey = getSessionDateKey(session);
+        const sessionDate = parseDateKey(dateKey);
 
         totalSeconds += session.duration_seconds;
-        activeDateKeys.add(session.focus_day);
+        activeDateKeys.add(dateKey);
 
         if (session.activity) {
             activityIDs.add(session.activity.id);
@@ -414,14 +449,8 @@ function calculateAllTimeStats(sessions: Session[]): AllTimeStats {
         sessionsCount: sessions.length,
         activeDays,
         calendarDays,
-        dailyAverageSeconds:
-            calendarDays > 0
-                ? Math.round(totalSeconds / calendarDays)
-                : 0,
-        averageActiveDaySeconds:
-            activeDays > 0
-                ? Math.round(totalSeconds / activeDays)
-                : 0,
+        dailyAverageSeconds: calendarDays > 0 ? Math.round(totalSeconds / calendarDays) : 0,
+        averageActiveDaySeconds: activeDays > 0 ? Math.round(totalSeconds / activeDays) : 0,
         activitiesCount: activityIDs.size,
     };
 }
@@ -434,7 +463,10 @@ function calculatePeriodStats(
     const startDate = startOfDay(rangeStartDate);
     const endDate = endOfDay(rangeEndDate);
 
+
     const activeDateKeys = new Set<string>();
+
+    const secondsByDate = new Map<string, number>();
 
     const activitiesByID = new Map<
         string,
@@ -449,7 +481,9 @@ function calculatePeriodStats(
     let sessionsCount = 0;
 
     for (const session of sessions) {
-        const sessionDate = parseDateKey(session.focus_day);
+        const dateKey = getSessionDateKey(session);
+
+        const sessionDate = parseDateKey(dateKey);
 
         if (!isDateInRange(sessionDate, startDate, endDate)) {
             continue;
@@ -457,22 +491,20 @@ function calculatePeriodStats(
 
         totalSeconds += session.duration_seconds;
         sessionsCount += 1;
-        activeDateKeys.add(session.focus_day);
+        activeDateKeys.add(dateKey);
 
-        const activityKey =
-            session.activity?.id ?? "no-activity";
+        const currentDaySeconds = secondsByDate.get(dateKey) ?? 0;
+        secondsByDate.set(dateKey, currentDaySeconds + session.duration_seconds);
 
-        const currentActivity =
-            activitiesByID.get(activityKey);
+        const activityKey = session.activity?.id ?? "no-activity";
+        const currentActivity = activitiesByID.get(activityKey);
 
         if (currentActivity) {
-            currentActivity.totalSeconds +=
-                session.duration_seconds;
+            currentActivity.totalSeconds += session.duration_seconds;
         } else {
             activitiesByID.set(activityKey, {
                 activityID: session.activity?.id ?? null,
-                title:
-                    session.activity?.title ?? "No activity",
+                title: session.activity?.title ?? "No activity",
                 totalSeconds: session.duration_seconds,
             });
         }
@@ -483,6 +515,28 @@ function calculatePeriodStats(
         startDate,
         endDate,
     );
+
+    let peakDay: PeakDay | null = null;
+
+    for (const [dateKey, daySeconds] of secondsByDate) {
+        const date = parseDateKey(dateKey);
+
+        const isBetter =
+            peakDay === null ||
+            daySeconds > peakDay.totalSeconds ||
+            (
+                daySeconds === peakDay.totalSeconds &&
+                date.getTime() > peakDay.date.getTime()
+            );
+
+        if (isBetter) {
+            peakDay = {
+                dateKey,
+                date,
+                totalSeconds: daySeconds,
+            };
+        }
+    }
 
     const activities = Array.from(
         activitiesByID.values(),
@@ -523,6 +577,7 @@ function calculatePeriodStats(
                 )
                 : 0,
         activities,
+        peakDay,
     };
 }
 
@@ -910,9 +965,11 @@ export function GlobalHistoryView() {
                             </div>
 
                             <div>
-                                <span>Sessions</span>
+                                <span>Peak day</span>
                                 <strong>
-                                    {selectedPeriodStats.sessionsCount}
+                                    {selectedPeriodStats.peakDay
+                                        ? `${formatPeakDayDate(selectedPeriodStats.peakDay.date)} · ${formatDuration(selectedPeriodStats.peakDay.totalSeconds)}`
+                                        : "—"}
                                 </strong>
                             </div>
                         </div>
