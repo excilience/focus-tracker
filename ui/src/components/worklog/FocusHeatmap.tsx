@@ -284,7 +284,7 @@ export function FocusHeatmap({
         };
     }, [heatmapDays]);
 
-    const todayDateKey = formatDateKey(new Date());
+    const currentFocusDateKey = getCurrentFocusDateKey(dayStartHour);
 
     return (
         <section className="focusHeatmap">
@@ -369,7 +369,7 @@ export function FocusHeatmap({
                                     className={[
                                         "heatmapCell",
                                         `heatmapLevel${cell.day.level}`,
-                                        cell.day.date === todayDateKey
+                                        cell.day.date === currentFocusDateKey
                                             ? "heatmapCellToday"
                                             : "",
                                         cell.day.isFuture
