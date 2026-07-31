@@ -39,6 +39,7 @@ func main() {
 	runtimeSettings := defaultSettings
 	runtimeSettings.DailyGoal = dbSettings.DailyGoalMinutes
 	runtimeSettings.DayStartHour = dbSettings.DayStartHour
+	runtimeSettings.Timezone = dbSettings.Timezone
 
 	focusService, err := NewFocusService(runtimeSettings)
 	if err != nil {

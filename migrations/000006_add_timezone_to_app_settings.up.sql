@@ -1,0 +1,2 @@
+ALTER TABLE app_settings
+ADD COLUMN timezone TEXT NOT NULL DEFAULT '';
