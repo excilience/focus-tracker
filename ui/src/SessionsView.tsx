@@ -5,7 +5,8 @@ import {
     updateSessionDuration,
     type Session,
 } from "./api";
-import { getLocalDateKey } from "./utils/dateTime";
+
+import { getLocalDateKey } from "./utils/dateTime"
 
 const DAYS_PER_PAGE = 7;
 
