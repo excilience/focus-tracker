@@ -17,3 +17,7 @@ export function getLocalDateKey(
 
     return `${year}-${month}-${day}`;
 }
+
+function getSessionDateKey(session: Session): string {
+    return getLocalDateKey(session.start) || session.focus_day;
+}

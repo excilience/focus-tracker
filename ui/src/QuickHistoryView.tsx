@@ -1,5 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { getAllSessions, type Session } from "./api";
+import { getLocalDateKey } from "./utils/dateTime";
 
 type DaySummary = {
     date: Date;
@@ -40,6 +41,10 @@ function formatDuration(totalSeconds: number): string {
     }
 
     return "0m";
+}
+
+function getSessionDateKey(session: Session): string {
+    return getLocalDateKey(session.start) || session.focus_day;
 }
 
 function formatDateKey(date: Date): string {
@@ -94,18 +99,16 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
     >();
 
     for (const session of sessions) {
-        const currentTotal = totalsByDate.get(session.focus_day) ?? 0;
+        const dateKey = getSessionDateKey(session);
+        const currentTotal = totalsByDate.get(dateKey) ?? 0;
 
-        totalsByDate.set(
-            session.focus_day,
-            currentTotal + session.duration_seconds,
-        );
+        totalsByDate.set(dateKey, currentTotal + session.duration_seconds);
 
-        let dayActivities = activitiesByDate.get(session.focus_day);
+        let dayActivities = activitiesByDate.get(dateKey);
 
         if (!dayActivities) {
             dayActivities = new Map();
-            activitiesByDate.set(session.focus_day, dayActivities);
+            activitiesByDate.set(dateKey, dayActivities);
         }
 
         const activityKey = session.activity?.id ?? "no-activity";
