@@ -42,6 +42,7 @@ function formatDuration(totalSeconds: number): string {
     return "0m";
 }
 
+
 function formatDateKey(date: Date): string {
     const year = date.getFullYear();
     const month = String(date.getMonth() + 1).padStart(2, "0");
@@ -94,18 +95,16 @@ function groupSessionsByCalendarWeeks(sessions: Session[]): WeekGroup[] {
     >();
 
     for (const session of sessions) {
-        const currentTotal = totalsByDate.get(session.focus_day) ?? 0;
+        const dateKey = session.focus_day;
+        const currentTotal = totalsByDate.get(dateKey) ?? 0;
 
-        totalsByDate.set(
-            session.focus_day,
-            currentTotal + session.duration_seconds,
-        );
+        totalsByDate.set(dateKey, currentTotal + session.duration_seconds);
 
-        let dayActivities = activitiesByDate.get(session.focus_day);
+        let dayActivities = activitiesByDate.get(dateKey);
 
         if (!dayActivities) {
             dayActivities = new Map();
-            activitiesByDate.set(session.focus_day, dayActivities);
+            activitiesByDate.set(dateKey, dayActivities);
         }
 
         const activityKey = session.activity?.id ?? "no-activity";

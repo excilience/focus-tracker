@@ -1,4 +1,4 @@
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "http://localhost:8080";
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL ?? "/api";
 
 export type ApiErrorResponse = {
     error: {
@@ -50,17 +50,22 @@ export type GoalResponse = {
 
 export type SettingsResponse = {
     day_start_hour: number;
+    timezone: string;
 };
 
 export function getSettings(): Promise<SettingsResponse> {
     return request<SettingsResponse>("/settings");
 }
 
-export function updateSettings(dayStartHour: number): Promise<SettingsResponse> {
+export function updateSettings(
+    dayStartHour: number,
+    timezone: string,
+): Promise<SettingsResponse> {
     return request<SettingsResponse>("/settings", {
         method: "PATCH",
         body: JSON.stringify({
             day_start_hour: dayStartHour,
+            timezone,
         }),
     });
 }

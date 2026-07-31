@@ -5,10 +5,8 @@ import (
 	"time"
 )
 
-const humanTimeLayout = "02.01.2006 15:04:05"
-
 func timeFormat(t time.Time) string {
-	return t.Format(humanTimeLayout)
+	return t.UTC().Format(time.RFC3339)
 }
 
 func formatDuration(totalSeconds int) string {

@@ -5,6 +5,7 @@ import {
     updateSessionDuration,
     type Session,
 } from "./api";
+
 const DAYS_PER_PAGE = 7;
 
 function formatDate(dateText: string): string {
@@ -24,6 +25,7 @@ function formatDate(dateText: string): string {
 
     return `${weekday} ${day}.${month}.${year}`;
 }
+
 
 function formatTime(dateText: string): string {
     const date = new Date(dateText);
@@ -105,9 +107,7 @@ export function SessionsView() {
         }
 
         return Array.from(groups.entries())
-            .sort(([dayA], [dayB]) => {
-                return new Date(dayB).getTime() - new Date(dayA).getTime();
-            })
+            .sort(([dayA], [dayB]) => dayB.localeCompare(dayA))
             .map(([day, sessions]) => ({
                 day,
                 sessions: [...sessions].sort((a, b) => {

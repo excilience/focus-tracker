@@ -325,7 +325,8 @@ function App() {
 
     try {
       const updatedGoal = await updateGoal(goalInput);
-      const updatedSettings = await updateSettings(parsedDayStartHour);
+      const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      const updatedSettings = await updateSettings(parsedDayStartHour, timezone);
 
 
       setGoal(updatedGoal);
@@ -521,24 +522,38 @@ function App() {
               style={{ width: `${activitySelectWidth}px` }}
             >
               <label className="activitySelector activitySelectorAboveRing">
-                <span className="activitySelectorLabel">Activity</span>
+                <span className="activitySelectorLabel">
+                  Activity
+                </span>
 
-                <select
-                  className="activitySelectorInput"
-                  value={selectedActivityID}
-                  onChange={(event) =>
-                    setSelectedActivityID(event.target.value)
-                  }
-                  disabled={loading || activitySaving}
-                >
-                  <option value="">-</option>
+                <div className="activitySelectWrapper">
+                  <select
+                    className="activitySelectorInput"
+                    value={selectedActivityID}
+                    onChange={(event) =>
+                      setSelectedActivityID(event.target.value)
+                    }
+                    disabled={loading || activitySaving}
+                  >
+                    <option value="">-</option>
 
-                  {activities.map((activity) => (
-                    <option key={activity.id} value={activity.id}>
-                      {activity.title}
-                    </option>
-                  ))}
-                </select>
+                    {activities.map((activity) => (
+                      <option
+                        key={activity.id}
+                        value={activity.id}
+                      >
+                        {activity.title}
+                      </option>
+                    ))}
+                  </select>
+
+                  <span
+                    className="activitySelectArrow"
+                    aria-hidden="true"
+                  >
+                    ▾
+                  </span>
+                </div>
               </label>
 
               <button
@@ -549,7 +564,10 @@ function App() {
                 aria-label="Create activity"
                 title="Create activity"
               >
-                <span className="activityCreateIcon" aria-hidden="true">
+                <span
+                  className="activityCreateIcon"
+                  aria-hidden="true"
+                >
                   +
                 </span>
               </button>
